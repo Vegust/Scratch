@@ -3,13 +3,9 @@ project(Scratch)
 
 set(CMAKE_CXX_STANDARD 20)
 
-if (NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release)
-endif ()
-
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat)
 
 include_directories(Source)
+include_directories(Source/Core)
 
-add_executable(Scratch WIN32
-        Source/windows_entry.cpp)
+add_executable(Scratch WIN32 Source/main.cpp Source/Core/app.cpp)
