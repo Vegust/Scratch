@@ -2,14 +2,18 @@
 // Created by Vegust on 17.06.2023.
 //
 
-//#include "Platform/Win32/win32_window.cpp"
+#include "core_types.h"
+#include <cassert>
 
-#include "Utils/glfw.h"
+SCRATCH_DISABLE_WARNINGS_BEGIN()
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
+SCRATCH_DISABLE_WARNINGS_END()
 
 int main()
 {
 	GLFWwindow* window;
-	
+
 	/* Initialize the library */
 	if (!glfwInit())
         return -1;
@@ -24,6 +28,10 @@ int main()
 
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
+	
+	SCRATCH_DISABLE_WARNINGS_BEGIN()
+	assert(gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)));
+	SCRATCH_DISABLE_WARNINGS_END()
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
@@ -31,11 +39,11 @@ int main()
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glBegin(GL_TRIANGLES);
-		glVertex2f(-0.5f,-0.5f);
-		glVertex2f(-0.0f,0.5f);
-		glVertex2f(0.5f,-0.5f);
-		glEnd();
+		//glBegin(GL_TRIANGLES);
+		//glVertex2f(-0.5f,-0.5f);
+		//glVertex2f(-0.0f,0.5f);
+		//glVertex2f(0.5f,-0.5f);
+		//glEnd();
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
