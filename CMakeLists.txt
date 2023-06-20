@@ -10,6 +10,7 @@ set(GLFW_INSTALL OFF)
 link_libraries(glfw)
 # --------------------------------
 
+# not linking to default gl lib, using glad instead
 # ------------ opengl ------------
 # find_package(OpenGL REQUIRED)
 # include_directories(${OPENGL_INCLUDE_DIR})
@@ -25,6 +26,8 @@ link_libraries(glad)
 include_directories(Source)
 include_directories(Source/Core)
 
+add_compile_options(/GR- /GX-) # no exceptions, no typeinfo
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+
 add_executable(Scratch Source/main.cpp)
 

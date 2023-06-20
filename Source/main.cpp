@@ -29,6 +29,7 @@ int main()
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 	
+	// TODO: maybe you can rewrite it without clang warnings
 	SCRATCH_DISABLE_WARNINGS_BEGIN()
 	assert(gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)));
 	SCRATCH_DISABLE_WARNINGS_END()
