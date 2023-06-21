@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 project(Scratch)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 # ------------ glfw --------------
 add_subdirectory(Source/ThirdParty/glfw)
@@ -27,7 +27,14 @@ include_directories(Source)
 include_directories(Source/Core)
 
 add_compile_options(/GR- /GX-) # no exceptions, no typeinfo
-add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic)
+add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
-add_executable(Scratch Source/main.cpp)
+add_executable(Scratch
+		Source/main.cpp
+		Source/Rendering/renderer.cpp
+		Source/Rendering/vertex_buffer.cpp
+		Source/Rendering/index_buffer.cpp
+		Source/Rendering/vertex_array.cpp
+		Source/Rendering/vertex_buffer_layout.cpp
+		Source/Rendering/shader.cpp Source/Rendering/shader.h)
 
