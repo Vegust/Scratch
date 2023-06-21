@@ -5,10 +5,11 @@
 #pragma once
 
 #include "core_types.h"
+#include "glm/fwd.hpp"
 
+#include <filesystem>
 #include <map>
 #include <type_traits>
-#include <filesystem>
 
 class shader
 {
@@ -26,6 +27,7 @@ public:
 	// Set uniforms
 	void SetUniform4f(std::string_view Name, float V1, float V2, float V3, float V4);
 	void SetUniform1i(std::string_view Name, int32 V1);
+	void SetUniformMat4f(std::string_view Name, const glm::mat4& Matrix);
 private:
 	struct parsed_shaders
 	{

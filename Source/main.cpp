@@ -7,6 +7,8 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 
 #include <GLFW/glfw3.h>
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
 #include "Rendering/index_buffer.h"
@@ -18,7 +20,6 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "Rendering/vertex_buffer_layout.h"
 
 #include <array>
-#include <cassert>
 
 int main()
 {
@@ -34,8 +35,10 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	constexpr uint32 WindowWidth = 1920;
+	constexpr uint32 WindowHeight = 1080;
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(1920, 1080, "Hello World", nullptr, nullptr);
+	window = glfwCreateWindow(WindowWidth, WindowHeight, "Hello World", nullptr, nullptr);
 	if (!window)
 	{
 		glfwTerminate();
@@ -67,6 +70,9 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	{
+		constexpr float AspectRatio = static_cast<float>(WindowWidth)/WindowHeight;
+		glm::mat4 ProjectionMatrix = glm::ortho(-AspectRatio, AspectRatio, -1.f, 1.f, -1.f, 1.f);
+		
 		vertex_array VertexArray{};
 		vertex_buffer VertexBuffer{Positions.data(), NumVertices * SizeOfVertex};
 		vertex_buffer_layout VertexLayout{};
@@ -78,39 +84,21 @@ int main()
 
 		shader Shader{"Resources/Shaders/Basic.shader"};
 		Shader.Bind();
-		Shader.SetUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
 		texture Texture{"Resources/Textures/OpenGL_Logo.png"};
 		Texture.Bind();
 		Shader.SetUniform1i("u_Texture", 0);
-
+		Shader.SetUniformMat4f("u_MVP", ProjectionMatrix);
+		
 		renderer Renderer;
 
-		float R = 0.f;
-		float Increment = 0.05f;
-		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
 			Shader.Bind();
-			Shader.SetUniform4f("u_Color", R, 0.3f, 0.8f, 1.0f);
-
 			Renderer.Clear();
 			Renderer.Draw(VertexArray, IndexBuffer, Shader);
 
-			if (R > 1.f)
-			{
-				Increment = -0.05f;
-			}
-			else if (R < 0.f)
-			{
-				Increment = 0.05f;
-			}
-			R += Increment;
-
-			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
-
-			/* Poll for and process events */
 			glfwPollEvents();
 		}
 	}
