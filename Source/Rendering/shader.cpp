@@ -37,6 +37,11 @@ void shader::SetUniform4f(std::string_view Name, float V1, float V2, float V3, f
 	glUniform4f(GetUniformLocation(Name), V1, V2, V3, V4);
 }
 
+void shader::SetUniform1i(std::string_view Name, int32 V1)
+{
+	glUniform1i(GetUniformLocation(Name), V1);
+}
+
 int32 shader::GetUniformLocation(std::string_view Name) const
 {
 	if (const auto Result = UniformsCache.find(Name); Result != UniformsCache.end())

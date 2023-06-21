@@ -23,6 +23,12 @@ add_library(glad STATIC Source/ThirdParty/glad/src/glad.c)
 link_libraries(glad)
 # --------------------------------
 
+# ------------ stb --------------
+include_directories(Source/ThirdParty/stb)
+add_library(stb STATIC Source/ThirdParty/stb/stb_image.cpp)
+link_libraries(stb)
+# --------------------------------
+
 include_directories(Source)
 include_directories(Source/Core)
 
@@ -36,5 +42,5 @@ add_executable(Scratch
 		Source/Rendering/index_buffer.cpp
 		Source/Rendering/vertex_array.cpp
 		Source/Rendering/vertex_buffer_layout.cpp
-		Source/Rendering/shader.cpp Source/Rendering/shader.h)
+		Source/Rendering/shader.cpp Source/Rendering/shader.h Source/Rendering/Texture.cpp)
 
