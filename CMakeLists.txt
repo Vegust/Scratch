@@ -40,14 +40,7 @@ include_directories(Source/Core)
 add_compile_options(/GR- /GX-) # no exceptions, no typeinfo
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
-add_executable(Scratch
-		Source/main.cpp
-		Source/Rendering/renderer.cpp
-		Source/Rendering/vertex_buffer.cpp
-		Source/Rendering/index_buffer.cpp
-		Source/Rendering/vertex_array.cpp
-		Source/Rendering/vertex_buffer_layout.cpp
-		Source/Rendering/shader.cpp
-		Source/Rendering/shader.h
-		Source/Rendering/Texture.cpp)
+file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
+
+add_executable(Scratch Source/main.cpp ${SCRATCH_RENDERING_SOURCES})
 
