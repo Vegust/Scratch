@@ -5,10 +5,10 @@
 #include "core_types.h"
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
-
-#include <GLFW/glfw3.h>
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+
+#include <GLFW/glfw3.h>
 SCRATCH_DISABLE_WARNINGS_END()
 
 #include "Rendering/index_buffer.h"
@@ -65,14 +65,18 @@ int main()
 		// clang-format on
 	};
 	std::array<uint32, NumTriangles* 3> Indices = {0, 1, 2, 1, 2, 3};
-	
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	{
-		constexpr float AspectRatio = static_cast<float>(WindowWidth)/WindowHeight;
+		constexpr float AspectRatio = static_cast<float>(WindowWidth) / WindowHeight;
 		glm::mat4 ProjectionMatrix = glm::ortho(-AspectRatio, AspectRatio, -1.f, 1.f, -1.f, 1.f);
-		
+		glm::mat4 ViewMatrix = glm::translate(glm::mat4{1.0f}, glm::vec3(-0.5, 0.f, 0.f));
+		glm::mat4 ModelMatrix = glm::translate(glm::mat4{1.0f}, glm::vec3(0.5, 0.f, 0.f));
+
+		glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
+
 		vertex_array VertexArray{};
 		vertex_buffer VertexBuffer{Positions.data(), NumVertices * SizeOfVertex};
 		vertex_buffer_layout VertexLayout{};
@@ -85,11 +89,11 @@ int main()
 		shader Shader{"Resources/Shaders/Basic.shader"};
 		Shader.Bind();
 
-		texture Texture{"Resources/Textures/OpenGL_Logo.png"};
+		texture Texture{"Resources/Textures/SlostestPhone.jpg"};
 		Texture.Bind();
 		Shader.SetUniform1i("u_Texture", 0);
-		Shader.SetUniformMat4f("u_MVP", ProjectionMatrix);
-		
+		Shader.SetUniformMat4f("u_MVP", MVP);
+
 		renderer Renderer;
 
 		while (!glfwWindowShouldClose(window))
