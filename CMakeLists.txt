@@ -34,6 +34,21 @@ link_libraries(stb)
 include_directories(Source/ThirdParty/glm)
 # --------------------------------
 
+# --------- dear imgui -----------
+include_directories(Source/ThirdParty/imgui)
+add_library(imgui STATIC
+		Source/ThirdParty/imgui/imgui.cpp
+		Source/ThirdParty/imgui/imgui_demo.cpp
+		Source/ThirdParty/imgui/imgui_draw.cpp
+		Source/ThirdParty/imgui/imgui_widgets.cpp
+		Source/ThirdParty/imgui/imgui_tables.cpp
+		# opengl and glfw backends
+		Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
+		Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
+)
+link_libraries(imgui)
+# --------------------------------
+
 include_directories(Source)
 include_directories(Source/Core)
 

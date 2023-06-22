@@ -85,12 +85,12 @@ int main()
 		VertexArray.AddBuffer(VertexBuffer, VertexLayout);
 
 		index_buffer IndexBuffer{Indices.data(), Indices.size()};
+		
+		texture Texture{"Resources/Textures/SlostestPhone.jpg"};
+		Texture.Bind();
 
 		shader Shader{"Resources/Shaders/Basic.shader"};
 		Shader.Bind();
-
-		texture Texture{"Resources/Textures/SlostestPhone.jpg"};
-		Texture.Bind();
 		Shader.SetUniform1i("u_Texture", 0);
 		Shader.SetUniformMat4f("u_MVP", MVP);
 
@@ -98,7 +98,6 @@ int main()
 
 		while (!glfwWindowShouldClose(window))
 		{
-			Shader.Bind();
 			Renderer.Clear();
 			Renderer.Draw(VertexArray, IndexBuffer, Shader);
 
