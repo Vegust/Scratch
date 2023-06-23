@@ -28,6 +28,6 @@ bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber);
 class renderer
 {
 public:
-	void Clear() const;
-	void Draw(const vertex_array& VertexArray, const index_buffer& IndexBuffer, const shader& Shader) const;
+	static void Clear();
+	static void Draw(const vertex_array& VertexArray, const index_buffer& IndexBuffer, const shader& Shader);
 };

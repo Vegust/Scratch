@@ -45,17 +45,22 @@ add_library(imgui STATIC
 		# opengl and glfw backends
 		Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
 		Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
-)
+		)
 link_libraries(imgui)
 # --------------------------------
 
 include_directories(Source)
 include_directories(Source/Core)
 
-add_compile_options(/GR- /GX-) # no exceptions, no typeinfo
+add_compile_options(/GX-) # no exceptions, typeinfo (/GR-)
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
 file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
+file(GLOB_RECURSE SCRATCH_TEST_SOURCES "Source/TestScenes/*.cpp")
 
-add_executable(Scratch Source/main.cpp ${SCRATCH_RENDERING_SOURCES})
+add_executable(Scratch
+		Source/main.cpp
+		${SCRATCH_RENDERING_SOURCES}
+		${SCRATCH_TEST_SOURCES}
+		)
 

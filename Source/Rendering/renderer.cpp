@@ -4,6 +4,8 @@
 
 #include "renderer.h"
 
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_transform.hpp"
 #include "index_buffer.h"
 #include "shader.h"
 #include "vertex_array.h"
@@ -30,7 +32,7 @@ bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber)
 void renderer::Draw(
 	const vertex_array& VertexArray,
 	const index_buffer& IndexBuffer,
-	const shader& Shader) const
+	const shader& Shader)
 {
 	Shader.Bind();
 	VertexArray.Bind();
@@ -39,7 +41,7 @@ void renderer::Draw(
 	GL_CALL(glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
-void renderer::Clear() const
+void renderer::Clear()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 }
