@@ -61,8 +61,8 @@ test_texture::test_texture()
 
 	Shader = std::make_unique<shader>("Resources/Shaders/Basic.shader");
 	Shader->Bind();
-	Shader->SetUniform1i("u_Texture", 0);
-	Shader->SetUniformMat4f("u_MVP", MVP);
+	Shader->SetUniform("u_Texture", 0);
+	Shader->SetUniform("u_MVP", MVP);
 }
 
 test_texture::~test_texture()
@@ -89,13 +89,13 @@ void test_texture::OnRender()
 	glm::mat4 ModelMatrix = glm::translate(glm::mat4{1.0f}, Pic1Trans);
 	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	Shader->Bind();
-	Shader->SetUniformMat4f("u_MVP", MVP);
+	Shader->SetUniform("u_MVP", MVP);
 	renderer::Draw(*VertexArray, *IndexBuffer, *Shader);
 	
 	ModelMatrix = glm::translate(glm::mat4{1.0f}, Pic2Trans);
 	MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 	Shader->Bind();
-	Shader->SetUniformMat4f("u_MVP", MVP);
+	Shader->SetUniform("u_MVP", MVP);
 	renderer::Draw(*VertexArray, *IndexBuffer, *Shader);
 }
 

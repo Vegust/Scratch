@@ -15,43 +15,49 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include <GLFW/glfw3.h>
 SCRATCH_DISABLE_WARNINGS_END()
 
-#include "Rendering/index_buffer.h"
 #include "Rendering/renderer.h"
-#include "Rendering/shader.h"
-#include "Rendering/texture.h"
-#include "Rendering/vertex_array.h"
-#include "Rendering/vertex_buffer.h"
-#include "Rendering/vertex_buffer_layout.h"
-
-#include "TestScenes/test_scene.h"
 #include "TestScenes/test_clear_color.h"
+#include "TestScenes/test_scene.h"
 #include "TestScenes/test_texture.h"
 
 #include <array>
+#include <iostream>
+
+static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight)
+{
+	glViewport(0, 0, NewWidth, NewHeight);
+}
+
+static void ProcessInput(GLFWwindow* Window)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantCaptureKeyboard)
+	{
+		if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		{
+			glfwSetWindowShouldClose(Window, true);
+		}
+	}
+}
 
 int main()
 {
-	GLFWwindow* window;
-	if (!glfwInit())
-	{
-		return -1;
-	}
-
+	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;
-	window = glfwCreateWindow(WindowWidth, WindowHeight, "Scratch", nullptr, nullptr);
-	if (!window)
+	GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "Scratch", nullptr, nullptr);
+	if (!Window)
 	{
 		glfwTerminate();
 		return -1;
 	}
-
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(Window);
 	glfwSwapInterval(1);
+	glfwSetFramebufferSizeCallback(Window, OnWindowResize);
 
 	SCRATCH_DISABLE_WARNINGS_BEGIN()
 	assert(gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)));
@@ -59,6 +65,9 @@ int main()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	bool bVSync = true;
+	bool bOldVSync = bVSync;
 
 	{
 		IMGUI_CHECKVERSION();
@@ -68,7 +77,7 @@ int main()
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	 // Enable Gamepad Controls
 		io.IniFilename = nullptr;
 		ImGui::StyleColorsDark();
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
+		ImGui_ImplGlfw_InitForOpenGL(Window, true);
 		ImGui_ImplOpenGL3_Init("#version 460");
 		
 		test_scene* CurrentTestScene = nullptr;
@@ -78,12 +87,15 @@ int main()
 		TestMenu.RegisterTest<test_clear_color>("Clear Color");
 		TestMenu.RegisterTest<test_texture>("Texture");
 
-		while (!glfwWindowShouldClose(window))
+		double LastTime = glfwGetTime();
+		while (!glfwWindowShouldClose(Window))
 		{
-			int display_w, display_h;
-			glfwGetFramebufferSize(window, &display_w, &display_h);
-			glViewport(0, 0, display_w, display_h);
-
+			const double NewTime = glfwGetTime();
+			const double DeltaTime = NewTime - LastTime;
+			LastTime = NewTime;
+			
+			ProcessInput(Window);
+			
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
@@ -95,7 +107,16 @@ int main()
 			{
 				CurrentTestScene->OnUpdate();
 				CurrentTestScene->OnRender();
-				ImGui::Begin("Test");
+				ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+				ImGui::SetWindowFontScale(1.5f);
+				ImGui::Text("Frame time %.4f ms", 1000.0 * DeltaTime);
+				ImGui::Text("%.1f FPS", static_cast<double>(io.Framerate));
+				ImGui::Checkbox("VSync", &bVSync);
+				if (bOldVSync != bVSync)
+				{
+					glfwSwapInterval(bVSync ? 1 : 0);
+				}
+				bOldVSync = bVSync;
 				if (CurrentTestScene != &TestMenu && ImGui::Button("<-"))
 				{
 					delete CurrentTestScene;
@@ -108,7 +129,7 @@ int main()
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-			glfwSwapBuffers(window);
+			glfwSwapBuffers(Window);
 			glfwPollEvents();
 		}
 		

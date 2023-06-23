@@ -52,7 +52,7 @@ link_libraries(imgui)
 include_directories(Source)
 include_directories(Source/Core)
 
-add_compile_options(/GX-) # no exceptions, typeinfo (/GR-)
+add_compile_options(/GX-) # no exceptions
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
 file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")

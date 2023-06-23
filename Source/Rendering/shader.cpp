@@ -33,17 +33,17 @@ void shader::Unbind() const
 	glUseProgram(0);
 }
 
-void shader::SetUniform4f(std::string_view Name, float V1, float V2, float V3, float V4)
+void shader::SetUniform(std::string_view Name, float V1, float V2, float V3, float V4)
 {
 	glUniform4f(GetUniformLocation(Name), V1, V2, V3, V4);
 }
 
-void shader::SetUniform1i(std::string_view Name, int32 V1)
+void shader::SetUniform(std::string_view Name, int32 V1)
 {
 	glUniform1i(GetUniformLocation(Name), V1);
 }
 
-void shader::SetUniformMat4f(std::string_view Name, const glm::mat4& Matrix)
+void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix)
 {
 	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, &Matrix[0][0]);
 }
