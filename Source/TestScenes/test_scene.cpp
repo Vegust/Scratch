@@ -19,21 +19,21 @@ test_menu::~test_menu()
 {
 }
 
-void test_menu::OnUpdate()
+void test_menu::OnUpdate(float DeltaTime)
 {
-	test_scene::OnUpdate();
+	test_scene::OnUpdate(DeltaTime);
 }
 
-void test_menu::OnRender()
+void test_menu::OnRender(const renderer& Renderer)
 {
-	test_scene::OnRender();
+	test_scene::OnRender(Renderer);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void test_menu::OnIMGuiRender()
 {
 	test_scene::OnIMGuiRender();
-	for (auto& Test : Tests)
+	for (auto& Test : GetTests())
 	{
 		if (ImGui::Button(Test.first.c_str()))
 		{

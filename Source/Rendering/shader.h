@@ -25,9 +25,9 @@ public:
 	void Unbind() const;
 	
 	// Set uniforms
-	void SetUniform(std::string_view Name, float V1, float V2, float V3, float V4);
-	void SetUniform(std::string_view Name, int32 V1);
-	void SetUniform(std::string_view Name, const glm::mat4& Matrix);
+	void SetUniform(std::string_view Name, float V1, float V2, float V3, float V4) const;
+	void SetUniform(std::string_view Name, int32 V1) const;
+	void SetUniform(std::string_view Name, const glm::mat4& Matrix) const;
 private:
 	struct parsed_shaders
 	{

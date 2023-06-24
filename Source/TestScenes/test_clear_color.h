@@ -14,8 +14,8 @@ public:
 	test_clear_color();
 	virtual ~test_clear_color() override;
 	
-	virtual void OnUpdate() override;
-	virtual void OnRender() override;
+	virtual void OnUpdate(float DeltaTime) override;
+	virtual void OnRender(const renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
 private:
 	std::array<float,4> ClearColor{0.2f, 0.3f, 0.8f, 1.f};

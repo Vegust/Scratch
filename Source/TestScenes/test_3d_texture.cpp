@@ -7,7 +7,6 @@
 #include "Rendering/vertex_array.h"
 #include "core_types.h"
 #include "glm/ext/scalar_constants.hpp"
-#include "glm/fwd.hpp"
 
 #include <array>
 #include <memory>
@@ -24,6 +23,8 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "Rendering/renderer.h"
 #include "Rendering/texture.h"
 #include "Rendering/vertex_buffer_layout.h"
+
+REGISTER_TEST_SCENE(test_3d_texture)
 
 test_3d_texture::test_3d_texture()
 {
@@ -72,14 +73,14 @@ test_3d_texture::~test_3d_texture()
 {
 }
 
-void test_3d_texture::OnUpdate()
+void test_3d_texture::OnUpdate(float DeltaTime)
 {
-	test_scene::OnUpdate();
+	test_scene::OnUpdate(DeltaTime);
 }
 
-void test_3d_texture::OnRender()
+void test_3d_texture::OnRender(const renderer& Renderer)
 {
-	test_scene::OnRender();
+	test_scene::OnRender(Renderer);
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT);
 

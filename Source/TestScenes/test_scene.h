@@ -4,10 +4,18 @@
 
 #pragma once
 
+#include "Rendering/renderer.h"
+
 #include <functional>
 #include <string_view>
 #include <utility>
 #include <vector>
+
+#define REGISTER_TEST_SCENE(Class)                                 \
+	_Pragma("clang diagnostic push");                              \
+	_Pragma("clang diagnostic ignored \"-Wglobal-constructors\""); \
+	static RegisterTestScene<Class> Test{#Class};                \
+	_Pragma("clang diagnostic pop");
 
 class test_scene
 {
@@ -20,11 +28,11 @@ public:
 	{
 	}
 
-	virtual void OnUpdate()
+	virtual void OnUpdate(float DeltaTime)
 	{
 	}
 
-	virtual void OnRender()
+	virtual void OnRender(const renderer& Renderer)
 	{
 	}
 
@@ -39,17 +47,27 @@ public:
 	explicit test_menu(test_scene*& InCurrentTestSceneRef);
 	virtual ~test_menu() override;
 
-	virtual void OnUpdate() override;
-	virtual void OnRender() override;
+	virtual void OnUpdate(float DeltaTime) override;
+	virtual void OnRender(const renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
-	
-	template<typename T>
-	void RegisterTest(std::string_view Name)
+
+	static std::vector<std::pair<std::string, std::function<test_scene*()>>>& GetTests()
 	{
-		Tests.push_back(std::make_pair(std::string{Name},[](){ return new T(); }));
+		[[clang::no_destroy]] static std::vector<std::pair<std::string, std::function<test_scene*()>>>
+			Tests{};
+		return Tests;
 	}
 
 private:
 	test_scene*& CurrentTestSceneRef;
-	std::vector<std::pair<std::string, std::function<test_scene*()>>> Tests{};
+};
+
+template <typename T>
+struct RegisterTestScene
+{
+	explicit RegisterTestScene(std::string_view Name)
+	{
+		test_menu::GetTests().push_back(
+			std::make_pair(std::string{Name}, []() { return new T(); }));
+	}
 };

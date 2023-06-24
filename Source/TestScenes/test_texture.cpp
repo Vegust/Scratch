@@ -22,6 +22,8 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "Rendering/texture.h"
 #include "Rendering/vertex_buffer_layout.h"
 
+REGISTER_TEST_SCENE(test_texture)
+
 test_texture::test_texture()
 {
 	constexpr uint32 NumTriangles = 2;
@@ -69,14 +71,14 @@ test_texture::~test_texture()
 {
 }
 
-void test_texture::OnUpdate()
+void test_texture::OnUpdate(float DeltaTime)
 {
-	test_scene::OnUpdate();
+	test_scene::OnUpdate(DeltaTime);
 }
 
-void test_texture::OnRender()
+void test_texture::OnRender(const renderer& Renderer)
 {
-	test_scene::OnRender();
+	test_scene::OnRender(Renderer);
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	

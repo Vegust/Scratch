@@ -24,9 +24,12 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include <array>
 #include <iostream>
 
+static renderer Renderer;
+
 static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight)
 {
 	glViewport(0, 0, NewWidth, NewHeight);
+	Renderer.AspectRatio = static_cast<float>(NewWidth)/ static_cast<float>(NewHeight);
 }
 
 static void ProcessInput(GLFWwindow* Window)
@@ -50,6 +53,7 @@ int main()
 
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;
+	Renderer.AspectRatio = static_cast<float>(WindowWidth)/ static_cast<float>(WindowHeight);
 	GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "Scratch", nullptr, nullptr);
 	if (!Window)
 	{
@@ -69,7 +73,7 @@ int main()
 	
 	bool bVSync = true;
 	bool bOldVSync = bVSync;
-
+	
 	{
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -85,10 +89,6 @@ int main()
 		test_menu TestMenu{CurrentTestScene};
 		CurrentTestScene = &TestMenu;
 		
-		TestMenu.RegisterTest<test_clear_color>("Clear Color");
-		TestMenu.RegisterTest<test_texture>("Texture");
-		TestMenu.RegisterTest<test_3d_texture>("3D Texture");
-
 		double LastTime = glfwGetTime();
 		while (!glfwWindowShouldClose(Window))
 		{
@@ -107,8 +107,8 @@ int main()
 			
 			if (CurrentTestScene)
 			{
-				CurrentTestScene->OnUpdate();
-				CurrentTestScene->OnRender();
+				CurrentTestScene->OnUpdate(static_cast<float>(DeltaTime));
+				CurrentTestScene->OnRender(Renderer);
 				ImGui::Begin("Debug", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 				ImGui::SetWindowFontScale(1.5f);
 				ImGui::Text("Frame time %.4f ms", 1000.0 * DeltaTime);
@@ -122,6 +122,7 @@ int main()
 				if (CurrentTestScene != &TestMenu && ImGui::Button("<-"))
 				{
 					delete CurrentTestScene;
+					Renderer.ResetCamera();
 					CurrentTestScene = &TestMenu;
 				}
 				CurrentTestScene->OnIMGuiRender();
