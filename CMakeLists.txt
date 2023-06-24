@@ -52,6 +52,7 @@ link_libraries(imgui)
 include_directories(Source)
 include_directories(Source/Core)
 
+add_compile_options(-Wno-unused-function -Wno-unused-variable)
 add_compile_options(/GX-) # no exceptions
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
