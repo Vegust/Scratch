@@ -78,17 +78,17 @@ void test_3d_texture::OnUpdate(float DeltaTime)
 	test_scene::OnUpdate(DeltaTime);
 }
 
-void test_3d_texture::OnRender(const renderer& Renderer)
+void test_3d_texture::OnRender(renderer& Renderer)
 {
 	test_scene::OnRender(Renderer);
-	glClearColor(0.f, 0.f, 0.f, 0.f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClearColor(1.f, 1.f, 1.f, 0.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;
 	float AspectRatio = static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight);
 	//glm::mat4 ProjectionMatrix = glm::ortho(-AspectRatio, AspectRatio, -1.f, 1.f, 0.f, 2.f);
-	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(120.0f), AspectRatio, 0.f, 2.f);
+	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(120.0f), AspectRatio, 0.001f, 2.f);
 	glm::mat4 ViewMatrix = glm::translate(glm::mat4{1.0f}, glm::vec3(0.0, 0.f, -1.f));
 
 	glm::mat4 ModelMatrix = glm::rotate(

@@ -1,7 +1,6 @@
 //
-// Created by Vegust on 22.06.2023.
+// Created by Vegust on 24.06.2023.
 //
-
 #pragma once
 
 #include "core_types.h"
@@ -15,11 +14,11 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "Rendering/shader.h"
 #include "Rendering/index_buffer.h"
 
-class test_texture : public test_scene
+class test_cube : public test_scene
 {
 public:
-	test_texture();
-	virtual ~test_texture() override;
+	test_cube();
+	virtual ~test_cube() override;
 	
 	virtual void OnUpdate(float DeltaTime) override;
 	virtual void OnRender(renderer& Renderer) override;
@@ -31,6 +30,8 @@ private:
 	std::unique_ptr<index_buffer> IndexBuffer{nullptr};
 	std::unique_ptr<shader> Shader{nullptr};
 	
-	glm::vec3 Pic1Trans{0.5f,0.f,0.f};
-	glm::vec3 Pic2Trans{-0.5f,0.f,0.f};
+	glm::vec3 Pic1Trans{0.f,0.f,0.f};
+	glm::vec3 Pic1Rot{0.f,0.f,0.f};
+	
+	float CurrentRotation = 0.f;
 };

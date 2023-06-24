@@ -32,7 +32,7 @@ public:
 	{
 	}
 
-	virtual void OnRender(const renderer& Renderer)
+	virtual void OnRender(renderer& Renderer)
 	{
 	}
 
@@ -48,7 +48,7 @@ public:
 	virtual ~test_menu() override;
 
 	virtual void OnUpdate(float DeltaTime) override;
-	virtual void OnRender(const renderer& Renderer) override;
+	virtual void OnRender(renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
 
 	static std::vector<std::pair<std::string, std::function<test_scene*()>>>& GetTests()

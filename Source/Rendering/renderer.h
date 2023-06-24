@@ -5,6 +5,8 @@
 #pragma once
 
 #include "core_types.h"
+#include "vertex_array.h"
+#include <memory>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
@@ -30,16 +32,29 @@ class renderer
 {
 public:
 	static void Clear();
-	static void Draw(const vertex_array& VertexArray, const index_buffer& IndexBuffer, const shader& Shader);
-	
-	void Draw(const vertex_array& VertexArray, const index_buffer& IndexBuffer, const shader& Shader, glm::mat4 Transform);
-	
+	static void Draw(
+		const vertex_array& VertexArray,
+		const index_buffer& IndexBuffer,
+		const shader& Shader);
+
+	void Init();
+	void InitCubeVAO();
+	void Draw(
+		const vertex_array& VertexArray,
+		const index_buffer& IndexBuffer,
+		const shader& Shader,
+		glm::mat4 Transform) const;
+	void DrawCube(const shader& Shader, glm::mat4 Transform) const;
+
 	void ResetCamera()
 	{
 		CameraTransform = glm::mat4{1.f};
 	}
-	
+	glm::mat4 CalcMVPForTransform(const glm::mat4& Transform) const;
+
 	float AspectRatio = 1.f;
 	float FoV = 60.f;
 	glm::mat4 CameraTransform = glm::mat4{1.f};
+	
+	std::unique_ptr<vertex_array> CubeVAO{nullptr};
 };

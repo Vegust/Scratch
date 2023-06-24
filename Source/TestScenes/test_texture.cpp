@@ -76,11 +76,11 @@ void test_texture::OnUpdate(float DeltaTime)
 	test_scene::OnUpdate(DeltaTime);
 }
 
-void test_texture::OnRender(const renderer& Renderer)
+void test_texture::OnRender(renderer& Renderer)
 {
 	test_scene::OnRender(Renderer);
 	glClearColor(0.f, 0.f, 0.f, 0.f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;

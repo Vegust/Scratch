@@ -21,7 +21,7 @@ public:
 	virtual ~test_3d_texture() override;
 	
 	virtual void OnUpdate(float DeltaTime) override;
-	virtual void OnRender(const renderer& Renderer) override;
+	virtual void OnRender(renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
 	
 private:

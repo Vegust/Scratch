@@ -5,6 +5,8 @@
 #pragma once
 
 #include "core_types.h"
+
+class index_buffer;
 class vertex_buffer;
 class vertex_buffer_layout;
 
@@ -18,6 +20,10 @@ public:
 	~vertex_array();
 
 	void AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buffer_layout& Layout);
+	void AddBuffer(
+		const vertex_buffer& VertexBuffer,
+		const index_buffer& IndexBuffer,
+		const vertex_buffer_layout& Layout);
 
 	void Bind() const;
 	void Unbind() const;

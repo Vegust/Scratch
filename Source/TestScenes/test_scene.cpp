@@ -24,10 +24,10 @@ void test_menu::OnUpdate(float DeltaTime)
 	test_scene::OnUpdate(DeltaTime);
 }
 
-void test_menu::OnRender(const renderer& Renderer)
+void test_menu::OnRender(renderer& Renderer)
 {
 	test_scene::OnRender(Renderer);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void test_menu::OnIMGuiRender()

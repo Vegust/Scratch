@@ -24,7 +24,7 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include <array>
 #include <iostream>
 
-static renderer Renderer;
+[[clang::no_destroy]] static renderer Renderer;
 
 static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight)
 {
@@ -63,13 +63,14 @@ int main()
 	glfwMakeContextCurrent(Window);
 	glfwSwapInterval(1);
 	glfwSetFramebufferSizeCallback(Window, OnWindowResize);
-
+	
 	SCRATCH_DISABLE_WARNINGS_BEGIN()
 	assert(gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)));
 	SCRATCH_DISABLE_WARNINGS_END()
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST);
 	
 	bool bVSync = true;
 	bool bOldVSync = bVSync;
@@ -88,6 +89,8 @@ int main()
 		test_scene* CurrentTestScene = nullptr;
 		test_menu TestMenu{CurrentTestScene};
 		CurrentTestScene = &TestMenu;
+		
+		Renderer.Init();
 		
 		double LastTime = glfwGetTime();
 		while (!glfwWindowShouldClose(Window))

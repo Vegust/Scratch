@@ -5,6 +5,7 @@
 #include "vertex_array.h"
 
 #include "vertex_buffer.h"
+#include "index_buffer.h"
 #include "vertex_buffer_layout.h"
 
 vertex_array::vertex_array()
@@ -37,6 +38,15 @@ void vertex_array::AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buf
 			reinterpret_cast<const void*>(Offset));
 		Offset += Attribute.Count * vertex_buffer_attribute::GetSizeOfType(Attribute.Type);
 	}
+}
+
+void vertex_array::AddBuffer(
+	const vertex_buffer& VertexBuffer,
+	const index_buffer& IndexBuffer,
+	const vertex_buffer_layout& Layout)
+{
+	AddBuffer(VertexBuffer, Layout);
+	IndexBuffer.Bind();
 }
 
 void vertex_array::Bind() const
