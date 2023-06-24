@@ -8,6 +8,7 @@
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
+#include "glm/vec3.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
 #define ASSERT(x) \
@@ -30,4 +31,8 @@ class renderer
 public:
 	static void Clear();
 	static void Draw(const vertex_array& VertexArray, const index_buffer& IndexBuffer, const shader& Shader);
+	
+	float AspectRatio = 1.f;
+	float FoV = 60.f;
+	glm::vec3 CameraPosition = glm::vec3{0.f,0.f,0.f};
 };

@@ -14,18 +14,19 @@ SCRATCH_DISABLE_WARNINGS_END()
 texture::texture(const std::string_view InPath) : Path(InPath)
 {
 	stbi_set_flip_vertically_on_load(1);
-	LocalBuffer = stbi_load(InPath.data(), &Width, &Height, &BitsPerPixel, 4);
+	LocalBuffer = stbi_load(InPath.data(), &Width, &Height, &NumChannels, 4);
 
 	glGenTextures(1, &RendererId);
 	glBindTexture(GL_TEXTURE_2D, RendererId);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	glTexImage2D(
 		GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, LocalBuffer);
+	glGenerateMipmap(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if (LocalBuffer)

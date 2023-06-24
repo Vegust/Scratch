@@ -7,6 +7,7 @@
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
 #include <fstream>
@@ -45,7 +46,7 @@ void shader::SetUniform(std::string_view Name, int32 V1)
 
 void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix)
 {
-	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, &Matrix[0][0]);
+	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
 }
 
 int32 shader::GetUniformLocation(std::string_view Name) const

@@ -17,7 +17,7 @@ private:
 	uint8* LocalBuffer{nullptr};
 	int32 Width{0};
 	int32 Height{0};
-	int32 BitsPerPixel{0};
+	int32 NumChannels{0};
 
 public:
 	explicit texture(std::string_view InPath);

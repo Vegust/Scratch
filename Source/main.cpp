@@ -19,6 +19,7 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "TestScenes/test_clear_color.h"
 #include "TestScenes/test_scene.h"
 #include "TestScenes/test_texture.h"
+#include "TestScenes/test_3d_texture.h"
 
 #include <array>
 #include <iostream>
@@ -86,6 +87,7 @@ int main()
 		
 		TestMenu.RegisterTest<test_clear_color>("Clear Color");
 		TestMenu.RegisterTest<test_texture>("Texture");
+		TestMenu.RegisterTest<test_3d_texture>("3D Texture");
 
 		double LastTime = glfwGetTime();
 		while (!glfwWindowShouldClose(Window))
