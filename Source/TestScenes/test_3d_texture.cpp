@@ -24,7 +24,7 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "Rendering/texture.h"
 #include "Rendering/vertex_buffer_layout.h"
 
-REGISTER_TEST_SCENE(test_3d_texture)
+REGISTER_TEST_SCENE(test_3d_texture, "03 3D Texture")
 
 test_3d_texture::test_3d_texture()
 {

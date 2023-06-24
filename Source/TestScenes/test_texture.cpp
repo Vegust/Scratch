@@ -22,7 +22,7 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "Rendering/texture.h"
 #include "Rendering/vertex_buffer_layout.h"
 
-REGISTER_TEST_SCENE(test_texture)
+REGISTER_TEST_SCENE(test_texture, "02 Texture")
 
 test_texture::test_texture()
 {

@@ -74,6 +74,17 @@ void renderer::DrawCube(const shader& Shader, glm::mat4 Transform) const
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
 }
 
+void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
+{
+	CubeVAO->Bind();
+	Shader.Bind();
+	for (const auto& Transform : Transforms)
+	{
+		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
+		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+	}
+}
+
 void renderer::InitCubeVAO()
 {
 	constexpr uint32 NumVertices = 36;

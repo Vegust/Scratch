@@ -11,7 +11,7 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "imgui.h"
 SCRATCH_DISABLE_WARNINGS_END()
 
-REGISTER_TEST_SCENE(test_clear_color)
+REGISTER_TEST_SCENE(test_clear_color, "01 Clear Color")
 
 test_clear_color::test_clear_color()
 {

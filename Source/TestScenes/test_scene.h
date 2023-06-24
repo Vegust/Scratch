@@ -11,10 +11,10 @@
 #include <utility>
 #include <vector>
 
-#define REGISTER_TEST_SCENE(Class)                                 \
+#define REGISTER_TEST_SCENE(Class, Name)                           \
 	_Pragma("clang diagnostic push");                              \
 	_Pragma("clang diagnostic ignored \"-Wglobal-constructors\""); \
-	static RegisterTestScene<Class> Test{#Class};                \
+	static RegisterTestScene<Class> Test{Name};                    \
 	_Pragma("clang diagnostic pop");
 
 class test_scene

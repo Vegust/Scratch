@@ -2,8 +2,11 @@
 // Created by Vegust on 22.06.2023.
 //
 
-#include "core_types.h"
 #include "test_scene.h"
+
+#include "core_types.h"
+
+#include <algorithm>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
@@ -13,6 +16,17 @@ SCRATCH_DISABLE_WARNINGS_END()
 test_menu::test_menu(test_scene*& InCurrentTestSceneRef)
 	: CurrentTestSceneRef{InCurrentTestSceneRef}
 {
+	struct
+	{
+		bool operator()(
+			const std::pair<std::string, std::function<test_scene*()>>& a,
+			const std::pair<std::string, std::function<test_scene*()>>& b) const
+		{
+			return a.first < b.first;
+		}
+	} CustomLess;
+
+	std::sort(GetTests().begin(), GetTests().end(), CustomLess);
 }
 
 test_menu::~test_menu()

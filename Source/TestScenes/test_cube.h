@@ -34,4 +34,6 @@ private:
 	glm::vec3 Pic1Rot{0.f,0.f,0.f};
 	
 	float CurrentRotation = 0.f;
+	int32 NumCubes = 5;
+	uint32 Seed{0};
 };

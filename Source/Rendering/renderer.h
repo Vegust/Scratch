@@ -6,7 +6,9 @@
 
 #include "core_types.h"
 #include "vertex_array.h"
+
 #include <memory>
+#include <vector>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
@@ -45,6 +47,7 @@ public:
 		const shader& Shader,
 		glm::mat4 Transform) const;
 	void DrawCube(const shader& Shader, glm::mat4 Transform) const;
+	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 
 	void ResetCamera()
 	{
