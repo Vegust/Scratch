@@ -50,12 +50,15 @@ public:
 
 	void Init();
 	void InitCubeVAO();
+	void InitNormalCubeVAO();
+	
 	void Draw(
 		const vertex_array& VertexArray,
 		const index_buffer& IndexBuffer,
 		const shader& Shader,
 		glm::mat4 Transform) const;
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
+	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 
 	void ResetCamera()
 	{
@@ -76,4 +79,6 @@ public:
 	glm::vec3 CameraUpVector = glm::vec3{0.f,1.f,0.f};
 	
 	std::unique_ptr<vertex_array> CubeVAO{nullptr};
+	
+	std::unique_ptr<vertex_array> NormalCubeVAO{nullptr};
 };

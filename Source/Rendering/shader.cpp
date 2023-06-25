@@ -49,6 +49,21 @@ void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix) const
 	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
 }
 
+void shader::SetUniform(std::string_view Name, const glm::mat3& Matrix) const
+{
+	glUniformMatrix3fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
+}
+
+void shader::SetUniform(std::string_view Name, float V1) const
+{
+	glUniform1f(GetUniformLocation(Name), V1);
+}
+
+void shader::SetUniform(std::string_view Name, glm::vec3 V1) const
+{
+	glUniform3f(GetUniformLocation(Name), V1.x, V1.y, V1.z);
+}
+
 int32 shader::GetUniformLocation(std::string_view Name) const
 {
 	if (const auto Result = UniformsCache.find(Name); Result != UniformsCache.end())

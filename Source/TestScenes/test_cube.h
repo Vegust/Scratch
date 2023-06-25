@@ -25,9 +25,6 @@ public:
 	virtual void OnIMGuiRender() override;
 	
 private:
-	std::unique_ptr<vertex_buffer> VertexBuffer{nullptr};
-	std::unique_ptr<vertex_array> VertexArray{nullptr};
-	std::unique_ptr<index_buffer> IndexBuffer{nullptr};
 	std::unique_ptr<shader> Shader{nullptr};
 	
 	glm::vec3 Pic1Trans{0.f,0.f,0.f};
