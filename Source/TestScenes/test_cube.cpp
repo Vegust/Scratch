@@ -56,7 +56,7 @@ void test_cube::OnRender(renderer& Renderer)
 	glClearColor(0.2f, 0.1f, 0.1f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	Renderer.CameraTransform = glm::translate(glm::mat4{1.0f}, glm::vec3{0.f, 0.f, 3.f});
+	Renderer.CameraPosition = glm::vec3{0.f, 0.f, 3.f};
 
 	std::srand(Seed);
 	std::vector<glm::mat4> Transforms;

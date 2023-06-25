@@ -13,6 +13,8 @@
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/glm.hpp"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/geometric.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
 #define ASSERT(x) \
@@ -46,18 +48,23 @@ public:
 		const index_buffer& IndexBuffer,
 		const shader& Shader,
 		glm::mat4 Transform) const;
-	void DrawCube(const shader& Shader, glm::mat4 Transform) const;
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 
 	void ResetCamera()
 	{
-		CameraTransform = glm::mat4{1.f};
+		CameraPosition = glm::vec3{0.f, 0.f, 0.f};
+		CameraDirection = glm::vec3{0.f,0.f,-1.f};
+		CameraUpVector = glm::vec3{0.f,1.f,0.f};
 	}
+
 	glm::mat4 CalcMVPForTransform(const glm::mat4& Transform) const;
 
 	float AspectRatio = 1.f;
 	float FoV = 60.f;
-	glm::mat4 CameraTransform = glm::mat4{1.f};
-	
+
+	glm::vec3 CameraPosition = glm::vec3{0.f, 0.f, 0.f};
+	glm::vec3 CameraDirection = glm::vec3{0.f,0.f,-1.f};
+	glm::vec3 CameraUpVector = glm::vec3{0.f,1.f,0.f};
+
 	std::unique_ptr<vertex_array> CubeVAO{nullptr};
 };

@@ -66,14 +66,6 @@ void renderer::Draw(
 	GL_CALL(glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
-void renderer::DrawCube(const shader& Shader, glm::mat4 Transform) const
-{
-	CubeVAO->Bind();
-	Shader.Bind();
-	Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
-}
-
 void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
 {
 	CubeVAO->Bind();
@@ -147,7 +139,7 @@ void renderer::InitCubeVAO()
 glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
 {
 	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 1000.f);
-	glm::mat4 ViewMatrix = glm::inverse(CameraTransform);
+	glm::mat4 ViewMatrix = glm::lookAt(CameraPosition, CameraPosition+CameraDirection,CameraUpVector);
 	glm::mat4 ModelMatrix = Transform;
 	return ProjectionMatrix * ViewMatrix * ModelMatrix;
 }
