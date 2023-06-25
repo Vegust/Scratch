@@ -140,6 +140,13 @@ glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
 {
 	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 1000.f);
 	glm::mat4 ViewMatrix = glm::lookAt(CameraPosition, CameraPosition+CameraDirection,CameraUpVector);
+	if (!CustomCamera.expired())
+	{
+		auto CameraHandle = CustomCamera.lock();
+		ProjectionMatrix = glm::perspective(glm::radians(CameraHandle->GetFoV()), AspectRatio, 0.001f, 1000.f);
+		ViewMatrix = CameraHandle->GetViewTransform();
+	}
+	
 	glm::mat4 ModelMatrix = Transform;
 	return ProjectionMatrix * ViewMatrix * ModelMatrix;
 }

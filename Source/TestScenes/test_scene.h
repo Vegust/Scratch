@@ -39,6 +39,10 @@ public:
 	virtual void OnIMGuiRender()
 	{
 	}
+
+	virtual void ProcessInput(struct GLFWwindow* Window, float DeltaTime)
+	{
+	}
 };
 
 class test_menu : public test_scene

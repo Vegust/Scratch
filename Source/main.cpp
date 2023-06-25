@@ -24,22 +24,82 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include <array>
 #include <iostream>
 
-[[clang::no_destroy]] static renderer Renderer;
+static test_scene*& GetCurrentScene()
+{
+	[[clang::no_destroy]] static test_scene* Scene = nullptr;
+	return Scene;
+}
 
 static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight)
 {
 	glViewport(0, 0, NewWidth, NewHeight);
-	Renderer.AspectRatio = static_cast<float>(NewWidth) / static_cast<float>(NewHeight);
+	renderer::Get().AspectRatio = static_cast<float>(NewWidth) / static_cast<float>(NewHeight);
 }
 
-static void ProcessInput(GLFWwindow* Window)
+static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos)
+{
+	static double LastXPos{XPos};
+	static double LastYPos{YPos};
+	
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantCaptureMouse)
+	{
+		if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+		{
+			if (!renderer::Get().CustomCamera.expired())
+			{
+				auto CameraHandle = renderer::Get().CustomCamera.lock();
+				CameraHandle->OnMouseMoved(Window, XPos - LastXPos, YPos - LastYPos);
+			}
+		}
+	}
+	
+	LastXPos = XPos;
+	LastYPos = YPos;
+}
+
+static void OnMouseScroll(struct GLFWwindow* Window, double XDelta, double YDelta)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	if (!io.WantCaptureKeyboard)
+	if (!io.WantCaptureMouse)
+	{
+		if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+		{
+			if (!renderer::Get().CustomCamera.expired())
+			{
+				auto CameraHandle = renderer::Get().CustomCamera.lock();
+				CameraHandle->OnMouseScroll(Window, XDelta, YDelta);
+			}
+		}
+	}
+}
+
+static void ProcessInput(GLFWwindow* Window, float DeltaTime)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantCaptureKeyboard && !io.WantCaptureMouse)
 	{
 		if (glfwGetKey(Window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		{
 			glfwSetWindowShouldClose(Window, true);
+		}
+		if (GetCurrentScene())
+		{
+			if (!renderer::Get().CustomCamera.expired())
+			{
+				if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+				{
+					glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
+				}
+				else
+				{
+					glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); 
+				}
+				
+				auto CameraHandle = renderer::Get().CustomCamera.lock();
+				CameraHandle->ProcessInput(Window, DeltaTime);
+			}
+			GetCurrentScene()->ProcessInput(Window, DeltaTime);
 		}
 	}
 }
@@ -53,7 +113,8 @@ int main()
 
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;
-	Renderer.AspectRatio = static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight);
+	renderer::Get().AspectRatio =
+		static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight);
 	GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "Scratch", nullptr, nullptr);
 	if (!Window)
 	{
@@ -75,6 +136,12 @@ int main()
 
 	bool bVSync = true;
 	bool bOldVSync = bVSync;
+	
+	bool bFreeCamera = false;
+	bool bOldFreeCamera = bFreeCamera;
+	
+	std::shared_ptr<camera> FreeCamera{};
+	std::weak_ptr<camera> ReplacedCamera{};
 
 	{
 		IMGUI_CHECKVERSION();
@@ -84,14 +151,18 @@ int main()
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	 // Enable Gamepad Controls
 		io.IniFilename = nullptr;
 		ImGui::StyleColorsDark();
+
+		glfwSetCursorPosCallback(Window, OnMouseMoved);
+		glfwSetScrollCallback(Window, OnMouseScroll);
 		ImGui_ImplGlfw_InitForOpenGL(Window, true);
+		
 		ImGui_ImplOpenGL3_Init("#version 460");
+		
 
-		test_scene* CurrentTestScene = nullptr;
-		test_menu TestMenu{CurrentTestScene};
-		CurrentTestScene = &TestMenu;
+		test_menu TestMenu{GetCurrentScene()};
+		GetCurrentScene() = &TestMenu;
 
-		Renderer.Init();
+		renderer::Get().Init();
 
 		double LastTime = glfwGetTime();
 		while (!glfwWindowShouldClose(Window))
@@ -100,7 +171,7 @@ int main()
 			const double DeltaTime = NewTime - LastTime;
 			LastTime = NewTime;
 
-			ProcessInput(Window);
+			ProcessInput(Window, static_cast<float>(DeltaTime));
 
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
@@ -109,10 +180,10 @@ int main()
 			glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 			renderer::Clear();
 
-			if (CurrentTestScene)
+			if (GetCurrentScene())
 			{
-				CurrentTestScene->OnUpdate(static_cast<float>(DeltaTime));
-				CurrentTestScene->OnRender(Renderer);
+				GetCurrentScene()->OnUpdate(static_cast<float>(DeltaTime));
+				GetCurrentScene()->OnRender(renderer::Get());
 				ImGui::Begin(
 					"Debug",
 					nullptr,
@@ -120,19 +191,64 @@ int main()
 				ImGui::SetWindowFontScale(1.5f);
 				ImGui::Text("Frame time %.4f ms", 1000.0 * DeltaTime);
 				ImGui::Text("%.1f FPS", static_cast<double>(io.Framerate));
-				ImGui::Checkbox("VSync", &bVSync);
-				if (bOldVSync != bVSync)
 				{
-					glfwSwapInterval(bVSync ? 1 : 0);
+					ImGui::Checkbox("VSync", &bVSync);
+					if (bOldVSync != bVSync)
+					{
+						glfwSwapInterval(bVSync ? 1 : 0);
+					}
+					bOldVSync = bVSync;
 				}
-				bOldVSync = bVSync;
-				if (CurrentTestScene != &TestMenu && ImGui::Button("<-"))
+				if (GetCurrentScene() != &TestMenu)
 				{
-					delete CurrentTestScene;
-					Renderer.ResetCamera();
-					CurrentTestScene = &TestMenu;
+					ImGui::Checkbox("Free Camera", &bFreeCamera);
+					if (bOldFreeCamera != bFreeCamera)
+					{
+						if (bFreeCamera)
+						{
+							ReplacedCamera = renderer::Get().CustomCamera;
+							FreeCamera = std::make_shared<camera>();
+							renderer::Get().CustomCamera = FreeCamera;
+							if (!ReplacedCamera.expired())
+							{
+								auto ReplacedHandle = ReplacedCamera.lock();
+								FreeCamera->Direction = ReplacedHandle->Direction;
+								FreeCamera->UpVector = ReplacedHandle->UpVector;
+								FreeCamera->Position = ReplacedHandle->Position;
+								FreeCamera->FoV = ReplacedHandle->FoV;
+								FreeCamera->MovementSpeed = ReplacedHandle->MovementSpeed;
+								FreeCamera->Pitch = ReplacedHandle->Pitch;
+								FreeCamera->Yaw = ReplacedHandle->Yaw;
+								FreeCamera->Sensitivity = ReplacedHandle->Sensitivity;
+							}
+							else
+							{
+								FreeCamera->Direction = renderer::Get().CameraDirection;
+								FreeCamera->UpVector = renderer::Get().CameraUpVector;
+								FreeCamera->Position = renderer::Get().CameraPosition;
+								FreeCamera->FoV = renderer::Get().FoV;
+							}
+						}
+						else
+						{
+							renderer::Get().CustomCamera = ReplacedCamera;
+							FreeCamera = nullptr;
+						}
+					}
+					bOldFreeCamera = bFreeCamera;
 				}
-				CurrentTestScene->OnIMGuiRender();
+				
+				if (GetCurrentScene() != &TestMenu && ImGui::Button("<-"))
+				{
+					delete GetCurrentScene();
+					renderer::Get().ResetCamera();
+					renderer::Get().CustomCamera = ReplacedCamera;
+					FreeCamera = nullptr;
+					bFreeCamera = false;
+					bOldFreeCamera = false;
+					GetCurrentScene() = &TestMenu;
+				}
+				GetCurrentScene()->OnIMGuiRender();
 				ImGui::End();
 			}
 
@@ -141,11 +257,6 @@ int main()
 
 			glfwSwapBuffers(Window);
 			glfwPollEvents();
-		}
-
-		if (CurrentTestScene != &TestMenu)
-		{
-			delete CurrentTestScene;
 		}
 	}
 

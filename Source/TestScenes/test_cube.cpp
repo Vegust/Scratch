@@ -4,12 +4,9 @@
 
 #include "test_cube.h"
 
-#include "Rendering/vertex_array.h"
 #include "core_types.h"
 #include "glm/ext/scalar_constants.hpp"
-#include "glm/fwd.hpp"
 
-#include <array>
 #include <memory>
 #include <vector>
 
