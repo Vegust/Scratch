@@ -54,87 +54,67 @@ out vec4 Color;
 uniform material u_Material;
 uniform light u_Light;
 
+vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection)
+{
+	// Ambient
+	vec3 AmbientColor = Light.Ambient * DiffuseTextureColor;
+
+	// Diffuse
+	vec3 LightDirection;
+	if (Light.Type == 1) //directional
+	{
+		LightDirection = normalize(-Light.Direction);
+	}
+	else
+	{
+		LightDirection = normalize(Light.Position - v_FragPos);
+	}
+	float DiffuseImpact = max(dot(Normal, LightDirection), 0.0);
+	vec3 DiffuseColor = DiffuseImpact * Light.Diffuse * DiffuseTextureColor;
+
+	// Specular
+	vec3 ReflectDirection = reflect(-LightDirection, Normal);
+	float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
+	vec3 SpecularColor = Light.Specular * SpecularImpact * SpecularTextureColor;
+
+	// Attenuation
+	float Attenuation = 1.0;
+	if (Light.Type == 0 /*point*/ || Light.Type == 2 /*spot*/)
+	{
+		// Normalized to max distance of 100. Coefficients for 100 are from
+		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
+		float Distance = length(Light.Position - v_FragPos);
+		float NormalizedDistance = 100.0 * Distance / Light.AttenuationRadius;
+		Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
+	}
+
+	// Angular falloff
+	float Falloff = 1.f;
+	if (Light.Type == 2) //spot
+	{
+		float Cutoff = cos(radians(Light.AngularAttenuation));
+		float FalloffStart = max(Cutoff, cos(radians(Light.AngularAttenuationFalloffStart)));
+		float Theta = dot(LightDirection, normalize(-Light.Direction));
+
+		Falloff = clamp(1.0 - (FalloffStart - Theta) / (FalloffStart - Cutoff), 0.0, 1.0);
+		if (Theta < Cutoff)
+		{
+			Falloff = 0.f;
+		}
+	}
+
+	return Falloff * Attenuation * (AmbientColor + DiffuseColor + SpecularColor);
+}
+
 void main() {
 	vec3 CombinedLightColor = vec3(0.f, 0.f, 0.f);
 
-	if (u_Light.Type == 0) //point
-	{
-		// Ambient
-		vec3 AmbientColor = u_Light.Ambient * vec3(texture(u_Material.DiffuseMap, v_TexCoords));
+	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, v_TexCoords));
+	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, v_TexCoords));
+	vec3 NormalizedNormal = normalize(v_Normal);
+	vec3 ViewDirection = normalize(-v_FragPos);
 
-		// Diffuse
-		vec3 NormalizedNormal = normalize(v_Normal);
-		vec3 LightDirection = normalize(u_Light.Position - v_FragPos);
-		float DiffuseImpact = max(dot(NormalizedNormal, LightDirection), 0.0);
-		vec3 DiffuseColor = DiffuseImpact * u_Light.Diffuse * vec3(texture(u_Material.DiffuseMap, v_TexCoords));
-
-		// Specular
-		vec3 ReflectDirection = reflect(-LightDirection, v_Normal);
-		vec3 ViewDirection = normalize(-v_FragPos);
-		float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
-		vec3 SpecularColor = u_Light.Specular * SpecularImpact * vec3(texture(u_Material.SpecularMap, v_TexCoords));
-
-		// Normalized to max distance of 100. Coefficients for 100 are from
-		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
-		float Distance = length(u_Light.Position - v_FragPos);
-		float NormalizedDistance = 100.0 * Distance / u_Light.AttenuationRadius;
-		float Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
-
-		CombinedLightColor += Attenuation * (AmbientColor + DiffuseColor + SpecularColor);
-	}
-	else if (u_Light.Type == 1) //directional
-	{
-		// Ambient
-		vec3 AmbientColor = u_Light.Ambient * vec3(texture(u_Material.DiffuseMap, v_TexCoords));
-
-		// Diffuse
-		vec3 NormalizedNormal = normalize(v_Normal);
-		vec3 LightDirection = normalize(-u_Light.Direction);
-		float DiffuseImpact = max(dot(NormalizedNormal, LightDirection), 0.0);
-		vec3 DiffuseColor = DiffuseImpact * u_Light.Diffuse * vec3(texture(u_Material.DiffuseMap, v_TexCoords));
-
-		// Specular
-		vec3 ReflectDirection = reflect(-LightDirection, v_Normal);
-		vec3 ViewDirection = normalize(-v_FragPos);
-		float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
-		vec3 SpecularColor = u_Light.Specular * SpecularImpact * vec3(texture(u_Material.SpecularMap, v_TexCoords));
-
-		CombinedLightColor += AmbientColor + DiffuseColor + SpecularColor;
-	}
-	else if (u_Light.Type == 2) //spot
-	{
-		// Ambient
-		vec3 AmbientColor = u_Light.Ambient * vec3(texture(u_Material.DiffuseMap, v_TexCoords));
-
-		// Diffuse
-		vec3 NormalizedNormal = normalize(v_Normal);
-		vec3 LightDirection = normalize(u_Light.Position - v_FragPos);
-		float DiffuseImpact = max(dot(NormalizedNormal, LightDirection), 0.0);
-		vec3 DiffuseColor = DiffuseImpact * u_Light.Diffuse * vec3(texture(u_Material.DiffuseMap, v_TexCoords));
-
-		// Specular
-		vec3 ReflectDirection = reflect(-LightDirection, v_Normal);
-		vec3 ViewDirection = normalize(-v_FragPos);
-		float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
-		vec3 SpecularColor = u_Light.Specular * SpecularImpact * vec3(texture(u_Material.SpecularMap, v_TexCoords));
-
-		// Normalized to max distance of 100. Coefficients for 100 are from
-		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
-		float Distance = length(u_Light.Position - v_FragPos);
-		float NormalizedDistance = 100.0 * Distance / u_Light.AttenuationRadius;
-		float Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
-
-		float Cutoff = cos(radians(u_Light.AngularAttenuation));
-		float FalloffStart = max(Cutoff, cos(radians(u_Light.AngularAttenuationFalloffStart)));
-		float Theta = dot(LightDirection, normalize(-u_Light.Direction));
-
-		float Falloff = clamp(1.0 - (FalloffStart - Theta) / (FalloffStart - Cutoff), 0.0, 1.0);
-
-		if (Theta > Cutoff)
-		{
-			CombinedLightColor += Falloff * Attenuation * (AmbientColor + DiffuseColor + SpecularColor);
-		}
-	}
+	CombinedLightColor += CalcLightColor(u_Light, DiffuseTextureColor, SpecularTextureColor, NormalizedNormal, ViewDirection);
 
 	Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, v_TexCoords)), 1.0);
 };
