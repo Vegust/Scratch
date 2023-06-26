@@ -82,8 +82,20 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 {
 	NormalCubeVAO->Bind();
 	Shader.Bind();
+	
+	glm::mat4 View =
+		glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	if (!CustomCamera.expired())
+	{
+		auto CameraHandle = CustomCamera.lock();
+		View = CameraHandle->GetViewTransform();
+	}
+	
 	for (const auto& Transform : Transforms)
 	{
+		glm::mat4 ViewModel = View * Transform;
+		Shader.SetUniform("u_ViewModel", ViewModel);
+		Shader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
 		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
 	}

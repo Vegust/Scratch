@@ -30,13 +30,12 @@ test_basic_light::test_basic_light()
 	LightShader = std::make_unique<shader>("Resources/Shaders/BasicLight.shader");
 
 	CubeMaterial.InitTextures(
-		"Resources/Textures/Box/BoxDiffuse.png",
-		0,
-		"Resources/Textures/Box/BoxSpecular.png",
-		1,
-		"Resources/Textures/OpenGL_Logo.png",
-		2);
+		"Resources/Textures/Box/BoxDiffuse.png", 0, "Resources/Textures/Box/BoxSpecular.png", 1);
+	//"Resources/Textures/OpenGL_Logo.png",
+	// 2);
 
+	Light.Direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+	
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 0.f, 1.5f};
 	renderer::Get().CustomCamera = Camera;
@@ -63,17 +62,27 @@ void test_basic_light::OnRender(renderer& Renderer)
 
 	const glm::mat4 View = Camera->GetViewTransform();
 
+	std::srand(0);
 	std::vector<glm::mat4> Transforms;
-	glm::mat4 ModelTransform = glm::rotate(
-		glm::translate(glm::mat4{1.0f}, CubePosition), CurrentRotation, glm::vec3(0.5f, 1.f, 0.f));
-	Transforms.push_back(ModelTransform);
-	glm::mat4 ViewModel = View * ModelTransform;
+	for (int i = 0; i < 10; ++i)
+	{
+		glm::vec3 RandomOffset = glm::vec3{
+			(std::rand() % 2000 - 1000) / 200.f,
+			(std::rand() % 2000 - 1000) / 200.f,
+			(std::rand() % 2000 - 2000) / 200.f};
+		glm::vec3 Position = i == 0 ? CubePosition : CubePosition + RandomOffset;
+		glm::mat4 ModelTransform = glm::rotate(
+						glm::translate(glm::mat4{1.0f}, Position),
+			CurrentRotation + static_cast<float>(i) * glm::pi<float>() / 10.f,
+			glm::vec3(0.5f, 1.f, 0.f));
+		
+		Transforms.push_back(ModelTransform);
+	}
 
 	Shader->Bind();
 	Shader->SetUniform("u_Material", CubeMaterial);
-	Shader->SetUniform("u_ViewModel", ViewModel);
 	Shader->SetUniform("u_Light", Light, View);
-	Shader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+	
 	Renderer.DrawNormalCubes(*Shader, Transforms);
 
 	std::vector<glm::mat4> LightTransforms;
@@ -95,9 +104,6 @@ void test_basic_light::OnIMGuiRender()
 	test_scene::OnIMGuiRender();
 	ImGui::SliderFloat3("Cube Position", glm::value_ptr(CubePosition), -5.f, 5.f);
 	ImGui::SliderFloat("Cube Shininess", &CubeMaterial.Shininess, 2.f, 256.f);
-	ImGui::SliderFloat3("Light Position", glm::value_ptr(Light.Position), -5.f, 5.f);
-	ImGui::ColorEdit3("Light Diffuse Color", glm::value_ptr(Light.Diffuse));
-	ImGui::ColorEdit3("Light Ambient Color", glm::value_ptr(Light.Ambient));
-	ImGui::ColorEdit3("Light Specular Color", glm::value_ptr(Light.Specular));
+	Light.UIControlPanel();
 	ImGui::Checkbox("Rotating", &bRotating);
 }

@@ -68,16 +68,49 @@ void shader::SetUniform(std::string_view Name, const phong_material& Material) c
 
 void shader::SetUniform(std::string_view Name, const class light& Light, const glm::mat4& View) const
 {
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Position"),
-		1,
-		glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
+	glUniform1i(GetUniformLocation(std::string(Name) + ".Type"), static_cast<int32>(Light.Type));
 	glUniform3fv(
 		GetUniformLocation(std::string(Name) + ".Ambient"), 1, glm::value_ptr(Light.Ambient));
 	glUniform3fv(
 		GetUniformLocation(std::string(Name) + ".Diffuse"), 1, glm::value_ptr(Light.Diffuse));
 	glUniform3fv(
 		GetUniformLocation(std::string(Name) + ".Specular"), 1, glm::value_ptr(Light.Specular));
+
+	if (Light.Type == light_type::point)
+	{
+		glUniform3fv(
+			GetUniformLocation(std::string(Name) + ".Position"),
+			1,
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
+		glUniform1f(
+			GetUniformLocation(std::string(Name) + ".AttenuationRadius"), Light.AttenuationRadius);
+	}
+	else if (Light.Type == light_type::directional)
+	{
+		glUniform3fv(
+			GetUniformLocation(std::string(Name) + ".Direction"),
+			1,
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Direction, 0.f))));
+	}
+	else if (Light.Type == light_type::spot)
+	{
+		glUniform3fv(
+			GetUniformLocation(std::string(Name) + ".Position"),
+			1,
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
+		glUniform3fv(
+			GetUniformLocation(std::string(Name) + ".Direction"),
+			1,
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Direction, 0.f))));
+		glUniform1f(
+			GetUniformLocation(std::string(Name) + ".AttenuationRadius"), Light.AttenuationRadius);
+		glUniform1f(
+			GetUniformLocation(std::string(Name) + ".AngularAttenuation"),
+			Light.AngularAttenuation);
+		glUniform1f(
+			GetUniformLocation(std::string(Name) + ".AngularAttenuationFalloffStart"),
+			Light.AngularAttenuationFalloffStart);
+	}
 }
 
 void shader::SetUniform(std::string_view Name, const glm::mat3& Matrix) const
