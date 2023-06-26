@@ -21,8 +21,8 @@ private:
 
 public:
 	explicit texture(std::string_view InPath);
-	texture();
-
+	~texture();
+	
 	void Bind(uint32 Slot = 0) const;
 	void Unbind() const;
 };

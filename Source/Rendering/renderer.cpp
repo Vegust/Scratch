@@ -17,7 +17,6 @@
 #include <iostream>
 #include <memory>
 
-
 void GlClearError()
 {
 	while (glGetError() != GL_NO_ERROR)
@@ -44,7 +43,8 @@ void renderer::Draw(
 	VertexArray.Bind();
 	IndexBuffer.Bind();
 
-	GL_CALL(glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
+	GL_CALL(glDrawElements(
+		GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
 void renderer::Clear()
@@ -63,7 +63,8 @@ void renderer::Draw(
 	IndexBuffer.Bind();
 	Shader.Bind();
 	Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-	GL_CALL(glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
+	GL_CALL(glDrawElements(
+		GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
 void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
@@ -95,6 +96,7 @@ void renderer::InitCubeVAO()
 	constexpr uint32 SizeOfVertex = 5 * sizeof(float);
 	
 	std::array<float, NumVertices * ElementsPerVertex> Vertices = {
+		// clang-format off
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
 		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -136,6 +138,7 @@ void renderer::InitCubeVAO()
 		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		// clang-format on
 	};
 
 	[[clang::no_destroy]] static vertex_buffer VertexBuffer{Vertices.data(), NumVertices * SizeOfVertex};
@@ -150,57 +153,62 @@ void renderer::InitCubeVAO()
 void renderer::InitNormalCubeVAO()
 {
 	constexpr uint32 NumVertices = 36;
-	constexpr uint32 ElementsPerVertex = 6;
+	constexpr uint32 ElementsPerVertex = 8;
 	constexpr uint32 SizeOfVertex = ElementsPerVertex * sizeof(float);
-	
-	std::array<float, NumVertices * ElementsPerVertex> Vertices = {
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+
+	std::array<float, NumVertices* ElementsPerVertex> Vertices = {
+		// clang-format off
+		// positions          // normals           // texture coords
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 		
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
 
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+		// clang-format on
 	};
 
-	[[clang::no_destroy]] static vertex_buffer VertexBuffer{Vertices.data(), NumVertices * SizeOfVertex};
+	[[clang::no_destroy]] static vertex_buffer VertexBuffer{
+		Vertices.data(), NumVertices * SizeOfVertex};
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);
 	VertexLayout.Push<float>(3);
+	VertexLayout.Push<float>(2);
 
 	NormalCubeVAO = std::make_unique<vertex_array>();
 	NormalCubeVAO->AddBuffer(VertexBuffer, VertexLayout);
@@ -209,14 +217,16 @@ void renderer::InitNormalCubeVAO()
 glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
 {
 	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 1000.f);
-	glm::mat4 ViewMatrix = glm::lookAt(CameraPosition, CameraPosition+CameraDirection,CameraUpVector);
+	glm::mat4 ViewMatrix =
+		glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
-		ProjectionMatrix = glm::perspective(glm::radians(CameraHandle->GetFoV()), AspectRatio, 0.001f, 1000.f);
+		ProjectionMatrix =
+			glm::perspective(glm::radians(CameraHandle->GetFoV()), AspectRatio, 0.001f, 1000.f);
 		ViewMatrix = CameraHandle->GetViewTransform();
 	}
-	
+
 	glm::mat4 ModelMatrix = Transform;
 	return ProjectionMatrix * ViewMatrix * ModelMatrix;
 }

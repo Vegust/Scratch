@@ -8,11 +8,12 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
-#include "test_scene.h"
+#include "Rendering/index_buffer.h"
+#include "Rendering/shader.h"
+#include "Rendering/texture.h"
 #include "Rendering/vertex_array.h"
 #include "Rendering/vertex_buffer.h"
-#include "Rendering/shader.h"
-#include "Rendering/index_buffer.h"
+#include "test_scene.h"
 
 class test_cube : public test_scene
 {
@@ -26,6 +27,7 @@ public:
 	
 private:
 	std::unique_ptr<shader> Shader{nullptr};
+	std::unique_ptr<texture> Texture{nullptr};
 	
 	glm::vec3 Pic1Trans{0.f,0.f,0.f};
 	glm::vec3 Pic1Rot{0.f,0.f,0.f};

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "SceneObjects/light.h"
+#include "SceneObjects/phong_material.h"
 #include "core_types.h"
 #include "glm/fwd.hpp"
 
@@ -31,8 +33,8 @@ public:
 	void SetUniform(std::string_view Name, glm::vec3 V1) const;
 	void SetUniform(std::string_view Name, const glm::mat4& Matrix) const;
 	void SetUniform(std::string_view Name, const glm::mat3& Matrix) const;
-	void SetUniform(std::string_view Name, const class phong_material& Material) const;
-	void SetUniform(std::string_view Name, const class light& Light, const glm::mat4& View) const;
+	void SetUniform(std::string_view Name, const phong_material& Material) const;
+	void SetUniform(std::string_view Name, const light& Light, const glm::mat4& View) const;
 private:
 	struct parsed_shaders
 	{

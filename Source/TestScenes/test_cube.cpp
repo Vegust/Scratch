@@ -27,8 +27,9 @@ REGISTER_TEST_SCENE(test_cube, "04 Cubes")
 
 test_cube::test_cube()
 {
-	texture Texture{"Resources/Textures/Wall.jpg"};
-	Texture.Bind();
+	Texture = std::make_unique<texture>("Resources/Textures/Wall.jpg");
+	Texture->Bind();
+	
 	Shader = std::make_unique<shader>("Resources/Shaders/Basic.shader");
 	Shader->Bind();
 	Shader->SetUniform("u_Texture", 0);

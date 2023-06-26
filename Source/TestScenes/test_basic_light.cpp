@@ -28,6 +28,9 @@ test_basic_light::test_basic_light()
 {
 	Shader = std::make_unique<shader>("Resources/Shaders/BasicShaded.shader");
 	LightShader = std::make_unique<shader>("Resources/Shaders/BasicLight.shader");
+	
+	CubeMaterial.InitTextures("Resources/Textures/Box/BoxDiffuse.png",0,"Resources/Textures/Box/BoxSpecular.png",1);
+	
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 0.f, 1.5f};
 	renderer::Get().CustomCamera = Camera;
@@ -85,9 +88,6 @@ void test_basic_light::OnIMGuiRender()
 {
 	test_scene::OnIMGuiRender();
 	ImGui::SliderFloat3("Cube Position", glm::value_ptr(CubePosition), -5.f, 5.f);
-	ImGui::ColorEdit3("Cube Diffuse Color", glm::value_ptr(CubeMaterial.Diffuse));
-	ImGui::ColorEdit3("Cube Ambient Color", glm::value_ptr(CubeMaterial.Ambient));
-	ImGui::ColorEdit3("Cube Specular Color", glm::value_ptr(CubeMaterial.Specular));
 	ImGui::SliderFloat("Cube Shininess", &CubeMaterial.Shininess, 2.f, 256.f);
 	ImGui::SliderFloat3("Light Position", glm::value_ptr(Light.Position), -5.f, 5.f);
 	ImGui::ColorEdit3("Light Diffuse Color", glm::value_ptr(Light.Diffuse));

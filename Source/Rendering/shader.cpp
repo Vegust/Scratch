@@ -54,12 +54,10 @@ void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix) const
 
 void shader::SetUniform(std::string_view Name, const phong_material& Material) const
 {
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Ambient"), 1, glm::value_ptr(Material.Ambient));
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Diffuse"), 1, glm::value_ptr(Material.Diffuse));
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Specular"), 1, glm::value_ptr(Material.Specular));
+	glUniform1i(
+		GetUniformLocation(std::string(Name) + ".DiffuseMap"), static_cast<int32>(Material.DiffuseSlot));
+	glUniform1i(
+		GetUniformLocation(std::string(Name) + ".SpecularMap"), static_cast<int32>(Material.SpecularSlot));
 	glUniform1f(GetUniformLocation(std::string(Name) + ".Shininess"), Material.Shininess);
 }
 

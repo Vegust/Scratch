@@ -58,8 +58,8 @@ test_texture::test_texture()
 
 	IndexBuffer = std::make_unique<index_buffer>(Indices.data(), Indices.size());
 
-	texture Texture{"Resources/Textures/SlostestPhone.jpg"};
-	Texture.Bind();
+	Texture = std::make_unique<texture>("Resources/Textures/SlostestPhone.jpg");
+	Texture->Bind();
 
 	Shader = std::make_unique<shader>("Resources/Shaders/Basic.shader");
 	Shader->Bind();

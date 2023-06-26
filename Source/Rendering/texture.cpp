@@ -35,7 +35,7 @@ texture::texture(const std::string_view InPath) : Path(InPath)
 	}
 }
 
-texture::texture()
+texture::~texture()
 {
 	glDeleteTextures(1, &RendererId);
 }
