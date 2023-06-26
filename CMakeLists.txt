@@ -57,11 +57,13 @@ add_compile_options(/GX-) # no exceptions
 add_compile_options(-Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
 file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
-file(GLOB_RECURSE SCRATCH_TEST_SOURCES "Source/TestScenes/*.cpp")
+file(GLOB_RECURSE SCRATCH_TEST_SCENES_SOURCES "Source/TestScenes/*.cpp")
+file(GLOB_RECURSE SCRATCH_SCENE_OBJECT_SOURCES "Source/SceneObjects/*.cpp")
 
 add_executable(Scratch
 		Source/main.cpp
 		${SCRATCH_RENDERING_SOURCES}
-		${SCRATCH_TEST_SOURCES}
+		${SCRATCH_TEST_SCENES_SOURCES}
+		${SCRATCH_SCENE_OBJECT_SOURCES}
 		)
 

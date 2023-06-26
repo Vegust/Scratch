@@ -12,9 +12,17 @@ void main() {
 //!shader fragment
 #version 460 core
 
+struct light {
+	vec3 Position;
+	vec3 Ambient;
+	vec3 Diffuse;
+	vec3 Specular;
+};
+
 out vec4 Color;
-uniform vec4 u_LightColor;
+
+uniform light u_Light;
 
 void main() {
-	Color = u_LightColor;
+	Color = vec4(u_Light.Diffuse, 1.0);
 };

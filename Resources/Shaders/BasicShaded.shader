@@ -20,30 +20,40 @@ void main() {
 //!shader fragment
 #version 460 core
 
+struct material {
+	vec3 Ambient;
+	vec3 Diffuse;
+	vec3 Specular;
+	float Shininess;
+};
+
+struct light {
+	vec3 Position;
+	vec3 Ambient;
+	vec3 Diffuse;
+	vec3 Specular;
+};
+
 in vec3 v_Normal;
 in vec3 v_FragPos;
 
 out vec4 Color;
 
-uniform vec4 u_Color;
-uniform vec4 u_LightColor;
-uniform float u_AmbientStrength;
-uniform vec3 u_LightPos;
-uniform int u_SpecularPower;
-uniform float u_SpecularStrength;
+uniform material u_Material;
+uniform light u_Light;
 
 void main() {
-	vec4 AmbientColor = u_LightColor * vec4(vec3(u_AmbientStrength), 1.0);
+	vec3 AmbientColor = u_Light.Ambient * u_Material.Ambient;
 
 	vec3 NormalizedNormal = normalize(v_Normal);
-	vec3 LightDirection = normalize(u_LightPos - v_FragPos);
+	vec3 LightDirection = normalize(u_Light.Position - v_FragPos);
 	float DiffuseImpact = max(dot(NormalizedNormal, LightDirection), 0.0);
-	vec4 DiffuseColor = DiffuseImpact * u_LightColor;
+	vec3 DiffuseColor = DiffuseImpact * u_Light.Diffuse * u_Material.Diffuse;
 
 	vec3 ReflectDirection = reflect(-LightDirection, v_Normal);
 	vec3 ViewDirection = normalize(-v_FragPos);
-	float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), float(u_SpecularPower));
-	vec4 SpecularColor = u_SpecularStrength * SpecularImpact * u_LightColor;
+	float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
+	vec3 SpecularColor = u_Light.Specular * u_Material.Specular * SpecularImpact;
 
-	Color = u_Color * (DiffuseColor + AmbientColor + SpecularColor);
+	Color = vec4(DiffuseColor + AmbientColor + SpecularColor, 1.0);
 };

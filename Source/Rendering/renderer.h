@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include "SceneObjects/camera.h"
 #include "core_types.h"
 #include "vertex_array.h"
-#include "camera.h"
 
 #include <memory>
 #include <vector>

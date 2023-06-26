@@ -8,13 +8,15 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
-#include <array>
-
-#include "test_scene.h"
+#include "Rendering/index_buffer.h"
+#include "Rendering/shader.h"
 #include "Rendering/vertex_array.h"
 #include "Rendering/vertex_buffer.h"
-#include "Rendering/shader.h"
-#include "Rendering/index_buffer.h"
+#include "SceneObjects/phong_material.h"
+#include "SceneObjects/light.h"
+#include "test_scene.h"
+
+#include <array>
 
 class test_basic_light : public test_scene
 {
@@ -32,14 +34,10 @@ private:
 	std::shared_ptr<camera> Camera{nullptr};
 	
 	glm::vec3 CubePosition{0.7f,0.f,-1.5f};
-	glm::vec3 LightPosition{-0.7f,0.f,0.f};
+	phong_material CubeMaterial{};
+	
+	light Light{};
 	
 	float CurrentRotation = 0.f;
-	
-	float AmbientStrength = 0.1f;
-	float SpecularStrength = 0.5f;
-	int32 SpecularPower = 32;
-	std::array<float,4> LightColor{1.0f, 1.0f, 1.0f, 1.f};
-	std::array<float,4> CubeColor{1.0f, 0.5f, 0.31f, 1.f};
 	bool bRotating = true;
 };

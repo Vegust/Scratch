@@ -4,6 +4,9 @@
 
 #include "shader.h"
 
+#include "SceneObjects/light.h"
+#include "SceneObjects/phong_material.h"
+
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/glm.hpp"
@@ -47,6 +50,31 @@ void shader::SetUniform(std::string_view Name, int32 V1) const
 void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix) const
 {
 	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
+}
+
+void shader::SetUniform(std::string_view Name, const phong_material& Material) const
+{
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Ambient"), 1, glm::value_ptr(Material.Ambient));
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Diffuse"), 1, glm::value_ptr(Material.Diffuse));
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Specular"), 1, glm::value_ptr(Material.Specular));
+	glUniform1f(GetUniformLocation(std::string(Name) + ".Shininess"), Material.Shininess);
+}
+
+void shader::SetUniform(std::string_view Name, const class light& Light, const glm::mat4& View) const
+{
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Position"),
+		1,
+		glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Ambient"), 1, glm::value_ptr(Light.Ambient));
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Diffuse"), 1, glm::value_ptr(Light.Diffuse));
+	glUniform3fv(
+		GetUniformLocation(std::string(Name) + ".Specular"), 1, glm::value_ptr(Light.Specular));
 }
 
 void shader::SetUniform(std::string_view Name, const glm::mat3& Matrix) const
