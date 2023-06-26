@@ -28,9 +28,15 @@ test_basic_light::test_basic_light()
 {
 	Shader = std::make_unique<shader>("Resources/Shaders/BasicShaded.shader");
 	LightShader = std::make_unique<shader>("Resources/Shaders/BasicLight.shader");
-	
-	CubeMaterial.InitTextures("Resources/Textures/Box/BoxDiffuse.png",0,"Resources/Textures/Box/BoxSpecular.png",1);
-	
+
+	CubeMaterial.InitTextures(
+		"Resources/Textures/Box/BoxDiffuse.png",
+		0,
+		"Resources/Textures/Box/BoxSpecular.png",
+		1,
+		"Resources/Textures/OpenGL_Logo.png",
+		2);
+
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 0.f, 1.5f};
 	renderer::Get().CustomCamera = Camera;

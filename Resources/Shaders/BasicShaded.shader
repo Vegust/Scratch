@@ -26,6 +26,7 @@ void main() {
 struct material {
 	sampler2D DiffuseMap;
 	sampler2D SpecularMap;
+	sampler2D EmissionMap;
 	float Shininess;
 };
 
@@ -58,5 +59,5 @@ void main() {
 	float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
 	vec3 SpecularColor = u_Light.Specular * SpecularImpact * vec3(texture(u_Material.SpecularMap, v_TexCoords));
 
-	Color = vec4(DiffuseColor + AmbientColor + SpecularColor, 1.0);
+	Color = vec4(DiffuseColor + AmbientColor + SpecularColor + vec3(texture(u_Material.EmissionMap, v_TexCoords)), 1.0);
 };
