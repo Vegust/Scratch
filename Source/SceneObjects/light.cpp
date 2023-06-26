@@ -9,14 +9,13 @@
 #include <array>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
-#include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 SCRATCH_DISABLE_WARNINGS_END()
 
 static const char* TypeName(light_type Type)
 {
-	switch(Type)
+	switch (Type)
 	{
 		case light_type::point:
 			return "point";
@@ -28,13 +27,14 @@ static const char* TypeName(light_type Type)
 	std::unreachable();
 }
 
-void light::UIControlPanel()
+void light::UIControlPanel(std::string_view Prefix)
 {
 	ImGui::Separator();
 
-	constexpr std::array<light_type, 3> Types = { light_type::point, light_type::directional, light_type::spot};
+	constexpr std::array<light_type, 3> Types = {
+		light_type::point, light_type::directional, light_type::spot};
 
-	if (ImGui::BeginCombo("Light Type", TypeName(Type)))
+	if (ImGui::BeginCombo(std::string{Prefix}.append("Light Type").c_str(), TypeName(Type)))
 	{
 		for (uint64 i = 0; i < Types.size(); ++i)
 		{
@@ -47,25 +47,60 @@ void light::UIControlPanel()
 		ImGui::EndCombo();
 	}
 
-	ImGui::ColorEdit3("Light Diffuse Color", glm::value_ptr(Diffuse));
-	ImGui::ColorEdit3("Light Ambient Color", glm::value_ptr(Ambient));
-	ImGui::ColorEdit3("Light Specular Color", glm::value_ptr(Specular));
-	
+	ImGui::ColorEdit3(
+		std::string{Prefix}.append("Light Diffuse Color").c_str(), glm::value_ptr(Diffuse));
+	ImGui::ColorEdit3(
+		std::string{Prefix}.append("Light Ambient Color").c_str(), glm::value_ptr(Ambient));
+	ImGui::ColorEdit3(
+		std::string{Prefix}.append("Light Specular Color").c_str(), glm::value_ptr(Specular));
+
 	if (Type == light_type::point)
 	{
-		ImGui::SliderFloat3("Light Position", glm::value_ptr(Position), -5.f, 5.f);
-		ImGui::SliderFloat("Light Attenuation Radius", &AttenuationRadius, 0.f, 100.f);
+		ImGui::SliderFloat3(
+			std::string{Prefix}.append("Light Position").c_str(),
+			glm::value_ptr(Position),
+			-5.f,
+			5.f);
+		ImGui::SliderFloat(
+			std::string{Prefix}.append("Light Attenuation Radius").c_str(),
+			&AttenuationRadius,
+			0.f,
+			100.f);
 	}
 	else if (Type == light_type::directional)
 	{
-		ImGui::SliderFloat3("Light Direction", glm::value_ptr(Direction), -1.f, 1.f);
+		ImGui::SliderFloat3(
+			std::string{Prefix}.append("Light Direction").c_str(),
+			glm::value_ptr(Direction),
+			-1.f,
+			1.f);
 	}
 	else if (Type == light_type::spot)
 	{
-		ImGui::SliderFloat3("Light Position", glm::value_ptr(Position), -5.f, 5.f);
-		ImGui::SliderFloat3("Light Direction", glm::value_ptr(Direction), -1.f, 1.f);
-		ImGui::SliderFloat("Light Attenuation Radius", &AttenuationRadius, 0.f, 100.f);
-		ImGui::SliderFloat("Light Angular attenuation", &AngularAttenuation, 0.f, 180.f);
-		ImGui::SliderFloat("Light Angular attenuation falloff start", &AngularAttenuationFalloffStart, 0.f, AngularAttenuation);
+		ImGui::SliderFloat3(
+			std::string{Prefix}.append("Light Position").c_str(),
+			glm::value_ptr(Position),
+			-5.f,
+			5.f);
+		ImGui::SliderFloat3(
+			std::string{Prefix}.append("Light Direction").c_str(),
+			glm::value_ptr(Direction),
+			-1.f,
+			1.f);
+		ImGui::SliderFloat(
+			std::string{Prefix}.append("Light Attenuation Radius").c_str(),
+			&AttenuationRadius,
+			0.f,
+			100.f);
+		ImGui::SliderFloat(
+			std::string{Prefix}.append("Light Angular attenuation").c_str(),
+			&AngularAttenuation,
+			0.f,
+			180.f);
+		ImGui::SliderFloat(
+			std::string{Prefix}.append("Light Angular attenuation falloff start").c_str(),
+			&AngularAttenuationFalloffStart,
+			0.f,
+			AngularAttenuation);
 	}
 }

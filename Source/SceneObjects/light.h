@@ -29,12 +29,12 @@ public:
 	glm::vec3 Diffuse{1.f,1.f,1.f};
 	glm::vec3 Specular{1.f,1.f,1.f};
 	
-	glm::vec3 Direction{0.f,0.f,-1.f};
+	glm::vec3 Direction{-0.2f, -1.0f, -0.3f};
 	
 	float AttenuationRadius{20.f};
 	
 	float AngularAttenuation{12.5f};
 	float AngularAttenuationFalloffStart{10.0f};
 	
-	void UIControlPanel();
+	void UIControlPanel(std::string_view Prefix);
 };

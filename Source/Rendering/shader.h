@@ -35,6 +35,7 @@ public:
 	void SetUniform(std::string_view Name, const glm::mat3& Matrix) const;
 	void SetUniform(std::string_view Name, const phong_material& Material) const;
 	void SetUniform(std::string_view Name, const light& Light, const glm::mat4& View) const;
+	void SetUniform(std::string_view Name, std::string_view CountName, const std::vector<light>& Lights, const glm::mat4& View) const;
 private:
 	struct parsed_shaders
 	{

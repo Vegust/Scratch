@@ -8,6 +8,7 @@
 #include "glm/matrix.hpp"
 
 #include <memory>
+#include <string>
 #include <vector>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
@@ -34,8 +35,6 @@ test_basic_light::test_basic_light()
 	//"Resources/Textures/OpenGL_Logo.png",
 	// 2);
 
-	Light.Direction = glm::vec3(-0.2f, -1.0f, -0.3f);
-	
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 0.f, 1.5f};
 	renderer::Get().CustomCamera = Camera;
@@ -72,30 +71,32 @@ void test_basic_light::OnRender(renderer& Renderer)
 			(std::rand() % 2000 - 2000) / 200.f};
 		glm::vec3 Position = i == 0 ? CubePosition : CubePosition + RandomOffset;
 		glm::mat4 ModelTransform = glm::rotate(
-						glm::translate(glm::mat4{1.0f}, Position),
+			glm::translate(glm::mat4{1.0f}, Position),
 			CurrentRotation + static_cast<float>(i) * glm::pi<float>() / 10.f,
 			glm::vec3(0.5f, 1.f, 0.f));
-		
 		Transforms.push_back(ModelTransform);
 	}
 
 	Shader->Bind();
 	Shader->SetUniform("u_Material", CubeMaterial);
-	Shader->SetUniform("u_Light", Light, View);
-	
+	Shader->SetUniform("u_Lights", "u_NumLights", Lights, View);
 	Renderer.DrawNormalCubes(*Shader, Transforms);
 
 	std::vector<glm::mat4> LightTransforms;
-	glm::mat4 LightTransform = glm::scale(
-		glm::rotate(
-			glm::translate(glm::mat4{1.0f}, Light.Position),
-			CurrentRotation,
-			glm::vec3(-0.5f, 1.f, 0.f)),
-		glm::vec3(0.2f, 0.2f, 0.2f));
-	LightTransforms.push_back(LightTransform);
+	for (const auto& Light : Lights)
+	{
+		glm::mat4 LightTransform = glm::scale(
+			glm::rotate(
+				glm::translate(glm::mat4{1.0f}, Light.Position),
+				CurrentRotation,
+				glm::vec3(-0.5f, 1.f, 0.f)),
+			glm::vec3(0.2f, 0.2f, 0.2f));
+		LightTransforms.push_back(LightTransform);
+		LightShader->Bind();
+		// This won't work properly for light cubes color right now but i don't care tbh
+		LightShader->SetUniform("u_Light", Light, View);
+	}
 
-	LightShader->Bind();
-	LightShader->SetUniform("u_Light", Light, View);
 	Renderer.DrawNormalCubes(*LightShader, LightTransforms);
 }
 
@@ -104,6 +105,18 @@ void test_basic_light::OnIMGuiRender()
 	test_scene::OnIMGuiRender();
 	ImGui::SliderFloat3("Cube Position", glm::value_ptr(CubePosition), -5.f, 5.f);
 	ImGui::SliderFloat("Cube Shininess", &CubeMaterial.Shininess, 2.f, 256.f);
-	Light.UIControlPanel();
+	for (uint64 i = 0; i < Lights.size(); ++i)
+	{
+		Lights[i].UIControlPanel(std::to_string(i));
+	}
+	if (Lights.size() < 100 && ImGui::Button("Add Light"))
+	{
+		Lights.emplace_back();
+	}
+	if (Lights.size() > 0 && ImGui::Button("Remove Light"))
+	{
+		Lights.pop_back();
+	}
+	
 	ImGui::Checkbox("Rotating", &bRotating);
 }

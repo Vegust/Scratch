@@ -7,6 +7,8 @@
 #include "SceneObjects/light.h"
 #include "SceneObjects/phong_material.h"
 
+#include <string>
+
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/glm.hpp"
@@ -64,6 +66,19 @@ void shader::SetUniform(std::string_view Name, const phong_material& Material) c
 		GetUniformLocation(std::string(Name) + ".EmissionMap"),
 		static_cast<int32>(Material.EmissionSlot));
 	glUniform1f(GetUniformLocation(std::string(Name) + ".Shininess"), Material.Shininess);
+}
+
+void shader::SetUniform(
+	std::string_view Name,
+	std::string_view CountName,
+	const std::vector<light>& Lights,
+	const glm::mat4& View) const
+{
+	for (uint64 i = 0; i < Lights.size(); ++i)
+	{
+		SetUniform(std::string(Name) + "[" + std::to_string(i) + "]", Lights[i], View);
+	}
+	SetUniform(CountName, static_cast<int32>(Lights.size()));
 }
 
 void shader::SetUniform(std::string_view Name, const class light& Light, const glm::mat4& View) const

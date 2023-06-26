@@ -36,7 +36,7 @@ private:
 	glm::vec3 CubePosition{0.7f,0.f,-1.5f};
 	phong_material CubeMaterial{};
 	
-	light Light{};
+	std::vector<light> Lights{};
 	
 	float CurrentRotation = 0.f;
 	bool bRotating = true;

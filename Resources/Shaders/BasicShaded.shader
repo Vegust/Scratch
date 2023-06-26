@@ -52,7 +52,10 @@ in vec2 v_TexCoords;
 out vec4 Color;
 
 uniform material u_Material;
-uniform light u_Light;
+
+#define MAX_LIGHTS 100
+uniform light u_Lights[MAX_LIGHTS];
+uniform int u_NumLights;
 
 vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection)
 {
@@ -114,7 +117,15 @@ void main() {
 	vec3 NormalizedNormal = normalize(v_Normal);
 	vec3 ViewDirection = normalize(-v_FragPos);
 
-	CombinedLightColor += CalcLightColor(u_Light, DiffuseTextureColor, SpecularTextureColor, NormalizedNormal, ViewDirection);
+	for (int i = 0; i < u_NumLights; ++i)
+	{
+		CombinedLightColor += CalcLightColor(
+			u_Lights[i],
+			DiffuseTextureColor,
+			SpecularTextureColor,
+			NormalizedNormal,
+			ViewDirection);
+	}
 
 	Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, v_TexCoords)), 1.0);
 };
