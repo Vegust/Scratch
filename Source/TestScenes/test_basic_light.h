@@ -29,8 +29,9 @@ public:
 	virtual void OnIMGuiRender() override;
 	
 private:
-	std::unique_ptr<shader> Shader{nullptr};
-	std::unique_ptr<shader> LightShader{nullptr};
+	shader Shader{};
+	shader LightShader{};
+	
 	std::shared_ptr<camera> Camera{nullptr};
 	
 	glm::vec3 CubePosition{0.7f,0.f,-1.5f};

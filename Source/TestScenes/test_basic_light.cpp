@@ -27,8 +27,8 @@ REGISTER_TEST_SCENE(test_basic_light, "05 Basic (Phong?) Light")
 
 test_basic_light::test_basic_light()
 {
-	Shader = std::make_unique<shader>("Resources/Shaders/BasicShaded.shader");
-	LightShader = std::make_unique<shader>("Resources/Shaders/BasicLight.shader");
+	Shader.Compile("Resources/Shaders/BasicShaded.shader");
+	LightShader.Compile("Resources/Shaders/BasicLight.shader");
 
 	CubeMaterial.InitTextures(
 		"Resources/Textures/Box/BoxDiffuse.png", 0, "Resources/Textures/Box/BoxSpecular.png", 1);
@@ -77,10 +77,10 @@ void test_basic_light::OnRender(renderer& Renderer)
 		Transforms.push_back(ModelTransform);
 	}
 
-	Shader->Bind();
-	Shader->SetUniform("u_Material", CubeMaterial);
-	Shader->SetUniform("u_Lights", "u_NumLights", Lights, View);
-	Renderer.DrawNormalCubes(*Shader, Transforms);
+	Shader.Bind();
+	Shader.SetUniform("u_Material", CubeMaterial);
+	Shader.SetUniform("u_Lights", "u_NumLights", Lights, View);
+	Renderer.DrawNormalCubes(Shader, Transforms);
 
 	std::vector<glm::mat4> LightTransforms;
 	for (const auto& Light : Lights)
@@ -92,12 +92,12 @@ void test_basic_light::OnRender(renderer& Renderer)
 				glm::vec3(-0.5f, 1.f, 0.f)),
 			glm::vec3(0.2f, 0.2f, 0.2f));
 		LightTransforms.push_back(LightTransform);
-		LightShader->Bind();
+		LightShader.Bind();
 		// This won't work properly for light cubes color right now but i don't care tbh
-		LightShader->SetUniform("u_Light", Light, View);
+		LightShader.SetUniform("u_Light", Light, View);
 	}
 
-	Renderer.DrawNormalCubes(*LightShader, LightTransforms);
+	Renderer.DrawNormalCubes(LightShader, LightTransforms);
 }
 
 void test_basic_light::OnIMGuiRender()

@@ -16,6 +16,7 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
 #include "glm/glm.hpp"
+#include "vertex_buffer.h"
 SCRATCH_DISABLE_WARNINGS_END()
 
 #define ASSERT(x) \
@@ -26,8 +27,6 @@ SCRATCH_DISABLE_WARNINGS_END()
 	x;              \
 	ASSERT(GlLogCall(#x, __FILE__, __LINE__));
 
-class vertex_array;
-class index_buffer;
 class shader;
 
 void GlClearError();
@@ -78,7 +77,9 @@ public:
 	glm::vec3 CameraDirection = glm::vec3{0.f,0.f,-1.f};
 	glm::vec3 CameraUpVector = glm::vec3{0.f,1.f,0.f};
 	
-	std::unique_ptr<vertex_array> CubeVAO{nullptr};
+	vertex_array CubeVAO{};
+	vertex_buffer CubeVBO{};
 	
-	std::unique_ptr<vertex_array> NormalCubeVAO{nullptr};
+	vertex_array NormalCubeVAO{};
+	vertex_buffer NormalCubeVBO{};
 };

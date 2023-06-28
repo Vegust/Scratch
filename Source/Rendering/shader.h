@@ -20,11 +20,17 @@ private:
 	uint32 RendererId{0};
 	mutable std::map<std::string, int32, std::less<>> UniformsCache;
 public:
-	explicit shader(const std::filesystem::path& InPath);
-	shader();
+	shader() = default;
+	~shader();
 	
+	shader(const shader&) = delete;
+	shader& operator=(const shader&) = delete;
+	
+	shader(shader&& InShader);
+	shader& operator=(shader&& InShader);
+	
+	void Compile(const std::filesystem::path& InPath);
 	void Bind() const;
-	void Unbind() const;
 	
 	// Set uniforms
 	void SetUniform(std::string_view Name, float V1, float V2, float V3, float V4) const;
@@ -46,5 +52,4 @@ private:
 	[[nodiscard]] int32 GetUniformLocation(std::string_view Name) const;
 	static parsed_shaders ParseShader(const std::filesystem::path& Path);
 	static uint32 CompileShader(uint32 Type, std::string_view Source);
-	static uint32 CreateShader(std::string_view VertexShader, std::string_view FragmentShader);
 };

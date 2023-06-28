@@ -6,16 +6,29 @@
 
 #include "renderer.h"
 
-index_buffer::index_buffer(const uint32* InData, uint32 InCount) : Count(InCount)
+index_buffer::index_buffer(index_buffer&& InIndexBuffer)
 {
-	glGenBuffers(1, &RendererId);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Count * sizeof(uint32), InData, GL_STATIC_DRAW);
+	RendererId = InIndexBuffer.RendererId;
+	InIndexBuffer.RendererId = 0;
+}
+
+index_buffer& index_buffer::operator=(index_buffer&& InIndexBuffer)
+{
+	if (RendererId != 0)
+	{
+		glDeleteBuffers(1, &RendererId);
+	}
+	RendererId = InIndexBuffer.RendererId;
+	InIndexBuffer.RendererId = 0;
+	return *this;
 }
 
 index_buffer::~index_buffer()
 {
-	glDeleteBuffers(1, &RendererId);
+	if (RendererId != 0)
+	{
+		glDeleteBuffers(1, &RendererId);
+	}
 }
 
 void index_buffer::Bind() const
@@ -23,7 +36,13 @@ void index_buffer::Bind() const
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
 }
 
-void index_buffer::Unbind() const
+void index_buffer::SetData(const uint32* InData, uint32 InCount)
 {
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	if (RendererId == 0)
+	{
+		glGenBuffers(1, &RendererId);
+	}
+	Count = InCount;
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Count * sizeof(uint32), InData, GL_STATIC_DRAW);
 }

@@ -9,12 +9,13 @@
 class vertex_buffer
 {
 private:
-	uint32 RendererId{};
+	uint32 RendererId{0};
 
 public:
-	vertex_buffer(const void* InData, uint32 InSize);
+	vertex_buffer() = default;
 	~vertex_buffer();
+	
+	void SetData(const void* InData, uint32 InSize);
 
 	void Bind() const;
-	void Unbind() const;
 };

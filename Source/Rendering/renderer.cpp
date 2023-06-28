@@ -10,12 +10,10 @@
 #include "index_buffer.h"
 #include "shader.h"
 #include "vertex_array.h"
-#include "vertex_buffer.h"
 #include "vertex_buffer_layout.h"
 
 #include <array>
 #include <iostream>
-#include <memory>
 
 void GlClearError()
 {
@@ -69,7 +67,7 @@ void renderer::Draw(
 
 void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
 {
-	CubeVAO->Bind();
+	CubeVAO.Bind();
 	Shader.Bind();
 	for (const auto& Transform : Transforms)
 	{
@@ -80,17 +78,16 @@ void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Tra
 
 void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
 {
-	NormalCubeVAO->Bind();
+	NormalCubeVAO.Bind();
 	Shader.Bind();
-	
-	glm::mat4 View =
-		glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+
+	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
 		View = CameraHandle->GetViewTransform();
 	}
-	
+
 	for (const auto& Transform : Transforms)
 	{
 		glm::mat4 ViewModel = View * Transform;
@@ -106,8 +103,8 @@ void renderer::InitCubeVAO()
 	constexpr uint32 NumVertices = 36;
 	constexpr uint32 ElementsPerVertex = 5;
 	constexpr uint32 SizeOfVertex = 5 * sizeof(float);
-	
-	std::array<float, NumVertices * ElementsPerVertex> Vertices = {
+
+	std::array<float, NumVertices* ElementsPerVertex> Vertices = {
 		// clang-format off
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -153,13 +150,11 @@ void renderer::InitCubeVAO()
 		// clang-format on
 	};
 
-	[[clang::no_destroy]] static vertex_buffer VertexBuffer{Vertices.data(), NumVertices * SizeOfVertex};
+	CubeVBO.SetData(Vertices.data(), NumVertices * SizeOfVertex);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);
 	VertexLayout.Push<float>(2);
-
-	CubeVAO = std::make_unique<vertex_array>();
-	CubeVAO->AddBuffer(VertexBuffer, VertexLayout);
+	CubeVAO.AddBuffer(CubeVBO, VertexLayout);
 }
 
 void renderer::InitNormalCubeVAO()
@@ -215,15 +210,12 @@ void renderer::InitNormalCubeVAO()
 		// clang-format on
 	};
 
-	[[clang::no_destroy]] static vertex_buffer VertexBuffer{
-		Vertices.data(), NumVertices * SizeOfVertex};
+	NormalCubeVBO.SetData(Vertices.data(), NumVertices * SizeOfVertex);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);
 	VertexLayout.Push<float>(3);
 	VertexLayout.Push<float>(2);
-
-	NormalCubeVAO = std::make_unique<vertex_array>();
-	NormalCubeVAO->AddBuffer(VertexBuffer, VertexLayout);
+	NormalCubeVAO.AddBuffer(NormalCubeVBO, VertexLayout);
 }
 
 glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const

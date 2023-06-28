@@ -5,15 +5,14 @@
 #include "test_cube.h"
 
 #include "core_types.h"
-#include "glm/ext/scalar_constants.hpp"
 
-#include <memory>
 #include <vector>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/scalar_constants.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
@@ -27,13 +26,13 @@ REGISTER_TEST_SCENE(test_cube, "04 Cubes")
 
 test_cube::test_cube()
 {
-	Texture = std::make_unique<texture>("Resources/Textures/Wall.jpg");
-	Texture->Bind();
-	
-	Shader = std::make_unique<shader>("Resources/Shaders/Basic.shader");
-	Shader->Bind();
-	Shader->SetUniform("u_Texture", 0);
-	
+	Texture.Load("Resources/Textures/Wall.jpg");
+	Texture.Bind();
+
+	Shader.Compile("Resources/Shaders/Basic.shader");
+	Shader.Bind();
+	Shader.SetUniform("u_Texture", 0);
+
 	std::srand(static_cast<uint32>(std::time(nullptr)));
 	Seed = static_cast<uint32>(std::rand());
 }
@@ -82,7 +81,7 @@ void test_cube::OnRender(renderer& Renderer)
 		Transforms.push_back(ModelTransform);
 	}
 
-	Renderer.DrawCubes(*Shader, Transforms);
+	Renderer.DrawCubes(Shader, Transforms);
 }
 
 void test_cube::OnIMGuiRender()

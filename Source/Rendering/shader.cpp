@@ -18,25 +18,56 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include <fstream>
 #include <iostream>
 
-shader::shader(const std::filesystem::path& InPath) : Path(InPath)
+shader::shader(shader&& InShader)
 {
-	auto ParsedShaders = ParseShader(InPath);
-	RendererId = CreateShader(ParsedShaders.VertexShader, ParsedShaders.FragmentShader);
+	RendererId = InShader.RendererId;
+	InShader.RendererId = 0;
 }
 
-shader::shader()
+shader& shader::operator=(shader&& InShader)
 {
-	glDeleteProgram(RendererId);
+	if (RendererId != 0)
+	{
+		glDeleteProgram(RendererId);
+	}
+	RendererId = InShader.RendererId;
+	InShader.RendererId = 0;
+	return *this;
+}
+
+void shader::Compile(const std::filesystem::path& InPath)
+{
+	if (RendererId == 0)
+	{
+		RendererId = glCreateProgram();
+	}
+
+	Path = InPath;
+	auto ParsedShaders = ParseShader(InPath);
+
+	auto VSIndex = CompileShader(GL_VERTEX_SHADER, ParsedShaders.VertexShader);
+	auto FSIndex = CompileShader(GL_FRAGMENT_SHADER, ParsedShaders.FragmentShader);
+
+	glAttachShader(RendererId, VSIndex);
+	glAttachShader(RendererId, FSIndex);
+	glLinkProgram(RendererId);
+	glValidateProgram(RendererId);
+
+	glDeleteShader(VSIndex);
+	glDeleteShader(FSIndex);
+}
+
+shader::~shader()
+{
+	if (RendererId != 0)
+	{
+		glDeleteProgram(RendererId);
+	}
 }
 
 void shader::Bind() const
 {
 	glUseProgram(RendererId);
-}
-
-void shader::Unbind() const
-{
-	glUseProgram(0);
 }
 
 void shader::SetUniform(std::string_view Name, float V1, float V2, float V3, float V4) const
@@ -213,21 +244,4 @@ uint32 shader::CompileShader(uint32 Type, std::string_view Source)
 	}
 
 	return Index;
-}
-
-uint32 shader::CreateShader(std::string_view VertexShader, std::string_view FragmentShader)
-{
-	const auto ProgramIndex = glCreateProgram();
-	auto VSIndex = CompileShader(GL_VERTEX_SHADER, VertexShader);
-	auto FSIndex = CompileShader(GL_FRAGMENT_SHADER, FragmentShader);
-
-	glAttachShader(ProgramIndex, VSIndex);
-	glAttachShader(ProgramIndex, FSIndex);
-	glLinkProgram(ProgramIndex);
-	glValidateProgram(ProgramIndex);
-
-	glDeleteShader(VSIndex);
-	glDeleteShader(FSIndex);
-
-	return ProgramIndex;
 }

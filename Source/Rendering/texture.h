@@ -20,9 +20,17 @@ private:
 	int32 NumChannels{0};
 
 public:
-	explicit texture(std::string_view InPath);
+	texture() = default;
 	~texture();
 	
+	texture(const texture& InTexture) = delete;
+	texture& operator=(const texture&) = delete;
+	texture(texture&& InTexture) noexcept;
+	texture& operator=(texture&& InTexture) noexcept;
+	
+	bool Loaded() const { return RendererId != 0; }
+	
+	void Load(std::string_view InPath);
+	
 	void Bind(uint32 Slot = 0) const;
-	void Unbind() const;
 };

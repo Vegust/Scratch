@@ -16,8 +16,14 @@ private:
 	uint32 RendererId{0};
 
 public:
-	vertex_array();
+	vertex_array() = default;
 	~vertex_array();
+	
+	vertex_array(const vertex_array&) = delete;
+	vertex_array& operator=(const vertex_array&) = delete;
+	
+	vertex_array(vertex_array&& InVertexArray);
+	vertex_array& operator=(vertex_array&& InVertexArray);
 
 	void AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buffer_layout& Layout);
 	void AddBuffer(
@@ -26,5 +32,4 @@ public:
 		const vertex_buffer_layout& Layout);
 
 	void Bind() const;
-	void Unbind() const;
 };

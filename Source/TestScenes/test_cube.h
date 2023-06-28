@@ -26,8 +26,8 @@ public:
 	virtual void OnIMGuiRender() override;
 	
 private:
-	std::unique_ptr<shader> Shader{nullptr};
-	std::unique_ptr<texture> Texture{nullptr};
+	shader Shader{};
+	texture Texture{};
 	
 	glm::vec3 Pic1Trans{0.f,0.f,0.f};
 	glm::vec3 Pic1Rot{0.f,0.f,0.f};

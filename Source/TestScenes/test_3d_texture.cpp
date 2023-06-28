@@ -9,7 +9,6 @@
 #include "glm/ext/scalar_constants.hpp"
 
 #include <array>
-#include <memory>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
@@ -41,8 +40,6 @@ test_3d_texture::test_3d_texture()
 	};
 	std::array<uint32, NumTriangles* 3> Indices = {0, 1, 2, 1, 2, 3};
 
-	VertexArray = std::make_unique<vertex_array>();
-
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;
 	constexpr float InitialAspectRatio = static_cast<float>(WindowWidth) / WindowHeight;
@@ -52,21 +49,21 @@ test_3d_texture::test_3d_texture()
 	glm::mat4 ModelMatrix = glm::translate(glm::mat4{1.0f}, glm::vec3(0.5, 0.f, 0.f));
 	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
 
-	VertexBuffer = std::make_unique<vertex_buffer>(Positions.data(), NumVertices * SizeOfVertex);
+	VertexBuffer.SetData(Positions.data(), NumVertices * SizeOfVertex);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(2);
 	VertexLayout.Push<float>(2);
-	VertexArray->AddBuffer(*VertexBuffer, VertexLayout);
+	VertexArray.AddBuffer(VertexBuffer, VertexLayout);
+	
+	IndexBuffer.SetData(Indices.data(), Indices.size());
 
-	IndexBuffer = std::make_unique<index_buffer>(Indices.data(), Indices.size());
+	Texture.Load("Resources/Textures/Wall.jpg");
+	Texture.Bind(0);
 
-	Texture = std::make_unique<texture>("Resources/Textures/Wall.jpg");
-	Texture->Bind();
-
-	Shader = std::make_unique<shader>("Resources/Shaders/Basic.shader");
-	Shader->Bind();
-	Shader->SetUniform("u_Texture", 0);
-	Shader->SetUniform("u_MVP", MVP);
+	Shader.Compile("Resources/Shaders/Basic.shader");
+	Shader.Bind();
+	Shader.SetUniform("u_Texture", 0);
+	Shader.SetUniform("u_MVP", MVP);
 }
 
 test_3d_texture::~test_3d_texture()
@@ -101,9 +98,9 @@ void test_3d_texture::OnRender(renderer& Renderer)
 		glm::vec3(0.f, 0.f, 1.f));
 	//glm::mat4 ModelMatrix = glm::translate(glm::mat4{1.0f}, Pic1Trans);
 	glm::mat4 MVP = ProjectionMatrix * ViewMatrix * ModelMatrix;
-	Shader->Bind();
-	Shader->SetUniform("u_MVP", MVP);
-	renderer::Draw(*VertexArray, *IndexBuffer, *Shader);
+	Shader.Bind();
+	Shader.SetUniform("u_MVP", MVP);
+	renderer::Draw(VertexArray, IndexBuffer, Shader);
 }
 
 void test_3d_texture::OnIMGuiRender()

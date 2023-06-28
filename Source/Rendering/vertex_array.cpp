@@ -8,19 +8,37 @@
 #include "index_buffer.h"
 #include "vertex_buffer_layout.h"
 
-vertex_array::vertex_array()
+vertex_array::vertex_array(vertex_array&& InVertexArray)
 {
-	glGenVertexArrays(1, &RendererId);
-	glBindVertexArray(RendererId);
+	RendererId = InVertexArray.RendererId;
+	InVertexArray.RendererId = 0;
+}
+
+vertex_array& vertex_array::operator=(vertex_array&& InVertexArray)
+{
+	if (RendererId != 0)
+	{
+		glDeleteVertexArrays(1, &RendererId);
+	}
+	RendererId = InVertexArray.RendererId;
+	InVertexArray.RendererId = 0;
+	return *this;
 }
 
 vertex_array::~vertex_array()
 {
-	glDeleteVertexArrays(1, &RendererId);
+	if (RendererId != 0)
+	{
+		glDeleteVertexArrays(1, &RendererId);
+	}
 }
 
 void vertex_array::AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buffer_layout& Layout)
 {
+	if (RendererId == 0)
+	{
+		glGenVertexArrays(1, &RendererId);
+	}
 	Bind();
 	VertexBuffer.Bind();
 	const auto& Attributes = Layout.GetAttributes();
@@ -52,9 +70,4 @@ void vertex_array::AddBuffer(
 void vertex_array::Bind() const
 {
 	glBindVertexArray(RendererId);
-}
-
-void vertex_array::Unbind() const
-{
-	glBindVertexArray(0);
 }

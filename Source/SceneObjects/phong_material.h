@@ -16,9 +16,9 @@ SCRATCH_DISABLE_WARNINGS_END()
 class phong_material
 {
 public:
-	std::unique_ptr<texture> DiffuseMap{nullptr};
-	std::unique_ptr<texture> SpecularMap{nullptr};
-	std::unique_ptr<texture> EmissionMap{nullptr};
+	texture DiffuseMap{};
+	texture SpecularMap{};
+	texture EmissionMap{};
 
 	uint32 DiffuseSlot = 0;
 	uint32 SpecularSlot = 1;
@@ -31,24 +31,27 @@ public:
 		uint32 InDiffuseSlot,
 		std::string_view SpecularPath,
 		uint32 InSpecularSlot,
-		std::string_view EmissionPath = "",
+		std::string_view EmissionPath = {},
 		uint32 InEmissionSlot = 2)
 	{
-		DiffuseMap = std::make_unique<texture>(DiffusePath);
-		SpecularMap = std::make_unique<texture>(SpecularPath);
-		EmissionMap = std::make_unique<texture>(EmissionPath);
-
+		DiffuseMap.Load(DiffusePath);
+		SpecularMap.Load(SpecularPath);
+		if (!EmissionPath.empty())
+		{
+			EmissionMap.Load(EmissionPath);
+		}
+		
 		DiffuseSlot = InDiffuseSlot;
 		SpecularSlot = InSpecularSlot;
 		EmissionSlot = InEmissionSlot;
 
 		// Order is important. First, create all, then bind all.
 		// because creating textures binds them to current active texture
-		DiffuseMap->Bind(DiffuseSlot);
-		SpecularMap->Bind(SpecularSlot);
-		if (EmissionMap)
+		DiffuseMap.Bind(DiffuseSlot);
+		SpecularMap.Bind(SpecularSlot);
+		if (EmissionMap.Loaded())
 		{
-			EmissionMap->Bind(EmissionSlot);
+			EmissionMap.Bind(EmissionSlot);
 		}
 	}
 };
