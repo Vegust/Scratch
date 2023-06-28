@@ -6,9 +6,9 @@
 
 #include "core_types.h"
 
-class index_buffer;
+class element_buffer;
 class vertex_buffer;
-class vertex_buffer_layout;
+struct vertex_buffer_layout;
 
 class vertex_array
 {
@@ -28,7 +28,7 @@ public:
 	void AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buffer_layout& Layout);
 	void AddBuffer(
 		const vertex_buffer& VertexBuffer,
-		const index_buffer& IndexBuffer,
+		const element_buffer& IndexBuffer,
 		const vertex_buffer_layout& Layout);
 
 	void Bind() const;

@@ -8,12 +8,12 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
-#include "Rendering/index_buffer.h"
+#include "Rendering/element_buffer.h"
 #include "Rendering/shader.h"
 #include "Rendering/vertex_array.h"
 #include "Rendering/vertex_buffer.h"
-#include "SceneObjects/phong_material.h"
 #include "SceneObjects/light.h"
+#include "SceneObjects/phong_material.h"
 #include "test_scene.h"
 
 #include <array>
@@ -22,7 +22,6 @@ class test_basic_light : public test_scene
 {
 public:
 	test_basic_light();
-	virtual ~test_basic_light() override;
 	
 	virtual void OnUpdate(float DeltaTime) override;
 	virtual void OnRender(renderer& Renderer) override;

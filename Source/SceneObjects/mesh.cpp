@@ -4,18 +4,18 @@
 
 #include "mesh.h"
 
-void mesh::Init(
-	std::vector<vertex>&& InVertices,
-	std::vector<uint32>&& InIndices,
-	std::vector<texture>&& InTextures)
+#include "Rendering/renderer.h"
+
+void mesh::Init()
 {
-	Vertices = InVertices;
-	Indices = InIndices;
-	Textures = std::move(InTextures);
-	
-	
+	VertexBuffer.SetData(
+		Vertices.data(),
+		static_cast<uint32>(Vertices.size()) * static_cast<uint32>(sizeof(vertex)));
+	ElementBuffer.SetData(Indices.data(), static_cast<uint32>(Indices.size()));
+	VertexArray.AddBuffer(VertexBuffer, ElementBuffer, vertex::GetLayout());
 }
 
-void mesh::Draw()
+void mesh::Draw(const renderer& Renderer, const glm::mat4& Transform)
 {
+	Renderer.DrawPhong(VertexArray, Material, Transform);
 }

@@ -18,7 +18,7 @@ private:
 	int32 Width{0};
 	int32 Height{0};
 	int32 NumChannels{0};
-
+	
 public:
 	texture() = default;
 	~texture();

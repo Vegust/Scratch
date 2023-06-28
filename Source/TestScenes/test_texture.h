@@ -9,12 +9,12 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
-#include "test_scene.h"
-#include "Rendering/vertex_array.h"
-#include "Rendering/vertex_buffer.h"
+#include "Rendering/element_buffer.h"
 #include "Rendering/shader.h"
 #include "Rendering/texture.h"
-#include "Rendering/index_buffer.h"
+#include "Rendering/vertex_array.h"
+#include "Rendering/vertex_buffer.h"
+#include "test_scene.h"
 
 class test_texture : public test_scene
 {
@@ -29,7 +29,7 @@ public:
 private:
 	vertex_buffer VertexBuffer{};
 	vertex_array VertexArray{};
-	index_buffer IndexBuffer{};
+	element_buffer IndexBuffer{};
 	texture Texture{};
 	shader Shader{};
 	

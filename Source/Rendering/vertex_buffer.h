@@ -15,6 +15,11 @@ public:
 	vertex_buffer() = default;
 	~vertex_buffer();
 	
+	vertex_buffer(const vertex_buffer&) = delete;
+	vertex_buffer& operator=(const vertex_buffer&) = delete;
+	vertex_buffer(vertex_buffer&& InVertexBuffer) noexcept;
+	vertex_buffer& operator=(vertex_buffer&& InVertexBuffer) noexcept;
+	
 	void SetData(const void* InData, uint32 InSize);
 
 	void Bind() const;

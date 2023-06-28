@@ -16,9 +16,10 @@ add_executable(Scratch
 		${SCRATCH_SCENE_OBJECT_SOURCES}
 		)
 
-target_compile_options(Scratch PRIVATE -Wno-unused-function -Wno-unused-variable)
-target_compile_options(Scratch PRIVATE /GX-) # no exceptions
-target_compile_options(Scratch PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
+target_compile_options(Scratch PRIVATE)
+#target_compile_options(Scratch PRIVATE -Wno-unused-function -Wno-unused-variable)
+#target_compile_options(Scratch PRIVATE /GX)
+#target_compile_options(Scratch PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
 
 # ------------ glfw --------------
 set(GLFW_BUILD_DOCS OFF)
@@ -26,13 +27,6 @@ set(GLFW_INSTALL OFF)
 add_subdirectory(Source/ThirdParty/glfw)
 include_directories(Source/ThirdParty/glfw/include)
 target_link_libraries(Scratch glfw)
-# --------------------------------
-
-# not linking to default gl lib, using glad instead
-# ------------ opengl ------------
-# find_package(OpenGL REQUIRED)
-# include_directories(${OPENGL_INCLUDE_DIR})
-# link_libraries(${OPENGL_LIBRARY})
 # --------------------------------
 
 # ------------ glad --------------
@@ -67,13 +61,11 @@ add_library(imgui STATIC
 target_link_libraries(Scratch imgui)
 # --------------------------------
 
-# assimp is build manually using MSVC compiler because MinGW + Clang on Windows seem to break assimp cmake files
 # ----------- assimp -------------
-#set(BUILD_SHARED_LIBS OFF)
-#set(ASSIMP_BUILD_TESTS OFF)
-#set(ASSIMP_INJECT_DEBUG_POSTFIX OFF)
-#set(ASSIMP_INSTALL OFF)
-#add_subdirectory(Source/ThirdParty/assimp EXCLUDE_FROM_ALL)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
+set(ASSIMP_INSTALL OFF CACHE BOOL "")
+add_subdirectory(Source/ThirdParty/assimp EXCLUDE_FROM_ALL)
 include_directories(Source/ThirdParty/assimp/include)
-target_link_libraries(Scratch "${PROJECT_SOURCE_DIR}/Source/ThirdParty/assimp/lib/Debug/assimp-vc143-mtd.lib")
+target_link_libraries(Scratch assimp)
 # --------------------------------

@@ -2,17 +2,16 @@
 // Created by Vegust on 21.06.2023.
 //
 
-#include "index_buffer.h"
-
+#include "element_buffer.h"
 #include "renderer.h"
 
-index_buffer::index_buffer(index_buffer&& InIndexBuffer)
+element_buffer::element_buffer(element_buffer&& InIndexBuffer)
 {
 	RendererId = InIndexBuffer.RendererId;
 	InIndexBuffer.RendererId = 0;
 }
 
-index_buffer& index_buffer::operator=(index_buffer&& InIndexBuffer)
+element_buffer& element_buffer::operator=(element_buffer&& InIndexBuffer)
 {
 	if (RendererId != 0)
 	{
@@ -23,7 +22,7 @@ index_buffer& index_buffer::operator=(index_buffer&& InIndexBuffer)
 	return *this;
 }
 
-index_buffer::~index_buffer()
+element_buffer::~element_buffer()
 {
 	if (RendererId != 0)
 	{
@@ -31,12 +30,12 @@ index_buffer::~index_buffer()
 	}
 }
 
-void index_buffer::Bind() const
+void element_buffer::Bind() const
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
 }
 
-void index_buffer::SetData(const uint32* InData, uint32 InCount)
+void element_buffer::SetData(const uint32* InData, uint32 InCount)
 {
 	if (RendererId == 0)
 	{
@@ -44,5 +43,5 @@ void index_buffer::SetData(const uint32* InData, uint32 InCount)
 	}
 	Count = InCount;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Count * sizeof(uint32), InData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(Count * sizeof(uint32)), InData, GL_STATIC_DRAW);
 }

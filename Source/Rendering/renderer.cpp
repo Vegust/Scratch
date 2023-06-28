@@ -4,10 +4,10 @@
 
 #include "renderer.h"
 
+#include "element_buffer.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/matrix.hpp"
-#include "index_buffer.h"
 #include "shader.h"
 #include "vertex_array.h"
 #include "vertex_buffer_layout.h"
@@ -34,7 +34,7 @@ bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber)
 
 void renderer::Draw(
 	const vertex_array& VertexArray,
-	const index_buffer& IndexBuffer,
+	const element_buffer& IndexBuffer,
 	const shader& Shader)
 {
 	Shader.Bind();
@@ -52,7 +52,7 @@ void renderer::Clear()
 
 void renderer::Draw(
 	const vertex_array& VertexArray,
-	const index_buffer& IndexBuffer,
+	const element_buffer& IndexBuffer,
 	const shader& Shader,
 	glm::mat4 Transform) const
 {
@@ -96,6 +96,29 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
 		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
 	}
+}
+
+void renderer::DrawPhong(const vertex_array& VertexArray, const phong_material& Material, const glm::mat4& Transform) const
+{
+	VertexArray.Bind();
+	PhongShader.Bind();
+	
+	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	if (!CustomCamera.expired())
+	{
+		auto CameraHandle = CustomCamera.lock();
+		View = CameraHandle->GetViewTransform();
+	}
+	
+	PhongShader.Bind();
+	PhongShader.SetUniform("u_Material", Material);
+	PhongShader.SetUniform("u_Lights", "u_NumLights", SceneLights, View);
+	
+	glm::mat4 ViewModel = View * Transform;
+	PhongShader.SetUniform("u_ViewModel", ViewModel);
+	PhongShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+	PhongShader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
+	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
 }
 
 void renderer::InitCubeVAO()
@@ -239,4 +262,10 @@ void renderer::Init()
 {
 	InitCubeVAO();
 	InitNormalCubeVAO();
+	InitDefaultShaders();
+}
+
+void renderer::InitDefaultShaders()
+{
+	PhongShader.Compile("Resources/Shaders/BasicShaded.shader");
 }

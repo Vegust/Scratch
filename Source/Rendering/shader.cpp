@@ -105,7 +105,7 @@ void shader::SetUniform(
 	const std::vector<light>& Lights,
 	const glm::mat4& View) const
 {
-	for (uint64 i = 0; i < Lights.size(); ++i)
+	for (uint32 i = 0; i < Lights.size(); ++i)
 	{
 		SetUniform(std::string(Name) + "[" + std::to_string(i) + "]", Lights[i], View);
 	}

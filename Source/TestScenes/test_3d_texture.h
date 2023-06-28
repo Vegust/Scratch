@@ -8,7 +8,7 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 SCRATCH_DISABLE_WARNINGS_END()
 
-#include "Rendering/index_buffer.h"
+#include "Rendering/element_buffer.h"
 #include "Rendering/shader.h"
 #include "Rendering/texture.h"
 #include "Rendering/vertex_array.h"
@@ -28,7 +28,7 @@ public:
 private:
 	vertex_buffer VertexBuffer{};
 	vertex_array VertexArray{};
-	index_buffer IndexBuffer{};
+	element_buffer IndexBuffer{};
 	texture Texture{};
 	shader Shader{};
 	

@@ -241,9 +241,10 @@ int main()
 				if (GetCurrentScene() != &TestMenu && ImGui::Button("<-"))
 				{
 					delete GetCurrentScene();
-					renderer::Get().ResetCamera();
 					renderer::Get().CustomCamera = ReplacedCamera;
 					FreeCamera = nullptr;
+					renderer::Get().ResetCamera();
+					renderer::Get().SceneLights.clear();
 					bFreeCamera = false;
 					bOldFreeCamera = false;
 					GetCurrentScene() = &TestMenu;

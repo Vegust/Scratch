@@ -4,8 +4,8 @@
 
 #include "vertex_array.h"
 
+#include "element_buffer.h"
 #include "vertex_buffer.h"
-#include "index_buffer.h"
 #include "vertex_buffer_layout.h"
 
 vertex_array::vertex_array(vertex_array&& InVertexArray)
@@ -60,7 +60,7 @@ void vertex_array::AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buf
 
 void vertex_array::AddBuffer(
 	const vertex_buffer& VertexBuffer,
-	const index_buffer& IndexBuffer,
+	const element_buffer& IndexBuffer,
 	const vertex_buffer_layout& Layout)
 {
 	AddBuffer(VertexBuffer, Layout);

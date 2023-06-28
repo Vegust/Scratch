@@ -16,16 +16,14 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
 #include "glm/glm.hpp"
+#include "shader.h"
 #include "vertex_buffer.h"
 SCRATCH_DISABLE_WARNINGS_END()
 
-#define ASSERT(x) \
-	if (!(x))     \
-		__builtin_debugtrap();
 #define GL_CALL(x)  \
 	GlClearError(); \
 	x;              \
-	ASSERT(GlLogCall(#x, __FILE__, __LINE__));
+	GlLogCall(#x, __FILE__, __LINE__);
 
 class shader;
 
@@ -38,26 +36,29 @@ public:
 	static void Clear();
 	static void Draw(
 		const vertex_array& VertexArray,
-		const index_buffer& IndexBuffer,
+		const element_buffer& IndexBuffer,
 		const shader& Shader);
 	
 	static renderer& Get()
 	{
-		[[clang::no_destroy]] static renderer Renderer;
+		static renderer Renderer;
 		return Renderer;
 	}
 
 	void Init();
 	void InitCubeVAO();
 	void InitNormalCubeVAO();
+	void InitDefaultShaders();
 	
 	void Draw(
 		const vertex_array& VertexArray,
-		const index_buffer& IndexBuffer,
+		const element_buffer& IndexBuffer,
 		const shader& Shader,
 		glm::mat4 Transform) const;
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
+	
+	void DrawPhong(const vertex_array& VertexArray, const phong_material& Material, const glm::mat4& Transform) const;
 
 	void ResetCamera()
 	{
@@ -82,4 +83,7 @@ public:
 	
 	vertex_array NormalCubeVAO{};
 	vertex_buffer NormalCubeVBO{};
+	
+	shader PhongShader{};
+	std::vector<light> SceneLights{};
 };

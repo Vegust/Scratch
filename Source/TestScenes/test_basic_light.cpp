@@ -40,10 +40,6 @@ test_basic_light::test_basic_light()
 	renderer::Get().CustomCamera = Camera;
 }
 
-test_basic_light::~test_basic_light()
-{
-}
-
 void test_basic_light::OnUpdate(float DeltaTime)
 {
 	test_scene::OnUpdate(DeltaTime);
@@ -105,7 +101,7 @@ void test_basic_light::OnIMGuiRender()
 	test_scene::OnIMGuiRender();
 	ImGui::SliderFloat3("Cube Position", glm::value_ptr(CubePosition), -5.f, 5.f);
 	ImGui::SliderFloat("Cube Shininess", &CubeMaterial.Shininess, 2.f, 256.f);
-	for (uint64 i = 0; i < Lights.size(); ++i)
+	for (uint32 i = 0; i < Lights.size(); ++i)
 	{
 		Lights[i].UIControlPanel(std::to_string(i));
 	}

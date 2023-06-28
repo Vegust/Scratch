@@ -27,28 +27,42 @@ texture& texture::operator=(texture&& InTexture) noexcept
 
 void texture::Load(std::string_view InPath)
 {
-	if (RendererId == 0)
-	{
-		glGenTextures(1, &RendererId);
-	}
-	
 	Path = InPath;
 	stbi_set_flip_vertically_on_load(1);
-	LocalBuffer = stbi_load(InPath.data(), &Width, &Height, &NumChannels, 4);
-	
-	glBindTexture(GL_TEXTURE_2D, RendererId);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, GL_RGBA8, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, LocalBuffer);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	LocalBuffer = stbi_load(InPath.data(), &Width, &Height, &NumChannels, 0);
 
 	if (LocalBuffer)
 	{
+		if (RendererId == 0)
+		{
+			glGenTextures(1, &RendererId);
+		}
+		
+		GLenum Format = GL_RGBA;
+		if (NumChannels == 1)
+		{
+			Format = GL_RED;
+		}
+		else if (NumChannels == 3)
+		{
+			Format = GL_RGB;
+		}
+		else if (NumChannels == 4)
+		{
+			Format = GL_RGBA;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, RendererId);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, static_cast<GLint>(Format), Width, Height, 0, Format, GL_UNSIGNED_BYTE, LocalBuffer);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		stbi_image_free(LocalBuffer);
 	}
 }

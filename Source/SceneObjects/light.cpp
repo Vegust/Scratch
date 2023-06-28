@@ -36,7 +36,7 @@ void light::UIControlPanel(std::string_view Prefix)
 
 	if (ImGui::BeginCombo(std::string{Prefix}.append("Light Type").c_str(), TypeName(Type)))
 	{
-		for (uint64 i = 0; i < Types.size(); ++i)
+		for (uint32 i = 0; i < Types.size(); ++i)
 		{
 			bool bIsSelected = Type == Types[i];
 			if (ImGui::Selectable(TypeName(Types[i]), bIsSelected))

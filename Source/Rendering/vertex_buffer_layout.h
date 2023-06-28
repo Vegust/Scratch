@@ -36,13 +36,11 @@ struct vertex_buffer_attribute
 template <typename T>
 concept buffer_attribute_type = std::is_floating_point<T>::value || std::is_integral<T>::value;
 
-class vertex_buffer_layout
+struct vertex_buffer_layout
 {
-private:
 	std::vector<vertex_buffer_attribute> Attributes{};
 	uint32 Stride{0};
 
-public:
 	[[nodiscard]] const std::vector<vertex_buffer_attribute>& GetAttributes() const
 	{
 		return Attributes;

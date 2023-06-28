@@ -4,12 +4,17 @@
 
 #pragma once
 
-#include "Rendering/index_buffer.h"
+#include "Rendering/element_buffer.h"
 #include "Rendering/texture.h"
 #include "Rendering/vertex.h"
 #include "Rendering/vertex_array.h"
 #include "Rendering/vertex_buffer.h"
 #include "core_types.h"
+#include "phong_material.h"
+
+SCRATCH_DISABLE_WARNINGS_BEGIN()
+#include "glm/glm.hpp"
+SCRATCH_DISABLE_WARNINGS_END()
 
 #include <vector>
 
@@ -17,15 +22,12 @@ struct mesh
 {
 	std::vector<vertex> Vertices{};
 	std::vector<uint32> Indices{};
-	std::vector<texture> Textures{};
+	phong_material Material;
 
-	vertex_array VAO{};
-	vertex_buffer VBO{};
-	index_buffer EBO{};
+	vertex_array VertexArray{};
+	vertex_buffer VertexBuffer{};
+	element_buffer ElementBuffer{};
 
-	void Init(
-		std::vector<vertex>&& InVertices,
-		std::vector<uint32>&& InIndices,
-		std::vector<texture>&& InTextures);
-	void Draw();
+	void Init();
+	void Draw(const class renderer& Renderer, const glm::mat4& Transform);
 };
