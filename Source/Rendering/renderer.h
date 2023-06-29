@@ -12,6 +12,7 @@
 #include <vector>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
+#include "framebuffer.h"
 #include "glad/glad.h"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
@@ -56,6 +57,7 @@ public:
 	void Init();
 	void InitCubeVAO();
 	void InitNormalCubeVAO();
+	void InitScreenQuadVAO();
 	void InitDefaultShaders();
 	
 	void Draw(
@@ -64,9 +66,12 @@ public:
 		const shader& Shader,
 		glm::mat4 Transform) const;
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
+	void DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms) const;
 	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	
 	void Draw2(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
+	
+	void DrawFrameBuffer(const framebuffer& Framebuffer);
 
 	void ResetCamera()
 	{
@@ -78,6 +83,8 @@ public:
 	glm::mat4 CalcMVPForTransform(const glm::mat4& Transform) const;
 
 	float AspectRatio = 1.f;
+	uint32 CurrentHeight;
+	uint32 CurrentWidth;
 	
 	std::weak_ptr<camera> CustomCamera{};
 	
@@ -86,11 +93,16 @@ public:
 	glm::vec3 CameraDirection = glm::vec3{0.f,0.f,-1.f};
 	glm::vec3 CameraUpVector = glm::vec3{0.f,1.f,0.f};
 	
+	vertex_array ScreenQuadVAO{};
+	vertex_buffer ScreenQuadBVO{};
+		
 	vertex_array CubeVAO{};
 	vertex_buffer CubeVBO{};
 	
 	vertex_array NormalCubeVAO{};
 	vertex_buffer NormalCubeVBO{};
+	
+	shader PostProcessShader{};
 	
 	shader PhongShader{};
 	shader OutlineShader{};
@@ -99,8 +111,16 @@ public:
 	
 	std::vector<light> SceneLights{};
 
+	void UIRendererControls()
+	{
+		UIViewModeControl();
+		UIPostProcessControl();
+	}
+	
 	void UIViewModeControl();
 	void ChangeViewMode(view_mode NewViewMode);
 	view_mode ViewMode = view_mode::lit;
 	int32 DrawElementsMode = GL_TRIANGLES;
+	void UIPostProcessControl();
+	bool bGrayscale = false;
 };

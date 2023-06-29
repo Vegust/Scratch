@@ -99,6 +99,30 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 	}
 }
 
+void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms) const
+{
+	NormalCubeVAO.Bind();
+	
+	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	if (!CustomCamera.expired())
+	{
+		auto CameraHandle = CustomCamera.lock();
+		View = CameraHandle->GetViewTransform();
+	}
+	
+	ActiveShader->Bind();
+	ActiveShader->SetUniform("u_Material", Material);
+	ActiveShader->SetUniform("u_Lights", "u_NumLights", SceneLights, View);
+	for (const auto& Transform : Transforms)
+	{
+		glm::mat4 ViewModel = View * Transform;
+		ActiveShader->SetUniform("u_ViewModel", ViewModel);
+		ActiveShader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+		ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
+		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+	}
+}
+
 void renderer::Draw2(
 	const vertex_array& VertexArray,
 	const element_buffer& ElementBuffer,
@@ -123,12 +147,25 @@ void renderer::Draw2(
 	ActiveShader->SetUniform("u_ViewModel", ViewModel);
 	ActiveShader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 	ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
-	
+
 	GL_CALL(glDrawElements(
 		DrawElementsMode,
 		static_cast<GLsizei>(VertexArray.ElementBufferSize),
 		GL_UNSIGNED_INT,
 		nullptr));
+}
+
+void renderer::DrawFrameBuffer(const framebuffer& Framebuffer)
+{
+	ScreenQuadVAO.Bind();
+	PostProcessShader.Bind();
+	PostProcessShader.SetUniform("u_Buffer", 0);
+	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, Framebuffer.ColorTextureId);
+	glDisable(GL_DEPTH_TEST);
+	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
+	glEnable(GL_DEPTH_TEST);
 }
 
 void renderer::InitCubeVAO()
@@ -177,9 +214,9 @@ void renderer::InitCubeVAO()
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
 		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
 		0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right     
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left    
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f
 		// clang-format on
 	};
 
@@ -236,9 +273,10 @@ void renderer::InitNormalCubeVAO()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
 		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
 		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f
+		
 		// clang-format on
 	};
 
@@ -248,6 +286,26 @@ void renderer::InitNormalCubeVAO()
 	VertexLayout.Push<float>(3);
 	VertexLayout.Push<float>(2);
 	NormalCubeVAO.AddBuffer(NormalCubeVBO, VertexLayout);
+}
+
+void renderer::InitScreenQuadVAO()
+{
+	constexpr std::array<float, 6 * 4> Vertices = {
+		// clang-format off
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+		1.0f,  1.0f,  1.0f, 1.0f
+		// clang-format on
+	};
+
+	ScreenQuadBVO.SetData(Vertices.data(), Vertices.size() * sizeof(float));
+	vertex_buffer_layout VertexLayout{};
+	VertexLayout.Push<float>(2);
+	VertexLayout.Push<float>(2);
+	ScreenQuadVAO.AddBuffer(ScreenQuadBVO, VertexLayout);
 }
 
 glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
@@ -272,6 +330,7 @@ void renderer::Init()
 	InitCubeVAO();
 	InitNormalCubeVAO();
 	InitDefaultShaders();
+	InitScreenQuadVAO();
 }
 
 void renderer::InitDefaultShaders()
@@ -280,6 +339,8 @@ void renderer::InitDefaultShaders()
 	PhongShader.SetUniform("u_Unlit", false);
 	PhongShader.SetUniform("u_Depth", false);
 	OutlineShader.Compile("Resources/Shaders/Outline.shader");
+	PostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
+	PostProcessShader.SetUniform("u_Grayscale", false);
 }
 
 void renderer::ChangeViewMode(view_mode NewViewMode)
@@ -288,7 +349,7 @@ void renderer::ChangeViewMode(view_mode NewViewMode)
 	{
 		ViewMode = NewViewMode;
 		PhongShader.Bind();
-		switch(ViewMode)
+		switch (ViewMode)
 		{
 			case view_mode::lit:
 				PhongShader.SetUniform("u_Unlit", false);
@@ -318,8 +379,7 @@ void renderer::UIViewModeControl()
 {
 	constexpr std::array<view_mode, 4> Types = {
 		view_mode::lit, view_mode::unlit, view_mode::wireframe, view_mode::depth};
-	constexpr std::array<const char*, 4> Names = {
-		"Lit", "Unlit", "Wireframe", "Depth"};
+	constexpr std::array<const char*, 4> Names = {"Lit", "Unlit", "Wireframe", "Depth"};
 	if (ImGui::BeginCombo("View mode", Names[static_cast<uint32>(ViewMode)]))
 	{
 		for (uint32 i = 0; i < Types.size(); ++i)
@@ -333,3 +393,14 @@ void renderer::UIViewModeControl()
 		ImGui::EndCombo();
 	}
 }
+
+void renderer::UIPostProcessControl()
+{
+	bool bOldGrayscale = bGrayscale;
+	ImGui::Checkbox("Grayscale", &bGrayscale);
+	if (bOldGrayscale != bGrayscale)
+	{
+		PostProcessShader.SetUniform("u_Grayscale", bGrayscale);
+	}
+}
+

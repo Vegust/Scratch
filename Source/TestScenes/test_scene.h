@@ -35,6 +35,10 @@ public:
 	virtual void OnIMGuiRender()
 	{
 	}
+	
+	virtual void OnScreenSizeChanged(int NewWidth, int NewHeight)
+	{
+	}
 
 	virtual void ProcessInput(struct GLFWwindow* Window, float DeltaTime)
 	{

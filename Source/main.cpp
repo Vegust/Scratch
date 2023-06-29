@@ -34,6 +34,12 @@ static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight)
 {
 	glViewport(0, 0, NewWidth, NewHeight);
 	renderer::Get().AspectRatio = static_cast<float>(NewWidth) / static_cast<float>(NewHeight);
+	renderer::Get().CurrentHeight = NewHeight;
+	renderer::Get().CurrentWidth = NewWidth;
+	if (GetCurrentScene())
+	{
+		GetCurrentScene()->OnScreenSizeChanged(NewWidth, NewHeight);
+	}
 }
 
 static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos)
@@ -111,8 +117,11 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	constexpr uint32 WindowWidth = 1920;
-	constexpr uint32 WindowHeight = 1080;
+	constexpr uint32 WindowWidth = 1000;
+	constexpr uint32 WindowHeight = 800;
+	
+	renderer::Get().CurrentHeight = WindowHeight;
+	renderer::Get().CurrentWidth = WindowWidth;
 	renderer::Get().AspectRatio =
 		static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight);
 	GLFWwindow* Window = glfwCreateWindow(WindowWidth, WindowHeight, "Scratch", nullptr, nullptr);
@@ -205,7 +214,7 @@ int main()
 				}
 				if (GetCurrentScene() != &TestMenu)
 				{
-					renderer::Get().UIViewModeControl();
+					renderer::Get().UIRendererControls();
 					ImGui::Checkbox("Free Camera", &bFreeCamera);
 					if (bOldFreeCamera != bFreeCamera)
 					{
