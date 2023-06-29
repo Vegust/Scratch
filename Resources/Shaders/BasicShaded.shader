@@ -57,6 +57,9 @@ uniform material u_Material;
 uniform light u_Lights[MAX_LIGHTS];
 uniform int u_NumLights;
 
+uniform bool u_Unlit;
+uniform bool u_Depth;
+
 vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection)
 {
 	// Ambient
@@ -117,15 +120,34 @@ void main() {
 	vec3 NormalizedNormal = normalize(v_Normal);
 	vec3 ViewDirection = normalize(-v_FragPos);
 
-	for (int i = 0; i < u_NumLights; ++i)
+	if (u_Depth)
 	{
-		CombinedLightColor += CalcLightColor(
-			u_Lights[i],
-			DiffuseTextureColor,
-			SpecularTextureColor,
-			NormalizedNormal,
-			ViewDirection);
+		const float Near = 0.001f;
+		const float Far = 1000.f;
+		float NDC = gl_FragCoord.z * 2.0 - 1.0;
+		float LinearDepth = (2.0 * Near * Far) / (Far + Near - NDC * (Far - Near));
+		float FinalValue = (LinearDepth - Near) / 10.0;
+		Color = vec4(vec3(FinalValue), 1.0);
 	}
+	else
+	{
+		if (u_Unlit)
+		{
+			Color = vec4(DiffuseTextureColor, 1.f);
+		}
+		else
+		{
+			for (int i = 0; i < u_NumLights; ++i)
+			{
+				CombinedLightColor += CalcLightColor(
+					u_Lights[i],
+					DiffuseTextureColor,
+					SpecularTextureColor,
+					NormalizedNormal,
+					ViewDirection);
+			}
 
-	Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, v_TexCoords)), 1.0);
+			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, v_TexCoords)), 1.0);
+		}
+	}
 };

@@ -29,10 +29,10 @@ class shader;
 
 enum class view_mode : uint8
 {
-	lit,
-	unlit,
-	wireframe,
-	depth
+	lit = 0,
+	unlit = 1,
+	wireframe = 2,
+	depth = 3
 };
 
 void GlClearError();
@@ -94,8 +94,9 @@ public:
 	
 	shader PhongShader{};
 	std::vector<light> SceneLights{};
-	
-	view_mode ViewMode = view_mode::lit;
+
+	void UIViewModeControl();
 	void ChangeViewMode(view_mode NewViewMode);
+	view_mode ViewMode = view_mode::lit;
 	int32 DrawElementsMode = GL_TRIANGLES;
 };

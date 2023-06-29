@@ -10,8 +10,8 @@ test_model::test_model()
 {
 	auto& Light = renderer::Get().SceneLights.emplace_back();
 	Light.Type = light_type::directional;
-	Light.Ambient = glm::vec3{0.9f,0.9f,0.9f};
-	Light.Diffuse = glm::vec3{0.1f,0.1f,0.1f};
+	Light.Ambient = glm::vec3{0.5f,0.5f,0.5f};
+	Light.Diffuse = glm::vec3{0.5f,0.5f,0.5};
 	
 	Model.Load("Resources/Models/Backpack/backpack.obj");
 }
@@ -32,4 +32,5 @@ void test_model::OnRender(renderer& Renderer)
 void test_model::OnIMGuiRender()
 {
 	test_scene::OnIMGuiRender();
+	renderer::Get().SceneLights[0].UIControlPanel("");
 }

@@ -201,6 +201,7 @@ int main()
 				}
 				if (GetCurrentScene() != &TestMenu)
 				{
+					renderer::Get().UIViewModeControl();
 					ImGui::Checkbox("Free Camera", &bFreeCamera);
 					if (bOldFreeCamera != bFreeCamera)
 					{

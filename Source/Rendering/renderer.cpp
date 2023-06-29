@@ -8,6 +8,7 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/matrix.hpp"
+#include "imgui.h"
 #include "shader.h"
 #include "vertex_array.h"
 #include "vertex_buffer_layout.h"
@@ -42,7 +43,7 @@ void renderer::Draw(
 	IndexBuffer.Bind();
 
 	GL_CALL(glDrawElements(
-		DrawElementsMode, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
+		GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
 void renderer::Clear()
@@ -98,30 +99,36 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 	}
 }
 
-void renderer::DrawPhong(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const
+void renderer::DrawPhong(
+	const vertex_array& VertexArray,
+	const element_buffer& ElementBuffer,
+	const phong_material& Material,
+	const glm::mat4& Transform) const
 {
 	VertexArray.Bind();
 	ElementBuffer.Bind();
-	PhongShader.Bind();
 	Material.Bind();
-	
+
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
 		View = CameraHandle->GetViewTransform();
 	}
-	
+	glm::mat4 ViewModel = View * Transform;
+
 	PhongShader.Bind();
 	PhongShader.SetUniform("u_Material", Material);
 	PhongShader.SetUniform("u_Lights", "u_NumLights", SceneLights, View);
-	
-	glm::mat4 ViewModel = View * Transform;
 	PhongShader.SetUniform("u_ViewModel", ViewModel);
 	PhongShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 	PhongShader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
+	
 	GL_CALL(glDrawElements(
-		DrawElementsMode, static_cast<GLsizei>(VertexArray.ElementBufferSize), GL_UNSIGNED_INT, nullptr));
+		DrawElementsMode,
+		static_cast<GLsizei>(VertexArray.ElementBufferSize),
+		GL_UNSIGNED_INT,
+		nullptr));
 }
 
 void renderer::InitCubeVAO()
@@ -129,8 +136,7 @@ void renderer::InitCubeVAO()
 	constexpr uint32 NumVertices = 36;
 	constexpr uint32 ElementsPerVertex = 5;
 	constexpr uint32 SizeOfVertex = 5 * sizeof(float);
-
-	std::array<float, NumVertices* ElementsPerVertex> Vertices = {
+	constexpr std::array<float, NumVertices* ElementsPerVertex> Vertices = {
 		// clang-format off
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -188,8 +194,7 @@ void renderer::InitNormalCubeVAO()
 	constexpr uint32 NumVertices = 36;
 	constexpr uint32 ElementsPerVertex = 8;
 	constexpr uint32 SizeOfVertex = ElementsPerVertex * sizeof(float);
-
-	std::array<float, NumVertices* ElementsPerVertex> Vertices = {
+	constexpr std::array<float, NumVertices* ElementsPerVertex> Vertices = {
 		// clang-format off
 		// positions          // normals           // texture coords
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
@@ -271,6 +276,8 @@ void renderer::Init()
 void renderer::InitDefaultShaders()
 {
 	PhongShader.Compile("Resources/Shaders/BasicShaded.shader");
+	PhongShader.SetUniform("u_Unlit", false);
+	PhongShader.SetUniform("u_Depth", false);
 }
 
 void renderer::ChangeViewMode(view_mode NewViewMode)
@@ -278,13 +285,49 @@ void renderer::ChangeViewMode(view_mode NewViewMode)
 	if (NewViewMode != ViewMode)
 	{
 		ViewMode = NewViewMode;
-		if (ViewMode == view_mode::wireframe)
+		PhongShader.Bind();
+		switch(ViewMode)
 		{
-			DrawElementsMode = GL_LINES;
+			case view_mode::lit:
+				PhongShader.SetUniform("u_Unlit", false);
+				PhongShader.SetUniform("u_Depth", false);
+				DrawElementsMode = GL_TRIANGLES;
+				break;
+			case view_mode::unlit:
+				PhongShader.SetUniform("u_Unlit", true);
+				PhongShader.SetUniform("u_Depth", false);
+				DrawElementsMode = GL_TRIANGLES;
+				break;
+			case view_mode::wireframe:
+				PhongShader.SetUniform("u_Unlit", true);
+				PhongShader.SetUniform("u_Depth", false);
+				DrawElementsMode = GL_LINES;
+				break;
+			case view_mode::depth:
+				PhongShader.SetUniform("u_Unlit", true);
+				PhongShader.SetUniform("u_Depth", true);
+				DrawElementsMode = GL_TRIANGLES;
+				break;
 		}
-		else
+	}
+}
+
+void renderer::UIViewModeControl()
+{
+	constexpr std::array<view_mode, 4> Types = {
+		view_mode::lit, view_mode::unlit, view_mode::wireframe, view_mode::depth};
+	constexpr std::array<const char*, 4> Names = {
+		"Lit", "Unlit", "Wireframe", "Depth"};
+	if (ImGui::BeginCombo("View mode", Names[static_cast<uint32>(ViewMode)]))
+	{
+		for (uint32 i = 0; i < Types.size(); ++i)
 		{
-			DrawElementsMode = GL_TRIANGLES;
+			bool bIsSelected = ViewMode == Types[i];
+			if (ImGui::Selectable(Names[i], bIsSelected))
+			{
+				ChangeViewMode(Types[i]);
+			}
 		}
+		ImGui::EndCombo();
 	}
 }
