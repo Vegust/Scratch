@@ -87,8 +87,20 @@ mesh model::ProcessMesh(aiMesh* MeshData, const aiScene* Scene)
 	SCRATCH_DISABLE_WARNINGS_BEGIN()
 	aiMaterial* Material = Scene->mMaterials[MeshData->mMaterialIndex];
 	SCRATCH_DISABLE_WARNINGS_END()
-	OutMesh.Material.DiffuseMaps = LoadTextures(Material, aiTextureType_DIFFUSE);
-	OutMesh.Material.SpecularMaps = LoadTextures(Material, aiTextureType_SPECULAR);
+	
+	//TODO: What to do with more than 1 texture per type?
+	if (Material->GetTextureCount(aiTextureType_DIFFUSE) > 0)
+	{
+		aiString str;
+		Material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+		OutMesh.Material.DiffuseMap.Load(Directory.string() + '/' + str.C_Str());
+	}
+	if (Material->GetTextureCount(aiTextureType_SPECULAR) > 0)
+	{
+		aiString str;
+		Material->GetTexture(aiTextureType_SPECULAR, 0, &str);
+		OutMesh.Material.SpecularMap.Load(Directory.string() + '/' + str.C_Str());
+	}
 
 	OutMesh.Init();
 	return OutMesh;

@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "SceneObjects/model.h"
 #include "test_scene.h"
 
 class test_model : public test_scene
@@ -14,4 +15,6 @@ public:
 	virtual void OnUpdate(float DeltaTime) override;
 	virtual void OnRender(renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
+	
+	model Model;
 };

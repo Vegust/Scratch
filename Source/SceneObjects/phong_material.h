@@ -24,10 +24,6 @@ public:
 	uint32 SpecularSlot = 1;
 	uint32 EmissionSlot = 2;
 	
-	// for mesh imports
-	std::vector<texture> DiffuseMaps{};
-	std::vector<texture> SpecularMaps{};
-
 	float Shininess{32.f};
 
 	void InitTextures(
