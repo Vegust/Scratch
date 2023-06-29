@@ -11,6 +11,10 @@ test_cubemap::test_cubemap()
 	CubeMaterial.InitTextures(
 		"Resources/Textures/Box/BoxDiffuse.png", 0, "Resources/Textures/Box/BoxSpecular.png", 1);
 	
+	Skybox.Load({
+		"Resources/Textures/Skybox_Mountains"
+	});
+	
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 0.f, 1.5f};
 	renderer::Get().CustomCamera = Camera;
@@ -21,14 +25,15 @@ test_cubemap::test_cubemap()
 	Light.Diffuse = glm::vec3{0.5f, 0.5f, 0.5};
 }
 
-void test_cubemap::OnUpdate(float DeltaTime)
-{
-	test_scene::OnUpdate(DeltaTime);
-}
-
 void test_cubemap::OnRender(renderer& Renderer)
 {
 	test_scene::OnRender(Renderer);
+	
+	glClearColor(0.1f, 0.2f, 0.1f, 0.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	
+	Renderer.DrawSkybox(Skybox);
+	
 	std::vector<glm::mat4> CubeTransforms;
 	CubeTransforms.push_back(glm::translate(glm::mat4{1.f}, CubePosition));
 	Renderer.DrawCubes(CubeMaterial, CubeTransforms);

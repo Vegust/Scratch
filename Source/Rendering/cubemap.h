@@ -6,9 +6,13 @@
 
 #include "core_types.h"
 
+#include <vector>
+#include <string_view>
+
 struct cubemap
 {
 	uint32 RendererId{0};
+	constexpr static int32 CubemapSlot{15};
 	
 	cubemap() = default;
 	~cubemap();
@@ -18,5 +22,6 @@ struct cubemap
 	cubemap(cubemap&& InCubemap) noexcept;
 	cubemap& operator=(cubemap&& InCubemap) noexcept;
 	
-	void Load();
+	void Load(const std::string_view& Directory, const std::vector<std::string_view>& TextureFacePaths = {});
+	void Bind() const;
 };

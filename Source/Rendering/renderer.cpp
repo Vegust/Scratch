@@ -99,17 +99,18 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 	}
 }
 
-void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms) const
+void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms)
+	const
 {
 	NormalCubeVAO.Bind();
-	
+
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
 		View = CameraHandle->GetViewTransform();
 	}
-	
+
 	ActiveShader->Bind();
 	ActiveShader->SetUniform("u_Material", Material);
 	ActiveShader->SetUniform("u_Lights", "u_NumLights", SceneLights, View);
@@ -117,7 +118,8 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 	{
 		glm::mat4 ViewModel = View * Transform;
 		ActiveShader->SetUniform("u_ViewModel", ViewModel);
-		ActiveShader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+		ActiveShader->SetUniform(
+			"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
 		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
 	}
@@ -160,12 +162,32 @@ void renderer::DrawFrameBuffer(const framebuffer& Framebuffer)
 	ScreenQuadVAO.Bind();
 	PostProcessShader.Bind();
 	PostProcessShader.SetUniform("u_Buffer", 0);
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, Framebuffer.ColorTextureId);
 	glDisable(GL_DEPTH_TEST);
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
 	glEnable(GL_DEPTH_TEST);
+}
+
+void renderer::DrawSkybox(const cubemap& Skybox)
+{
+	glDepthMask(0x00);
+	SkyboxVAO.Bind();
+	SkyboxShader.Bind();
+	Skybox.Bind();
+	SkyboxShader.SetUniform("u_Cubemap", cubemap::CubemapSlot);
+	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 100.f);
+	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	if (!CustomCamera.expired())
+	{
+		auto CameraHandle = CustomCamera.lock();
+		View = CameraHandle->GetViewTransform();
+	}
+	View = glm::mat4(glm::mat3(View));
+	SkyboxShader.SetUniform("u_ProjectionView", ProjectionMatrix * View);
+	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+	glDepthMask(0xFF);
 }
 
 void renderer::InitCubeVAO()
@@ -276,7 +298,7 @@ void renderer::InitNormalCubeVAO()
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
 		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
 		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f
-		
+
 		// clang-format on
 	};
 
@@ -308,6 +330,60 @@ void renderer::InitScreenQuadVAO()
 	ScreenQuadVAO.AddBuffer(ScreenQuadBVO, VertexLayout);
 }
 
+void renderer::InitSkyboxVAO()
+{
+	constexpr std::array<float, 36 * 3> Vertices = {
+		// clang-format off
+ 		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f, -1.0f,
+		1.0f,  1.0f,  1.0f,
+		1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		1.0f, -1.0f, -1.0f,
+		1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		1.0f, -1.0f,  1.0f
+		// clang-format on
+	};
+	
+	SkyboxVBO.SetData(Vertices.data(), Vertices.size() * sizeof(float));
+	vertex_buffer_layout VertexLayout{};
+	VertexLayout.Push<float>(3);
+	SkyboxVAO.AddBuffer(SkyboxVBO, VertexLayout);
+}
+
 glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
 {
 	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 100.f);
@@ -331,6 +407,7 @@ void renderer::Init()
 	InitNormalCubeVAO();
 	InitDefaultShaders();
 	InitScreenQuadVAO();
+	InitSkyboxVAO();
 }
 
 void renderer::InitDefaultShaders()
@@ -341,6 +418,7 @@ void renderer::InitDefaultShaders()
 	OutlineShader.Compile("Resources/Shaders/Outline.shader");
 	PostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
 	PostProcessShader.SetUniform("u_Grayscale", false);
+	SkyboxShader.Compile("Resources/Shaders/Skybox.shader");
 }
 
 void renderer::ChangeViewMode(view_mode NewViewMode)
@@ -403,4 +481,3 @@ void renderer::UIPostProcessControl()
 		PostProcessShader.SetUniform("u_Grayscale", bGrayscale);
 	}
 }
-

@@ -12,6 +12,7 @@
 #include <vector>
 
 SCRATCH_DISABLE_WARNINGS_BEGIN()
+#include "cubemap.h"
 #include "framebuffer.h"
 #include "glad/glad.h"
 #include "glm/ext/matrix_transform.hpp"
@@ -58,6 +59,7 @@ public:
 	void InitCubeVAO();
 	void InitNormalCubeVAO();
 	void InitScreenQuadVAO();
+	void InitSkyboxVAO();
 	void InitDefaultShaders();
 	
 	void Draw(
@@ -68,10 +70,9 @@ public:
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	void DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms) const;
 	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
-	
 	void Draw2(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
-	
 	void DrawFrameBuffer(const framebuffer& Framebuffer);
+	void DrawSkybox(const cubemap& Skybox);
 
 	void ResetCamera()
 	{
@@ -102,8 +103,12 @@ public:
 	vertex_array NormalCubeVAO{};
 	vertex_buffer NormalCubeVBO{};
 	
+	vertex_array SkyboxVAO{};
+	vertex_buffer SkyboxVBO{};
+	
 	shader PostProcessShader{};
 	
+	shader SkyboxShader{};
 	shader PhongShader{};
 	shader OutlineShader{};
 	shader* ActiveShader = &PhongShader;
