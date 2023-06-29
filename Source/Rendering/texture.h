@@ -16,9 +16,6 @@ private:
 	uint32 RendererId{0};
 	std::filesystem::path Path{};
 	uint8* LocalBuffer{nullptr};
-	int32 Width{0};
-	int32 Height{0};
-	int32 NumChannels{0};
 	
 public:
 	texture() = default;
@@ -29,6 +26,14 @@ public:
 	texture(texture&& InTexture) noexcept;
 	texture& operator=(texture&& InTexture) noexcept;
 	
+	static std::unordered_map<std::string, std::pair<uint32, uint32>>& GetTextureCache()
+	{
+		static std::unordered_map<std::string, std::pair<uint32, uint32>> TextureCache{};
+		return TextureCache;
+	}
+	
+	void ClearTextureHandle();
+
 	bool Loaded() const { return RendererId != 0; }
 	
 	void Load(std::string_view InPath);

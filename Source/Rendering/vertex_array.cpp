@@ -11,7 +11,9 @@
 vertex_array::vertex_array(vertex_array&& InVertexArray)
 {
 	RendererId = InVertexArray.RendererId;
+	ElementBufferSize = InVertexArray.ElementBufferSize;
 	InVertexArray.RendererId = 0;
+	InVertexArray.ElementBufferSize = 0;
 }
 
 vertex_array& vertex_array::operator=(vertex_array&& InVertexArray)
@@ -21,7 +23,9 @@ vertex_array& vertex_array::operator=(vertex_array&& InVertexArray)
 		glDeleteVertexArrays(1, &RendererId);
 	}
 	RendererId = InVertexArray.RendererId;
+	ElementBufferSize = InVertexArray.ElementBufferSize;
 	InVertexArray.RendererId = 0;
+	InVertexArray.ElementBufferSize = 0;
 	return *this;
 }
 
@@ -65,6 +69,7 @@ void vertex_array::AddBuffer(
 {
 	AddBuffer(VertexBuffer, Layout);
 	IndexBuffer.Bind();
+	ElementBufferSize = IndexBuffer.GetCount();
 }
 
 void vertex_array::Bind() const

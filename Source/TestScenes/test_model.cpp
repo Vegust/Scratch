@@ -8,7 +8,11 @@ REGISTER_TEST_SCENE(test_model, "06 Mesh")
 
 test_model::test_model()
 {
-	renderer::Get().SceneLights.emplace_back();
+	auto& Light = renderer::Get().SceneLights.emplace_back();
+	Light.Type = light_type::directional;
+	Light.Ambient = glm::vec3{0.9f,0.9f,0.9f};
+	Light.Diffuse = glm::vec3{0.1f,0.1f,0.1f};
+	
 	Model.Load("Resources/Models/Backpack/backpack.obj");
 }
 

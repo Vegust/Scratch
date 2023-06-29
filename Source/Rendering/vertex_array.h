@@ -12,10 +12,10 @@ struct vertex_buffer_layout;
 
 class vertex_array
 {
-private:
-	uint32 RendererId{0};
-
 public:
+	uint32 RendererId{0};
+	uint32 ElementBufferSize{0};
+
 	vertex_array() = default;
 	~vertex_array();
 	

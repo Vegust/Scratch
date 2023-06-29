@@ -8,7 +8,9 @@
 element_buffer::element_buffer(element_buffer&& InIndexBuffer)
 {
 	RendererId = InIndexBuffer.RendererId;
+	Count = InIndexBuffer.Count;
 	InIndexBuffer.RendererId = 0;
+	InIndexBuffer.Count = 0;
 }
 
 element_buffer& element_buffer::operator=(element_buffer&& InIndexBuffer)
@@ -18,7 +20,9 @@ element_buffer& element_buffer::operator=(element_buffer&& InIndexBuffer)
 		glDeleteBuffers(1, &RendererId);
 	}
 	RendererId = InIndexBuffer.RendererId;
+	Count = InIndexBuffer.Count;
 	InIndexBuffer.RendererId = 0;
+	InIndexBuffer.Count = 0;
 	return *this;
 }
 

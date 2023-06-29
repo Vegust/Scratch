@@ -27,6 +27,14 @@ SCRATCH_DISABLE_WARNINGS_END()
 
 class shader;
 
+enum class view_mode : uint8
+{
+	lit,
+	unlit,
+	wireframe,
+	depth
+};
+
 void GlClearError();
 bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber);
 
@@ -58,7 +66,7 @@ public:
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	
-	void DrawPhong(const vertex_array& VertexArray, const phong_material& Material, const glm::mat4& Transform) const;
+	void DrawPhong(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
 
 	void ResetCamera()
 	{
@@ -86,4 +94,8 @@ public:
 	
 	shader PhongShader{};
 	std::vector<light> SceneLights{};
+	
+	view_mode ViewMode = view_mode::lit;
+	void ChangeViewMode(view_mode NewViewMode);
+	int32 DrawElementsMode = GL_TRIANGLES;
 };

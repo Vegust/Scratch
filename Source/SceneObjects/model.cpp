@@ -20,7 +20,7 @@ void model::Load(std::string_view Path)
 
 	Assimp::Importer Importer;
 	const aiScene* Scene =
-		Importer.ReadFile(Path.data(), aiProcess_Triangulate | aiProcess_FlipUVs);
+		Importer.ReadFile(Path.data(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 
 	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
 	{
@@ -36,16 +36,12 @@ void model::ProcessNode(aiNode* Node, const aiScene* Scene)
 {
 	for (uint32 i = 0; i < Node->mNumMeshes; i++)
 	{
-		SCRATCH_DISABLE_WARNINGS_BEGIN()
 		aiMesh* MeshData = Scene->mMeshes[Node->mMeshes[i]];
-		SCRATCH_DISABLE_WARNINGS_END()
 		Meshes.push_back(ProcessMesh(MeshData, Scene));
 	}
 	for (uint32 i = 0; i < Node->mNumChildren; i++)
 	{
-		SCRATCH_DISABLE_WARNINGS_BEGIN()
 		ProcessNode(Node->mChildren[i], Scene);
-		SCRATCH_DISABLE_WARNINGS_END()
 	}
 }
 
@@ -56,7 +52,6 @@ mesh model::ProcessMesh(aiMesh* MeshData, const aiScene* Scene)
 	for (unsigned int i = 0; i < MeshData->mNumVertices; i++)
 	{
 		vertex Vertex;
-		SCRATCH_DISABLE_WARNINGS_BEGIN()
 		Vertex.Position.x = MeshData->mVertices[i].x;
 		Vertex.Position.y = MeshData->mVertices[i].y;
 		Vertex.Position.z = MeshData->mVertices[i].z;
@@ -68,25 +63,20 @@ mesh model::ProcessMesh(aiMesh* MeshData, const aiScene* Scene)
 			Vertex.UV.x = MeshData->mTextureCoords[0][i].x;
 			Vertex.UV.y = MeshData->mTextureCoords[0][i].y;
 		}
-		SCRATCH_DISABLE_WARNINGS_END()
 		OutMesh.Vertices.push_back(Vertex);
 	}
 
 	OutMesh.Indices.reserve(MeshData->mNumFaces * 3);
 	for (unsigned int i = 0; i < MeshData->mNumFaces; i++)
 	{
-		SCRATCH_DISABLE_WARNINGS_BEGIN()
 		aiFace face = MeshData->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 		{
 			OutMesh.Indices.push_back(face.mIndices[j]);
 		}
-		SCRATCH_DISABLE_WARNINGS_END()
 	}
 
-	SCRATCH_DISABLE_WARNINGS_BEGIN()
 	aiMaterial* Material = Scene->mMaterials[MeshData->mMaterialIndex];
-	SCRATCH_DISABLE_WARNINGS_END()
 	
 	//TODO: What to do with more than 1 texture per type?
 	if (Material->GetTextureCount(aiTextureType_DIFFUSE) > 0)

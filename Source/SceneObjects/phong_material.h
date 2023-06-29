@@ -54,4 +54,14 @@ public:
 			EmissionMap.Bind(EmissionSlot);
 		}
 	}
+	
+	void Bind() const
+	{
+		DiffuseMap.Bind(DiffuseSlot);
+		SpecularMap.Bind(SpecularSlot);
+		if (EmissionMap.Loaded())
+		{
+			EmissionMap.Bind(EmissionSlot);
+		}
+	}
 };

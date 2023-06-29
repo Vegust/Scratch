@@ -42,7 +42,7 @@ void renderer::Draw(
 	IndexBuffer.Bind();
 
 	GL_CALL(glDrawElements(
-		GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
+		DrawElementsMode, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
 void renderer::Clear()
@@ -62,7 +62,7 @@ void renderer::Draw(
 	Shader.Bind();
 	Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
 	GL_CALL(glDrawElements(
-		GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
+		DrawElementsMode, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
 void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
@@ -98,10 +98,12 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 	}
 }
 
-void renderer::DrawPhong(const vertex_array& VertexArray, const phong_material& Material, const glm::mat4& Transform) const
+void renderer::DrawPhong(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const
 {
 	VertexArray.Bind();
+	ElementBuffer.Bind();
 	PhongShader.Bind();
+	Material.Bind();
 	
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
@@ -118,7 +120,8 @@ void renderer::DrawPhong(const vertex_array& VertexArray, const phong_material& 
 	PhongShader.SetUniform("u_ViewModel", ViewModel);
 	PhongShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 	PhongShader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+	GL_CALL(glDrawElements(
+		DrawElementsMode, static_cast<GLsizei>(VertexArray.ElementBufferSize), GL_UNSIGNED_INT, nullptr));
 }
 
 void renderer::InitCubeVAO()
@@ -268,4 +271,20 @@ void renderer::Init()
 void renderer::InitDefaultShaders()
 {
 	PhongShader.Compile("Resources/Shaders/BasicShaded.shader");
+}
+
+void renderer::ChangeViewMode(view_mode NewViewMode)
+{
+	if (NewViewMode != ViewMode)
+	{
+		ViewMode = NewViewMode;
+		if (ViewMode == view_mode::wireframe)
+		{
+			DrawElementsMode = GL_LINES;
+		}
+		else
+		{
+			DrawElementsMode = GL_TRIANGLES;
+		}
+	}
 }

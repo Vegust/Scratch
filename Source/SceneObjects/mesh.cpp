@@ -17,5 +17,5 @@ void mesh::Init()
 
 void mesh::Draw(const renderer& Renderer, const glm::mat4& Transform)
 {
-	Renderer.DrawPhong(VertexArray, Material, Transform);
+	Renderer.DrawPhong(VertexArray, ElementBuffer, Material, Transform);
 }

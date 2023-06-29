@@ -21,7 +21,11 @@ SCRATCH_DISABLE_WARNINGS_END()
 shader::shader(shader&& InShader)
 {
 	RendererId = InShader.RendererId;
+	Path = std::move(InShader.Path);
+	UniformsCache = std::move(InShader.UniformsCache);
 	InShader.RendererId = 0;
+	InShader.Path = std::filesystem::path{};
+	InShader.UniformsCache.clear();
 }
 
 shader& shader::operator=(shader&& InShader)
@@ -31,7 +35,11 @@ shader& shader::operator=(shader&& InShader)
 		glDeleteProgram(RendererId);
 	}
 	RendererId = InShader.RendererId;
+	Path = std::move(InShader.Path);
+	UniformsCache = std::move(InShader.UniformsCache);
 	InShader.RendererId = 0;
+	InShader.Path = std::filesystem::path{};
+	InShader.UniformsCache.clear();
 	return *this;
 }
 
