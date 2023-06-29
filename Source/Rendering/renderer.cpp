@@ -105,10 +105,12 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 	NormalCubeVAO.Bind();
 
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	glm::vec3 CameraPos{};
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
 		View = CameraHandle->GetViewTransform();
+		CameraPos = CameraHandle->Position;
 	}
 
 	ActiveShader->Bind();
@@ -118,6 +120,10 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 	{
 		glm::mat4 ViewModel = View * Transform;
 		ActiveShader->SetUniform("u_ViewModel", ViewModel);
+		ActiveShader->SetUniform("u_Model", Transform);
+		ActiveShader->SetUniform("u_CameraPos", CameraPos);
+		ActiveShader->SetUniform(
+			"u_NormalModelMatrix", glm::mat3(glm::transpose(glm::inverse(Transform))));
 		ActiveShader->SetUniform(
 			"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
@@ -172,7 +178,7 @@ void renderer::DrawFrameBuffer(const framebuffer& Framebuffer)
 
 void renderer::DrawSkybox(const cubemap& Skybox)
 {
-	glDepthMask(0x00);
+	glDepthFunc(GL_LEQUAL);
 	SkyboxVAO.Bind();
 	SkyboxShader.Bind();
 	Skybox.Bind();
@@ -187,7 +193,7 @@ void renderer::DrawSkybox(const cubemap& Skybox)
 	View = glm::mat4(glm::mat3(View));
 	SkyboxShader.SetUniform("u_ProjectionView", ProjectionMatrix * View);
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
-	glDepthMask(0xFF);
+	glDepthFunc(GL_LESS);
 }
 
 void renderer::InitCubeVAO()
@@ -377,7 +383,7 @@ void renderer::InitSkyboxVAO()
 		1.0f, -1.0f,  1.0f
 		// clang-format on
 	};
-	
+
 	SkyboxVBO.SetData(Vertices.data(), Vertices.size() * sizeof(float));
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);

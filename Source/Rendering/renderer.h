@@ -105,6 +105,7 @@ public:
 	
 	vertex_array SkyboxVAO{};
 	vertex_buffer SkyboxVBO{};
+	int32 SkyboxTextureSlot = cubemap::CubemapSlot;
 	
 	shader PostProcessShader{};
 	

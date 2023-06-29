@@ -246,7 +246,7 @@ uint32 shader::CompileShader(uint32 Type, std::string_view Source)
 		glGetShaderiv(Index, GL_INFO_LOG_LENGTH, &Length);
 		char* Message = static_cast<char*>(alloca(static_cast<uint64>(Length) * sizeof(char)));
 		glGetShaderInfoLog(Index, Length, &Length, Message);
-		std::cout << Message << "\r\n";
+		std::cout << Message << std::endl;
 		glDeleteShader(Index);
 		return 0;
 	}

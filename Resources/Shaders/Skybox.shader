@@ -6,7 +6,7 @@ out vec3 v_TexDirection;
 uniform mat4 u_ProjectionView;
 void main() {
 	v_TexDirection = Position;
-	gl_Position = u_ProjectionView * vec4(Position, 1.f);
+	gl_Position = (u_ProjectionView * vec4(Position, 1.f)).xyww;
 };
 
 //!shader fragment
