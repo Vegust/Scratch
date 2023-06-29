@@ -40,7 +40,7 @@ static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos)
 {
 	static double LastXPos{XPos};
 	static double LastYPos{YPos};
-	
+
 	ImGuiIO& io = ImGui::GetIO();
 	if (!io.WantCaptureMouse)
 	{
@@ -53,7 +53,7 @@ static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos)
 			}
 		}
 	}
-	
+
 	LastXPos = XPos;
 	LastYPos = YPos;
 }
@@ -89,13 +89,13 @@ static void ProcessInput(GLFWwindow* Window, float DeltaTime)
 			{
 				if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 				{
-					glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); 
+					glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 				}
 				else
 				{
-					glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); 
+					glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 				}
-				
+
 				auto CameraHandle = renderer::Get().CustomCamera.lock();
 				CameraHandle->ProcessInput(Window, DeltaTime);
 			}
@@ -133,13 +133,18 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+	glStencilMask(0xFF);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glEnable(GL_CULL_FACE);
 
 	bool bVSync = true;
 	bool bOldVSync = bVSync;
-	
+
 	bool bFreeCamera = false;
 	bool bOldFreeCamera = bFreeCamera;
-	
+
 	std::shared_ptr<camera> FreeCamera{};
 	std::weak_ptr<camera> ReplacedCamera{};
 
@@ -155,9 +160,8 @@ int main()
 		glfwSetCursorPosCallback(Window, OnMouseMoved);
 		glfwSetScrollCallback(Window, OnMouseScroll);
 		ImGui_ImplGlfw_InitForOpenGL(Window, true);
-		
+
 		ImGui_ImplOpenGL3_Init("#version 460");
-		
 
 		test_menu TestMenu{GetCurrentScene()};
 		GetCurrentScene() = &TestMenu;
@@ -238,7 +242,7 @@ int main()
 					}
 					bOldFreeCamera = bFreeCamera;
 				}
-				
+
 				if (GetCurrentScene() != &TestMenu && ImGui::Button("<-"))
 				{
 					delete GetCurrentScene();

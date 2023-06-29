@@ -66,7 +66,7 @@ public:
 	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	
-	void DrawPhong(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
+	void Draw2(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
 
 	void ResetCamera()
 	{
@@ -93,6 +93,10 @@ public:
 	vertex_buffer NormalCubeVBO{};
 	
 	shader PhongShader{};
+	shader OutlineShader{};
+	shader* ActiveShader = &PhongShader;
+	void SetActiveShader(shader* NewActiveShader) { ActiveShader = NewActiveShader; }
+	
 	std::vector<light> SceneLights{};
 
 	void UIViewModeControl();

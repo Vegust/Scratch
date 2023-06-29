@@ -123,7 +123,7 @@ void main() {
 	if (u_Depth)
 	{
 		const float Near = 0.001f;
-		const float Far = 1000.f;
+		const float Far = 100.f;
 		float NDC = gl_FragCoord.z * 2.0 - 1.0;
 		float LinearDepth = (2.0 * Near * Far) / (Far + Near - NDC * (Far - Near));
 		float FinalValue = (LinearDepth - Near) / 10.0;

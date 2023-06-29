@@ -20,7 +20,7 @@ void model::Load(std::string_view Path)
 
 	Assimp::Importer Importer;
 	const aiScene* Scene =
-		Importer.ReadFile(Path.data(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
+		Importer.ReadFile(Path.data(), aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph  | aiProcess_FlipUVs | aiProcess_GenNormals);
 
 	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
 	{

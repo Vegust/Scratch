@@ -15,6 +15,9 @@ public:
 	virtual void OnUpdate(float DeltaTime) override;
 	virtual void OnRender(renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
-	
+
 	model Model;
+	glm::vec3 ModelPosition{0.f, 0.f, -3.f};
+	
+	bool bDrawOutline = false;
 };

@@ -33,7 +33,7 @@ test_texture::test_texture()
 		-0.4f,	0.4f, 0.f, 1.f
 		// clang-format on
 	};
-	std::array<uint32, NumTriangles* 3> Indices = {0, 1, 2, 1, 2, 3};
+	std::array<uint32, NumTriangles* 3> Indices = {2, 1, 0, 1, 2, 3};
 
 	constexpr uint32 WindowWidth = 1920;
 	constexpr uint32 WindowHeight = 1080;
