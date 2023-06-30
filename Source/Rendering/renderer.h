@@ -112,6 +112,7 @@ public:
 	shader SkyboxShader{};
 	shader PhongShader{};
 	shader OutlineShader{};
+	shader NormalsShader{};
 	shader* ActiveShader = &PhongShader;
 	void SetActiveShader(shader* NewActiveShader) { ActiveShader = NewActiveShader; }
 	
@@ -129,4 +130,5 @@ public:
 	int32 DrawElementsMode = GL_TRIANGLES;
 	void UIPostProcessControl();
 	bool bGrayscale = false;
+	bool bNormals = false;
 };

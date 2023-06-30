@@ -208,7 +208,7 @@ shader::parsed_shaders shader::ParseShader(const std::filesystem::path& Path)
 	bool bHasGeometryShader = false;
 	while (getline(InputFile, Line))
 	{
-		if (Line.find("!shader") != std::string::npos)
+		if (Line.find("!shader") != std::string::npos && Line.find("////") == std::string::npos)
 		{
 			if (Line.find("vertex") != std::string::npos)
 			{

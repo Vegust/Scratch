@@ -106,9 +106,11 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	glm::vec3 CameraPos{};
+	float CurrentFoV = FoV;
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
+		CurrentFoV = CameraHandle->FoV;
 		View = CameraHandle->GetViewTransform();
 		CameraPos = CameraHandle->Position;
 	}
@@ -128,6 +130,17 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 			"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
 		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+		
+		if (bNormals)
+		{
+			NormalsShader.Bind();
+			NormalsShader.SetUniform("u_ViewModel", ViewModel);
+			NormalsShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+			glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
+			NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+		
+			GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+		}
 	}
 }
 
@@ -142,9 +155,11 @@ void renderer::Draw2(
 	Material.Bind();
 
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	float CurrentFoV = FoV;
 	if (!CustomCamera.expired())
 	{
 		auto CameraHandle = CustomCamera.lock();
+		CurrentFoV = CameraHandle->FoV;
 		View = CameraHandle->GetViewTransform();
 	}
 	glm::mat4 ViewModel = View * Transform;
@@ -161,6 +176,21 @@ void renderer::Draw2(
 		static_cast<GLsizei>(VertexArray.ElementBufferSize),
 		GL_UNSIGNED_INT,
 		nullptr));
+	
+	if (bNormals)
+	{
+		NormalsShader.Bind();
+		NormalsShader.SetUniform("u_ViewModel", ViewModel);
+		NormalsShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
+		NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+		
+		GL_CALL(glDrawElements(
+			DrawElementsMode,
+			static_cast<GLsizei>(VertexArray.ElementBufferSize),
+			GL_UNSIGNED_INT,
+			nullptr));
+	}
 }
 
 void renderer::DrawFrameBuffer(const framebuffer& Framebuffer)
@@ -425,6 +455,7 @@ void renderer::InitDefaultShaders()
 	PostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
 	PostProcessShader.SetUniform("u_Grayscale", false);
 	SkyboxShader.Compile("Resources/Shaders/Skybox.shader");
+	NormalsShader.Compile("Resources/Shaders/Normals.shader");
 }
 
 void renderer::ChangeViewMode(view_mode NewViewMode)
@@ -486,4 +517,5 @@ void renderer::UIPostProcessControl()
 	{
 		PostProcessShader.SetUniform("u_Grayscale", bGrayscale);
 	}
+	ImGui::Checkbox("Draw normals", &bNormals);
 }
