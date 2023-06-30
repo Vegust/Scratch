@@ -163,6 +163,7 @@ void renderer::Draw2(
 		View = CameraHandle->GetViewTransform();
 	}
 	glm::mat4 ViewModel = View * Transform;
+	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
 
 	ActiveShader->Bind();
 	ActiveShader->SetUniform("u_Material", Material);
@@ -170,26 +171,36 @@ void renderer::Draw2(
 	ActiveShader->SetUniform("u_ViewModel", ViewModel);
 	ActiveShader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 	ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
+	ActiveShader->SetUniform("u_Projection", ProjectionMatrix);
+	ActiveShader->SetUniform("u_View", View);
 
-	GL_CALL(glDrawElements(
-		DrawElementsMode,
-		static_cast<GLsizei>(VertexArray.ElementBufferSize),
-		GL_UNSIGNED_INT,
-		nullptr));
-	
-	if (bNormals)
+	if (bInstanced)
 	{
-		NormalsShader.Bind();
-		NormalsShader.SetUniform("u_ViewModel", ViewModel);
-		NormalsShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-		glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
-		NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
-		
+		glDrawElementsInstanced(
+			GL_TRIANGLES, static_cast<GLsizei>(VertexArray.ElementBufferSize), GL_UNSIGNED_INT, 0, VertexArray.InstanceCount
+		);
+	}
+	else
+	{
 		GL_CALL(glDrawElements(
 			DrawElementsMode,
 			static_cast<GLsizei>(VertexArray.ElementBufferSize),
 			GL_UNSIGNED_INT,
 			nullptr));
+	
+		if (bNormals)
+		{
+			NormalsShader.Bind();
+			NormalsShader.SetUniform("u_ViewModel", ViewModel);
+			NormalsShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+			NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+		
+			GL_CALL(glDrawElements(
+				DrawElementsMode,
+				static_cast<GLsizei>(VertexArray.ElementBufferSize),
+				GL_UNSIGNED_INT,
+				nullptr));
+		}
 	}
 }
 
@@ -213,7 +224,13 @@ void renderer::DrawSkybox(const cubemap& Skybox)
 	SkyboxShader.Bind();
 	Skybox.Bind();
 	SkyboxShader.SetUniform("u_Cubemap", cubemap::CubemapSlot);
-	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 100.f);
+	float CurrentFoV = FoV;
+	if (!CustomCamera.expired())
+	{
+		auto CameraHandle = CustomCamera.lock();
+		CurrentFoV = CameraHandle->FoV;
+	}
+	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
 	{

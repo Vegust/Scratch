@@ -65,7 +65,7 @@ void light::UIControlPanel(std::string_view Prefix)
 			std::string{Prefix}.append("Light Attenuation Radius").c_str(),
 			&AttenuationRadius,
 			0.f,
-			100.f);
+			1000.f);
 	}
 	else if (Type == light_type::directional)
 	{

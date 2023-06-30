@@ -85,11 +85,19 @@ mesh model::ProcessMesh(aiMesh* MeshData, const aiScene* Scene)
 		Material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
 		OutMesh.Material.DiffuseMap.Load(Directory.string() + '/' + str.C_Str());
 	}
+	else
+	{
+		OutMesh.Material.DiffuseMap.Load("Resources/Textures/DefaultDiffuse.jpg");
+	}
 	if (Material->GetTextureCount(aiTextureType_SPECULAR) > 0)
 	{
 		aiString str;
 		Material->GetTexture(aiTextureType_SPECULAR, 0, &str);
 		OutMesh.Material.SpecularMap.Load(Directory.string() + '/' + str.C_Str());
+	}
+	else
+	{
+		OutMesh.Material.SpecularMap.Load("Resources/Textures/DefaultSpecular.jpg");
 	}
 
 	OutMesh.Init();

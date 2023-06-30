@@ -131,4 +131,6 @@ public:
 	void UIPostProcessControl();
 	bool bGrayscale = false;
 	bool bNormals = false;
+	
+	bool bInstanced = false;
 };

@@ -12,6 +12,8 @@ vertex_array::vertex_array(vertex_array&& InVertexArray)
 {
 	RendererId = InVertexArray.RendererId;
 	ElementBufferSize = InVertexArray.ElementBufferSize;
+	InstanceCount = InVertexArray.InstanceCount;
+	InVertexArray.InstanceCount = 1;
 	InVertexArray.RendererId = 0;
 	InVertexArray.ElementBufferSize = 0;
 }
@@ -24,6 +26,8 @@ vertex_array& vertex_array::operator=(vertex_array&& InVertexArray)
 	}
 	RendererId = InVertexArray.RendererId;
 	ElementBufferSize = InVertexArray.ElementBufferSize;
+	InstanceCount = InVertexArray.InstanceCount;
+	InVertexArray.InstanceCount = 1;
 	InVertexArray.RendererId = 0;
 	InVertexArray.ElementBufferSize = 0;
 	return *this;

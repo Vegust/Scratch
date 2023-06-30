@@ -15,6 +15,8 @@ class vertex_array
 public:
 	uint32 RendererId{0};
 	uint32 ElementBufferSize{0};
+	
+	uint32 InstanceCount = 1;
 
 	vertex_array() = default;
 	~vertex_array();
