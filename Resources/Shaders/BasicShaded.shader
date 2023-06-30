@@ -5,20 +5,51 @@ layout (location = 0) in vec4 Position;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 
-out vec3 v_Normal;
-out vec3 v_FragPos;
-out vec2 v_TexCoords;
+out VS_OUT {
+	vec3 v_Normal;
+	vec3 v_FragPos;
+	vec2 v_TexCoords;
+} vs_out;
 
 uniform mat4 u_MVP;
 uniform mat4 u_ViewModel;
 uniform mat3 u_NormalMatrix;
 
 void main() {
-	v_Normal = u_NormalMatrix * Normal;
-	v_FragPos = vec3(u_ViewModel * Position);
-	v_TexCoords = TexCoords;
+	vs_out.v_Normal = u_NormalMatrix * Normal;
+	vs_out.v_FragPos = vec3(u_ViewModel * Position);
+	vs_out.v_TexCoords = TexCoords;
 	gl_Position = u_MVP * Position;
 };
+
+//!shader geometry
+#version 460 core
+layout (triangles) in;
+layout (triangle_strip, max_vertices = 3) out;
+
+in VS_OUT {
+	vec3 v_Normal;
+	vec3 v_FragPos;
+	vec2 v_TexCoords;
+} gs_in[];
+
+out GS_OUT {
+	vec3 g_Normal;
+	vec3 g_FragPos;
+	vec2 g_TexCoords;
+} gs_out;
+
+void main() {
+	for (int i = 0; i < 3; ++i)
+	{
+		gl_Position = gl_in[i].gl_Position;
+		gs_out.g_Normal = gs_in[i].v_Normal;
+		gs_out.g_FragPos = gs_in[i].v_FragPos;
+		gs_out.g_TexCoords = gs_in[i].v_TexCoords;
+		EmitVertex();
+	}
+	EndPrimitive();
+}
 
 //!shader fragment
 #version 460 core
@@ -45,9 +76,11 @@ struct light {
 	float AngularAttenuationFalloffStart;
 };
 
-in vec3 v_Normal;
-in vec3 v_FragPos;
-in vec2 v_TexCoords;
+in GS_OUT {
+	vec3 g_Normal;
+	vec3 g_FragPos;
+	vec2 g_TexCoords;
+} vs_in;
 
 out vec4 Color;
 
@@ -73,7 +106,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	}
 	else
 	{
-		LightDirection = normalize(Light.Position - v_FragPos);
+		LightDirection = normalize(Light.Position - vs_in.g_FragPos);
 	}
 	float DiffuseImpact = max(dot(Normal, LightDirection), 0.0);
 	vec3 DiffuseColor = DiffuseImpact * Light.Diffuse * DiffuseTextureColor;
@@ -89,7 +122,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	{
 		// Normalized to max distance of 100. Coefficients for 100 are from
 		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
-		float Distance = length(Light.Position - v_FragPos);
+		float Distance = length(Light.Position - vs_in.g_FragPos);
 		float NormalizedDistance = 100.0 * Distance / Light.AttenuationRadius;
 		Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
 	}
@@ -115,10 +148,10 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 void main() {
 	vec3 CombinedLightColor = vec3(0.f, 0.f, 0.f);
 
-	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, v_TexCoords));
-	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, v_TexCoords));
-	vec3 NormalizedNormal = normalize(v_Normal);
-	vec3 ViewDirection = normalize(-v_FragPos);
+	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, vs_in.g_TexCoords));
+	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, vs_in.g_TexCoords));
+	vec3 NormalizedNormal = normalize(vs_in.g_Normal);
+	vec3 ViewDirection = normalize(-vs_in.g_FragPos);
 
 	if (u_Depth)
 	{
@@ -126,7 +159,7 @@ void main() {
 		const float Far = 100.f;
 		float NDC = gl_FragCoord.z * 2.0 - 1.0;
 		float LinearDepth = (2.0 * Near * Far) / (Far + Near - NDC * (Far - Near));
-		float FinalValue = (LinearDepth - Near) / 10.0;
+		float FinalValue = (LinearDepth - Near) / 100.0;
 		Color = vec4(vec3(FinalValue), 1.0);
 	}
 	else
@@ -147,7 +180,7 @@ void main() {
 					ViewDirection);
 			}
 
-			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, v_TexCoords)), 1.0);
+			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, vs_in.g_TexCoords)), 1.0);
 		}
 	}
 };

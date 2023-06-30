@@ -45,8 +45,9 @@ public:
 private:
 	struct parsed_shaders
 	{
-		std::string VertexShader;
-		std::string FragmentShader;
+		std::string VertexShader{};
+		std::string GeometryShader{};
+		std::string FragmentShader{};
 	};
 	
 	[[nodiscard]] int32 GetUniformLocation(std::string_view Name) const;

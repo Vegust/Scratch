@@ -55,9 +55,15 @@ void shader::Compile(const std::filesystem::path& InPath)
 
 	auto VSIndex = CompileShader(GL_VERTEX_SHADER, ParsedShaders.VertexShader);
 	auto FSIndex = CompileShader(GL_FRAGMENT_SHADER, ParsedShaders.FragmentShader);
-
 	glAttachShader(RendererId, VSIndex);
 	glAttachShader(RendererId, FSIndex);
+
+	if (!ParsedShaders.GeometryShader.empty())
+	{
+		auto GSIndex = CompileShader(GL_GEOMETRY_SHADER, ParsedShaders.GeometryShader);
+		glAttachShader(RendererId, GSIndex);
+	}
+
 	glLinkProgram(RendererId);
 	glValidateProgram(RendererId);
 
@@ -199,6 +205,7 @@ shader::parsed_shaders shader::ParseShader(const std::filesystem::path& Path)
 	std::string Line;
 	parsed_shaders Result;
 	std::optional<size_t> ShaderIndex{};
+	bool bHasGeometryShader = false;
 	while (getline(InputFile, Line))
 	{
 		if (Line.find("!shader") != std::string::npos)
@@ -210,6 +217,15 @@ shader::parsed_shaders shader::ParseShader(const std::filesystem::path& Path)
 			else if (Line.find("fragment") != std::string::npos)
 			{
 				ShaderIndex = 1;
+			}
+			else if (Line.find("geometry") != std::string::npos)
+			{
+				bHasGeometryShader = true;
+				ShaderIndex = 2;
+			}
+			else if (Line.find("shared") != std::string::npos)
+			{
+				ShaderIndex = 3;
 			}
 		}
 		else
@@ -224,8 +240,23 @@ shader::parsed_shaders shader::ParseShader(const std::filesystem::path& Path)
 				{
 					Result.FragmentShader.append(Line + "\n");
 				}
+				if (ShaderIndex.value() == 2)
+				{
+					Result.GeometryShader.append(Line + "\n");
+				}
+				if (ShaderIndex.value() == 3)
+				{
+					Result.VertexShader.append(Line + "\n");
+					Result.GeometryShader.append(Line + "\n");
+					Result.FragmentShader.append(Line + "\n");
+				}
 			}
 		}
+	}
+
+	if (!bHasGeometryShader)
+	{
+		Result.GeometryShader = {};
 	}
 
 	return Result;
