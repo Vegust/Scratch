@@ -36,7 +36,7 @@ public:
 
 	bool Loaded() const { return RendererId != 0; }
 	
-	void Load(std::string_view InPath);
+	void Load(std::string_view InPath, bool bSRGB = false);
 	
 	void Bind(uint32 Slot = 0) const;
 };

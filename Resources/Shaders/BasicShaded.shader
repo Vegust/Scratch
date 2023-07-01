@@ -118,7 +118,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	// Blinn-Phong
 	vec3 HalfwayDirection = normalize(LightDirection + ViewDirection);
 	float SpecularImpact = pow(max(dot(HalfwayDirection, Normal), 0.0), u_Material.Shininess);
-	
+
 	vec3 SpecularColor = Light.Specular * SpecularImpact * SpecularTextureColor;
 
 	// Attenuation
@@ -128,8 +128,11 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 		// Normalized to max distance of 100. Coefficients for 100 are from
 		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
 		float Distance = length(Light.Position - vs_in.g_FragPos);
-		float NormalizedDistance = 100.0 * Distance / Light.AttenuationRadius;
-		Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
+		//float NormalizedDistance = 100.0 * Distance / Light.AttenuationRadius;
+		//Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
+
+		// When we use gamma correction we can just use correct quadratic attenuation?
+		Attenuation = max(1.0, Light.AttenuationRadius / (Distance * Distance));
 	}
 
 	// Angular falloff

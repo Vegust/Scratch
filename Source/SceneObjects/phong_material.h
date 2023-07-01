@@ -34,7 +34,7 @@ public:
 		std::string_view EmissionPath = {},
 		uint32 InEmissionSlot = 2)
 	{
-		DiffuseMap.Load(DiffusePath);
+		DiffuseMap.Load(DiffusePath, true);
 		SpecularMap.Load(SpecularPath);
 		if (!EmissionPath.empty())
 		{

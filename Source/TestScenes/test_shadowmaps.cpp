@@ -16,7 +16,8 @@ test_shadowmaps::test_shadowmaps()
 	Light.Ambient = {0.2f, 0.2f, 0.2f};
 	Light.Direction = {0.29, -0.58, -0.53};
 	auto& PointLight = renderer::Get().SceneLights.emplace_back();
-	PointLight.AttenuationRadius = 0.f;
+	PointLight.AttenuationRadius = 30.f;
+	PointLight.Position = {0.f,2.f,-5.f};
 
 	CubeMaterial.InitTextures(
 		"Resources/Textures/Wood.png", 0, "Resources/Textures/DefaultSpecular.jpg", 1);

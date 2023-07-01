@@ -468,11 +468,14 @@ void renderer::Init()
 void renderer::InitDefaultShaders()
 {
 	PhongShader.Compile("Resources/Shaders/BasicShaded.shader");
+	PhongShader.Bind();
 	PhongShader.SetUniform("u_Unlit", false);
 	PhongShader.SetUniform("u_Depth", false);
 	OutlineShader.Compile("Resources/Shaders/Outline.shader");
 	PostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
+	PostProcessShader.Bind();
 	PostProcessShader.SetUniform("u_Grayscale", false);
+	PostProcessShader.SetUniform("u_GammaCorrection", GammaCorrection);
 	SkyboxShader.Compile("Resources/Shaders/Skybox.shader");
 	NormalsShader.Compile("Resources/Shaders/Normals.shader");
 }
@@ -537,4 +540,8 @@ void renderer::UIPostProcessControl()
 		PostProcessShader.SetUniform("u_Grayscale", bGrayscale);
 	}
 	ImGui::Checkbox("Draw normals", &bNormals);
+	if (ImGui::SliderFloat("Gamma", &GammaCorrection, 1.f, 5.f))
+	{
+		PostProcessShader.SetUniform("u_GammaCorrection", GammaCorrection);
+	}
 }

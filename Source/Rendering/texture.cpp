@@ -49,7 +49,7 @@ void texture::ClearTextureHandle()
 	}
 }
 
-void texture::Load(std::string_view InPath)
+void texture::Load(std::string_view InPath, bool bSRGB)
 {
 	ClearTextureHandle();
 
@@ -78,11 +78,17 @@ void texture::Load(std::string_view InPath)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			
+			uint32 InternalType = GL_RGBA8;
+			if (bSRGB)
+			{
+				InternalType = GL_SRGB8_ALPHA8;
+			}
 
 			glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
-				static_cast<GLint>(GL_RGBA8),
+				static_cast<GLint>(InternalType),
 				Width,
 				Height,
 				0,

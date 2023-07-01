@@ -19,9 +19,11 @@ out vec4 Color;
 
 uniform sampler2D u_Buffer;
 uniform bool u_Grayscale;
+uniform float u_GammaCorrection;
 
 void main() {
 	vec4 TextureColor = texture(u_Buffer, v_TexCoords);
+	TextureColor.rgb = pow(TextureColor.rgb, vec3(1.0 / u_GammaCorrection));
 	if (u_Grayscale)
 	{
 		float average = 0.2126 * TextureColor.r + 0.7152 * TextureColor.g + 0.0722 * TextureColor.b;
