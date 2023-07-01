@@ -19,6 +19,7 @@ out vec4 Color;
 
 uniform sampler2D u_Buffer;
 uniform bool u_Grayscale;
+uniform bool u_Depth;
 uniform float u_GammaCorrection;
 
 void main() {
@@ -28,6 +29,11 @@ void main() {
 	{
 		float average = 0.2126 * TextureColor.r + 0.7152 * TextureColor.g + 0.0722 * TextureColor.b;
 		Color = vec4(average, average, average, 1.0);
+	}
+	else if (u_Depth)
+	{
+		float depthValue = texture(u_Buffer, v_TexCoords).x;
+		Color = vec4(vec3(depthValue), 1.0);
 	}
 	else
 	{

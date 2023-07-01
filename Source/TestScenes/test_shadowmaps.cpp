@@ -17,7 +17,11 @@ test_shadowmaps::test_shadowmaps()
 	Light.Direction = {0.29, -0.58, -0.53};
 	auto& PointLight = renderer::Get().SceneLights.emplace_back();
 	PointLight.AttenuationRadius = 30.f;
-	PointLight.Position = {0.f,2.f,-5.f};
+	PointLight.Position = {0.f, 2.f, -5.f};
+
+	framebuffer_params Params;
+	Params.Type = framebuffer_type::shadowmap;
+	DirectionalShadowmap.Reload(Params);
 
 	CubeMaterial.InitTextures(
 		"Resources/Textures/Wood.png", 0, "Resources/Textures/DefaultSpecular.jpg", 1);
@@ -27,6 +31,8 @@ test_shadowmaps::test_shadowmaps()
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 1.f, 10.f};
 	renderer::Get().CustomCamera = Camera;
+
+	DirectionalShadowmapShader.Compile("Resources/Shaders/DirectionalShadowMap.shader");
 
 	SetupCubeTransforms();
 }
@@ -38,13 +44,60 @@ void test_shadowmaps::OnUpdate(float DeltaTime)
 
 void test_shadowmaps::OnRender(renderer& Renderer)
 {
-	glClearColor(0.f, 0.f, 0.f, 0.f);
+	glClearColor(0.f, 1.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+	constexpr float NearPlane = 1.f;
+	constexpr float FarPlane = 50.f;
+	constexpr float SideDistance = 30.f;
+	glm::mat4 LightProjection =
+		glm::ortho(-SideDistance, SideDistance, -SideDistance, SideDistance, NearPlane, FarPlane);
+	// Directional light position is relative to player
+	glm::vec3 LightDirection = renderer::Get().SceneLights[0].Direction;
+	glm::vec3 LightPosition = Camera->Position + (-renderer::Get().SceneLights[0].Direction * 15.f);
+	glm::mat4 LightView =
+		glm::lookAt(LightPosition, LightPosition + LightDirection, glm::vec3(0.f, 1.f, 0.f));
+	glm::mat4 LightProjectionView = LightProjection * LightView;
+
+	// Directional shadow map pass
+	{
+		glViewport(0, 0, DirectionalShadowmap.Params.Width, DirectionalShadowmap.Params.Height);
+		DirectionalShadowmap.Bind();
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		Renderer.SetActiveShader(&DirectionalShadowmapShader);
+		DirectionalShadowmapShader.Bind();
+		DirectionalShadowmapShader.SetUniform("u_LightProjectionView", LightProjectionView);
+
+		Renderer.DrawCubes(CubeMaterial, StaticCubes);
+		Renderer.DrawCubes(CubeMaterial, DynamicCubes);
+		Renderer.SetActiveShader(&Renderer.PhongShader);
+		framebuffer::SetDefault();
+		glViewport(0, 0, Renderer.CurrentWidth, Renderer.CurrentHeight);
+	}
+
+	// Debug shadow
+	//{
+	//	Renderer.PostProcessShader.SetUniform("u_Depth", true);
+	//	Renderer.DrawFrameBuffer(DirectionalShadowmap, true);
+	//	Renderer.PostProcessShader.SetUniform("u_Depth", false);
+	//	return;
+	//}
+
+	// Main pass
 	{
 		SceneFramebuffer.Bind();
 		glClearColor(0.8f, 0.8f, 1.0f, 0.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+		constexpr int32 ShadowmapSlot = 5;
+		glActiveTexture(GL_TEXTURE0 + ShadowmapSlot);
+		glBindTexture(GL_TEXTURE_2D, DirectionalShadowmap.DepthStencilTextureId);
+
+		Renderer.ActiveShader->Bind();
+		Renderer.ActiveShader->SetUniform("u_LightProjectionView", LightProjectionView);
+		Renderer.ActiveShader->SetUniform("u_Shadowmaps", true);
+		Renderer.ActiveShader->SetUniform("u_Shadowmap", ShadowmapSlot);
 
 		Renderer.DrawCubes(CubeMaterial, StaticCubes);
 		Renderer.DrawCubes(CubeMaterial, DynamicCubes);
@@ -52,6 +105,7 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 		framebuffer::SetDefault();
 	}
 
+	// Post process
 	Renderer.DrawFrameBuffer(SceneFramebuffer);
 }
 
@@ -174,7 +228,6 @@ void test_shadowmaps::UpdateDynamicCubeTransforms(float DeltaTime)
 			translate(mat4(1.f), vec3(-3, 2 + Translation, 7.5)), Rotation, vec3(0.5f, 1.f, 0.f)),
 		vec3(2.f, 2.f, 2.f));
 	DynamicCubes[1] = scale(
-		rotate(
-			translate(mat4(1.f), vec3(-2, 5 + Translation, -4)), Rotation, vec3(0.5f, 1.f, 0.f)),
+		rotate(translate(mat4(1.f), vec3(-2, 5 + Translation, -4)), Rotation, vec3(0.5f, 1.f, 0.f)),
 		vec3(2.f, 2.f, 2.f));
 }

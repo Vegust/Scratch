@@ -206,14 +206,14 @@ void renderer::Draw2(
 	}
 }
 
-void renderer::DrawFrameBuffer(const framebuffer& Framebuffer)
+void renderer::DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth)
 {
 	ScreenQuadVAO.Bind();
 	PostProcessShader.Bind();
 	PostProcessShader.SetUniform("u_Buffer", 0);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, Framebuffer.ColorTextureId);
+	glBindTexture(GL_TEXTURE_2D, bDepth ?  Framebuffer.DepthStencilTextureId : Framebuffer.ColorTextureId);
 	glDisable(GL_DEPTH_TEST);
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
 	glEnable(GL_DEPTH_TEST);

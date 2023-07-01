@@ -21,6 +21,9 @@ public:
 	
 	std::vector<glm::mat4> StaticCubes;
 	std::vector<glm::mat4> DynamicCubes;
+	
+	framebuffer DirectionalShadowmap;
+	shader DirectionalShadowmapShader;
 
 	int32 CubeEditIndex = 0;
 	int32 LightEditIndex = 0;

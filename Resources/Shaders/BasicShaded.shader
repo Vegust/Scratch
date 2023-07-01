@@ -9,16 +9,21 @@ out GS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
+	vec4 g_FragPosLightSpace;
 } vs_out;
 
 uniform mat4 u_MVP;
+uniform mat4 u_Model;
 uniform mat4 u_ViewModel;
 uniform mat3 u_NormalMatrix;
+uniform mat4 u_LightProjectionView;
+uniform bool u_Shadowmaps;
 
 void main() {
 	vs_out.g_Normal = u_NormalMatrix * Normal;
 	vs_out.g_FragPos = vec3(u_ViewModel * Position);
 	vs_out.g_TexCoords = TexCoords;
+	vs_out.g_FragPosLightSpace = u_LightProjectionView * u_Model * Position;
 	gl_Position = u_MVP * Position;
 };
 
@@ -80,6 +85,7 @@ in GS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
+	vec4 g_FragPosLightSpace;
 } vs_in;
 
 out vec4 Color;
@@ -90,10 +96,42 @@ uniform material u_Material;
 uniform light u_Lights[MAX_LIGHTS];
 uniform int u_NumLights;
 
+uniform mat4 u_LightProjectionView;
+
+uniform bool u_Shadowmaps;
+uniform sampler2D u_Shadowmap;
+
 uniform bool u_Unlit;
 uniform bool u_Depth;
 
-vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection)
+float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection)
+{
+	vec3 ProjCoords = vs_in.g_FragPosLightSpace.xyz / vs_in.g_FragPosLightSpace.w;
+	if (ProjCoords.z > 1.0)
+	{
+		return 0.0;
+	}
+
+	ProjCoords = ProjCoords * 0.5 + 0.5;
+	float CurrentDepth = ProjCoords.z;
+	float Bias = max(0.005 * (1.0 - dot(Normal, LightDirection)), 0.001);
+
+	// PCF
+	vec2 TexelSize = 1.0 / textureSize(u_Shadowmap, 0);
+	float Shadow = 0;
+	for (int x = -2; x <= 2; ++x)
+	{
+		for (int y = -2; y <= 2; ++y)
+		{
+			float ClosestDepth = texture(u_Shadowmap, ProjCoords.xy + vec2(x, y) * TexelSize).r;
+			Shadow += CurrentDepth - Bias > ClosestDepth ? 1.0 : 0.0;
+		}
+	}
+
+	return Shadow /= 25;
+}
+
+vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection, bool bUseShadowmap)
 {
 	// Ambient
 	vec3 AmbientColor = Light.Ambient * DiffuseTextureColor;
@@ -132,7 +170,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 		//Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
 
 		// When we use gamma correction we can just use correct quadratic attenuation?
-		Attenuation = max(1.0, Light.AttenuationRadius / (Distance * Distance));
+		Attenuation = min(1.0, Light.AttenuationRadius / (Distance * Distance));
 	}
 
 	// Angular falloff
@@ -150,7 +188,13 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 		}
 	}
 
-	return Falloff * Attenuation * (AmbientColor + DiffuseColor + SpecularColor);
+	float ShadowMult = 1.f;
+	if (bUseShadowmap)
+	{
+		ShadowMult = 1.f - ShadowCalculation(vs_in.g_FragPosLightSpace, Normal, LightDirection);
+	}
+
+	return Falloff * Attenuation * (AmbientColor + ShadowMult * (DiffuseColor + SpecularColor));
 }
 
 void main() {
@@ -185,7 +229,9 @@ void main() {
 					DiffuseTextureColor,
 					SpecularTextureColor,
 					NormalizedNormal,
-					ViewDirection);
+					ViewDirection,
+					i == 0 && u_Shadowmaps
+				);
 			}
 
 			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, vs_in.g_TexCoords)), 1.0);

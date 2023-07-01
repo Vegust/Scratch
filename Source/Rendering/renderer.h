@@ -71,7 +71,7 @@ public:
 	void DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms) const;
 	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
 	void Draw2(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
-	void DrawFrameBuffer(const framebuffer& Framebuffer);
+	void DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth = false);
 	void DrawSkybox(const cubemap& Skybox);
 
 	void ResetCamera()
