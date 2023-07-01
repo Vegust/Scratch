@@ -56,16 +56,12 @@ void light::UIControlPanel(std::string_view Prefix)
 
 	if (Type == light_type::point)
 	{
-		ImGui::SliderFloat3(
+		ImGui::InputFloat3(
 			std::string{Prefix}.append("Light Position").c_str(),
-			glm::value_ptr(Position),
-			-5.f,
-			5.f);
-		ImGui::SliderFloat(
+			glm::value_ptr(Position));
+		ImGui::InputFloat(
 			std::string{Prefix}.append("Light Attenuation Radius").c_str(),
-			&AttenuationRadius,
-			0.f,
-			1000.f);
+			&AttenuationRadius);
 	}
 	else if (Type == light_type::directional)
 	{
@@ -77,21 +73,17 @@ void light::UIControlPanel(std::string_view Prefix)
 	}
 	else if (Type == light_type::spot)
 	{
-		ImGui::SliderFloat3(
+		ImGui::InputFloat3(
 			std::string{Prefix}.append("Light Position").c_str(),
-			glm::value_ptr(Position),
-			-5.f,
-			5.f);
+			glm::value_ptr(Position));
 		ImGui::SliderFloat3(
 			std::string{Prefix}.append("Light Direction").c_str(),
 			glm::value_ptr(Direction),
 			-1.f,
 			1.f);
-		ImGui::SliderFloat(
+		ImGui::InputFloat(
 			std::string{Prefix}.append("Light Attenuation Radius").c_str(),
-			&AttenuationRadius,
-			0.f,
-			100.f);
+			&AttenuationRadius);
 		ImGui::SliderFloat(
 			std::string{Prefix}.append("Light Angular attenuation").c_str(),
 			&AngularAttenuation,

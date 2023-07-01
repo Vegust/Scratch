@@ -43,9 +43,6 @@ void test_instancing::OnRender(renderer& Renderer)
 	glClearColor(0.1f, 0.1f, 0.05f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	// Stars
-	Renderer.DrawSkybox(Skybox);
-
 	// Sun
 	const glm::mat4 View = Camera->GetViewTransform();
 	std::vector<glm::mat4> LightTransforms;
@@ -73,6 +70,9 @@ void test_instancing::OnRender(renderer& Renderer)
 			Model.Draw(Renderer, Transform);
 		}
 	}
+	
+	// Stars
+	Renderer.DrawSkybox(Skybox);
 }
 
 void test_instancing::OnIMGuiRender()

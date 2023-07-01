@@ -112,8 +112,13 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	vec3 DiffuseColor = DiffuseImpact * Light.Diffuse * DiffuseTextureColor;
 
 	// Specular
-	vec3 ReflectDirection = reflect(-LightDirection, Normal);
-	float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
+	// Phong
+	//vec3 ReflectDirection = reflect(-LightDirection, Normal);
+	//float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
+	// Blinn-Phong
+	vec3 HalfwayDirection = normalize(LightDirection + ViewDirection);
+	float SpecularImpact = pow(max(dot(HalfwayDirection, Normal), 0.0), u_Material.Shininess);
+	
 	vec3 SpecularColor = Light.Specular * SpecularImpact * SpecularTextureColor;
 
 	// Attenuation

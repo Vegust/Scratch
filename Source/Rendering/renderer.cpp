@@ -114,6 +114,8 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 		View = CameraHandle->GetViewTransform();
 		CameraPos = CameraHandle->Position;
 	}
+	
+	Material.Bind();
 
 	ActiveShader->Bind();
 	ActiveShader->SetUniform("u_Material", Material);
