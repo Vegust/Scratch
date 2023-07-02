@@ -59,6 +59,9 @@ void light::UIControlPanel(std::string_view Prefix)
 		ImGui::InputFloat3(
 			std::string{Prefix}.append("Light Position").c_str(),
 			glm::value_ptr(Position));
+		ImGui::SliderFloat3(
+			std::string{Prefix}.append("Position Slider").c_str(),
+			glm::value_ptr(Position), -20.f,20.f);
 		ImGui::InputFloat(
 			std::string{Prefix}.append("Light Attenuation Radius").c_str(),
 			&AttenuationRadius);
@@ -76,6 +79,9 @@ void light::UIControlPanel(std::string_view Prefix)
 		ImGui::InputFloat3(
 			std::string{Prefix}.append("Light Position").c_str(),
 			glm::value_ptr(Position));
+		ImGui::SliderFloat3(
+			std::string{Prefix}.append("Position Slider").c_str(),
+			glm::value_ptr(Position), -20.f,20.f);
 		ImGui::SliderFloat3(
 			std::string{Prefix}.append("Light Direction").c_str(),
 			glm::value_ptr(Direction),
