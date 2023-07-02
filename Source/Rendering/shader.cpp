@@ -99,6 +99,18 @@ void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix) const
 	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
 }
 
+void shader::SetUniform(std::string_view Name, const std::vector<glm::mat4>& Matrix) const
+{
+	for (uint32 i = 0; i < Matrix.size(); ++i)
+	{
+		glUniformMatrix4fv(
+			GetUniformLocation(std::string(Name) + "[" + std::to_string(i) + "]"),
+			1,
+			GL_FALSE,
+			glm::value_ptr(Matrix[i]));
+	}
+}
+
 void shader::SetUniform(std::string_view Name, const phong_material& Material) const
 {
 	glUniform1i(
@@ -142,6 +154,10 @@ void shader::SetUniform(std::string_view Name, const class light& Light, const g
 			GetUniformLocation(std::string(Name) + ".Position"),
 			1,
 			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
+		glUniform3fv(
+			GetUniformLocation(std::string(Name) + ".PositionWorld"),
+			1,
+			glm::value_ptr(Light.Position));
 		glUniform1f(
 			GetUniformLocation(std::string(Name) + ".AttenuationRadius"), Light.AttenuationRadius);
 	}

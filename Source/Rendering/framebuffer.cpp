@@ -4,8 +4,8 @@
 
 #include "framebuffer.h"
 
-#include "iostream"
 #include "glad/glad.h"
+#include "iostream"
 #include "renderer.h"
 
 framebuffer::~framebuffer()
@@ -37,6 +37,9 @@ void framebuffer::Reload(const framebuffer_params& InParams)
 
 	glGenFramebuffers(1, &RendererId);
 	glBindFramebuffer(GL_FRAMEBUFFER, RendererId);
+
+	// for shadowmaps when sampling outside texture
+	constexpr float BorderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 	switch (Params.Type)
 	{
@@ -96,11 +99,36 @@ void framebuffer::Reload(const framebuffer_params& InParams)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-			float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);  
+			glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, BorderColor);
 			glFramebufferTexture2D(
 				GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, DepthStencilTextureId, 0);
-			glDrawBuffer(GL_NONE); // no color
+			glDrawBuffer(GL_NONE);	  // no color
+			glReadBuffer(GL_NONE);
+			break;
+		case framebuffer_type::shadowmap_omni:
+			glGenTextures(1, &DepthStencilTextureId);
+			glBindTexture(GL_TEXTURE_CUBE_MAP, DepthStencilTextureId);
+			for (unsigned int i = 0; i < 6; ++i)
+			{
+				glTexImage2D(
+					GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+					0,
+					GL_DEPTH_COMPONENT,
+					Params.Width,
+					Params.Height,
+					0,
+					GL_DEPTH_COMPONENT,
+					GL_FLOAT,
+					NULL);
+			}
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);  
+			glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, BorderColor);
+			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, DepthStencilTextureId, 0);
+			glDrawBuffer(GL_NONE);
 			glReadBuffer(GL_NONE);
 			break;
 	}

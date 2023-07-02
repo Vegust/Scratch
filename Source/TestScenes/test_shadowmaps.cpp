@@ -14,14 +14,21 @@ test_shadowmaps::test_shadowmaps()
 	auto& Light = renderer::Get().SceneLights.emplace_back();
 	Light.Type = light_type::directional;
 	Light.Ambient = {0.2f, 0.2f, 0.2f};
+	
 	Light.Direction = {0.29, -0.58, -0.53};
+	
 	auto& PointLight = renderer::Get().SceneLights.emplace_back();
 	PointLight.AttenuationRadius = 30.f;
-	PointLight.Position = {0.f, 2.f, -5.f};
+	PointLight.Position = {0.f, 8.f, -5.f};
 
 	framebuffer_params Params;
 	Params.Type = framebuffer_type::shadowmap;
 	DirectionalShadowmap.Reload(Params);
+	Params.Type = framebuffer_type::shadowmap_omni;
+	PointShadowmap.Reload(Params);
+
+	DirectionalShadowmapShader.Compile("Resources/Shaders/DirectionalShadowMap.shader");
+	PointShadowmapShader.Compile("Resources/Shaders/PointShadowMap.shader");
 
 	CubeMaterial.InitTextures(
 		"Resources/Textures/Wood.png", 0, "Resources/Textures/DefaultSpecular.jpg", 1);
@@ -31,8 +38,6 @@ test_shadowmaps::test_shadowmaps()
 	Camera = std::make_shared<camera>();
 	Camera->Position = glm::vec3{0.f, 1.f, 10.f};
 	renderer::Get().CustomCamera = Camera;
-
-	DirectionalShadowmapShader.Compile("Resources/Shaders/DirectionalShadowMap.shader");
 
 	SetupCubeTransforms();
 }
@@ -47,20 +52,44 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 	glClearColor(0.f, 1.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+	using namespace glm;
+
+	// Directional light transforms
 	constexpr float NearPlane = 1.f;
 	constexpr float FarPlane = 70.f;
 	constexpr float SideDistance = 15.f;
-	glm::mat4 LightProjection =
-		glm::ortho(-SideDistance, SideDistance, -SideDistance, SideDistance, NearPlane, FarPlane);
+	const auto& Light = renderer::Get().SceneLights[0];
+	mat4 LightProjection =
+		ortho(-SideDistance, SideDistance, -SideDistance, SideDistance, NearPlane, FarPlane);
 	// Directional light position is relative to player
-	glm::vec3 LightDirection = renderer::Get().SceneLights[0].Direction;
-	glm::vec3 LightPosition =
+	vec3 LightDirection = Light.Direction;
+	vec3 LightPosition =
 		Camera->Position +
-		glm::normalize(glm::vec3(Camera->Direction.x, 0.f, Camera->Direction.z)) * SideDistance +
-		(-renderer::Get().SceneLights[0].Direction * 35.f);
-	glm::mat4 LightView =
-		glm::lookAt(LightPosition, LightPosition + LightDirection, glm::vec3(0.f, 1.f, 0.f));
-	glm::mat4 LightProjectionView = LightProjection * LightView;
+		normalize(vec3(Camera->Direction.x, 0.f, Camera->Direction.z)) * SideDistance +
+		(-Light.Direction * 35.f);
+	mat4 LightView = lookAt(LightPosition, LightPosition + LightDirection, vec3(0.f, 1.f, 0.f));
+	mat4 LightProjectionView = LightProjection * LightView;
+
+	// Point Light transforms
+	const float Aspect = static_cast<float>(DirectionalShadowmap.Params.Width) /
+						 static_cast<float>(DirectionalShadowmap.Params.Height);
+	constexpr float Near = 0.1f;
+	constexpr float Far = 25.0f;
+	const auto& PointLight = renderer::Get().SceneLights[1];
+	mat4 PointLightProjection = perspective(glm::radians(90.0f), Aspect, Near, Far);
+	const std::vector<mat4> PointLightViews{
+		PointLightProjection * lookAt(
+			PointLight.Position, PointLight.Position + vec3(1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0)),
+		PointLightProjection * lookAt(
+			PointLight.Position, PointLight.Position + vec3(-1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0)),
+		PointLightProjection * lookAt(
+			PointLight.Position, PointLight.Position + vec3(0.0f, 1.0, 0.0), vec3(0.0, 0.0, 1.0)),
+		PointLightProjection * lookAt(
+			PointLight.Position, PointLight.Position + vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, -1.0)),
+		PointLightProjection * lookAt(
+			PointLight.Position, PointLight.Position + vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0)),
+		PointLightProjection * lookAt(
+			PointLight.Position, PointLight.Position + vec3(0.0, 0.0, -1.0), vec3(0.0, -1.0, 0.0))};
 
 	// Directional shadow map pass
 	{
@@ -80,11 +109,29 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 		glViewport(0, 0, Renderer.CurrentWidth, Renderer.CurrentHeight);
 	}
 
+	// Omnidirectional shadow map pass
+	{
+		glViewport(0, 0, PointShadowmap.Params.Width, PointShadowmap.Params.Height);
+		PointShadowmap.Bind();
+		glClear(GL_DEPTH_BUFFER_BIT);
+
+		Renderer.SetActiveShader(&PointShadowmapShader);
+		PointShadowmapShader.Bind();
+		PointShadowmapShader.SetUniform("u_PointLightFarPlane", Far);
+		PointShadowmapShader.SetUniform("u_PointLightPos", PointLight.Position);
+		PointShadowmapShader.SetUniform("u_PointLightViews", PointLightViews);
+
+		Renderer.DrawCubes(CubeMaterial, StaticCubes);
+		Renderer.DrawCubes(CubeMaterial, DynamicCubes);
+
+		Renderer.SetActiveShader(&Renderer.PhongShader);
+		framebuffer::SetDefault();
+		glViewport(0, 0, Renderer.CurrentWidth, Renderer.CurrentHeight);
+	}
+
 	if (bDrawShadowmap)
 	{
-		Renderer.PostProcessShader.SetUniform("u_Depth", true);
 		Renderer.DrawFrameBuffer(DirectionalShadowmap, true);
-		Renderer.PostProcessShader.SetUniform("u_Depth", false);
 		return;
 	}
 	else
@@ -97,10 +144,16 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 		glActiveTexture(GL_TEXTURE0 + ShadowmapSlot);
 		glBindTexture(GL_TEXTURE_2D, DirectionalShadowmap.DepthStencilTextureId);
 
+		constexpr int32 PointShadowmapSlot = 6;
+		glActiveTexture(GL_TEXTURE0 + PointShadowmapSlot);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, PointShadowmap.DepthStencilTextureId);
+
 		Renderer.ActiveShader->Bind();
 		Renderer.ActiveShader->SetUniform("u_LightProjectionView", LightProjectionView);
 		Renderer.ActiveShader->SetUniform("u_Shadowmaps", true);
 		Renderer.ActiveShader->SetUniform("u_Shadowmap", ShadowmapSlot);
+		Renderer.ActiveShader->SetUniform("u_PointShadowmap", PointShadowmapSlot);
+		Renderer.ActiveShader->SetUniform("u_PointLightFarPlane", Far);
 
 		Renderer.DrawCubes(CubeMaterial, StaticCubes);
 		Renderer.DrawCubes(CubeMaterial, DynamicCubes);
@@ -122,6 +175,9 @@ void test_shadowmaps::OnIMGuiRender()
 		Params.Width = ShadowmapResolution;
 		Params.Height = ShadowmapResolution;
 		DirectionalShadowmap.Reload(Params);
+
+		Params.Type = framebuffer_type::shadowmap_omni;
+		PointShadowmap.Reload(Params);
 	}
 	if (ImGui::CollapsingHeader("Cubes"))
 	{

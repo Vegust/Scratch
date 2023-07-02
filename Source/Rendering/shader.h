@@ -38,6 +38,7 @@ public:
 	void SetUniform(std::string_view Name, float V1) const;
 	void SetUniform(std::string_view Name, glm::vec3 V1) const;
 	void SetUniform(std::string_view Name, const glm::mat4& Matrix) const;
+	void SetUniform(std::string_view Name, const std::vector<glm::mat4>& Matrix) const;
 	void SetUniform(std::string_view Name, const glm::mat3& Matrix) const;
 	void SetUniform(std::string_view Name, const phong_material& Material) const;
 	void SetUniform(std::string_view Name, const light& Light, const glm::mat4& View) const;

@@ -10,6 +10,7 @@ out GS_OUT {
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
 	vec4 g_FragPosLightSpace;
+	vec3 g_FragPosWorld;
 } vs_out;
 
 uniform mat4 u_MVP;
@@ -22,6 +23,7 @@ uniform bool u_Shadowmaps;
 void main() {
 	vs_out.g_Normal = u_NormalMatrix * Normal;
 	vs_out.g_FragPos = vec3(u_ViewModel * Position);
+	vs_out.g_FragPosWorld = vec3(u_Model * Position);
 	vs_out.g_TexCoords = TexCoords;
 	vs_out.g_FragPosLightSpace = u_LightProjectionView * u_Model * Position;
 	gl_Position = u_MVP * Position;
@@ -76,6 +78,8 @@ struct light {
 	vec3 Position;
 	vec3 Direction;
 
+	vec3 PositionWorld;
+
 	float AttenuationRadius;
 	float AngularAttenuation;
 	float AngularAttenuationFalloffStart;
@@ -86,6 +90,7 @@ in GS_OUT {
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
 	vec4 g_FragPosLightSpace;
+	vec3 g_FragPosWorld;
 } vs_in;
 
 out vec4 Color;
@@ -98,11 +103,23 @@ uniform int u_NumLights;
 
 uniform mat4 u_LightProjectionView;
 
+uniform float u_PointLightFarPlane;
+uniform samplerCube u_PointShadowmap;
+
 uniform bool u_Shadowmaps;
 uniform sampler2D u_Shadowmap;
 
 uniform bool u_Unlit;
 uniform bool u_Depth;
+
+float PointShadowCalculation(vec3 FragPosWorld, vec3 PointLightPosition)
+{
+	vec3 FragToLight = FragPosWorld - PointLightPosition;
+	float ClothestDepth = texture(u_PointShadowmap, normalize(FragToLight)).r * u_PointLightFarPlane;
+	float CurrentDepth = length(FragToLight);
+	float Shadow = CurrentDepth - 0.1 > ClothestDepth ? 1.0 : 0.0;
+	return Shadow;
+}
 
 float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection)
 {
@@ -114,7 +131,6 @@ float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection
 
 	ProjCoords = ProjCoords * 0.5 + 0.5;
 	float CurrentDepth = ProjCoords.z;
-
 
 	ivec2 TextureSize = textureSize(u_Shadowmap, 0);
 	vec2 TexelSize = 1.0 / TextureSize;
@@ -137,7 +153,7 @@ float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection
 	return Shadow;
 }
 
-vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection, bool bUseShadowmap)
+vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection, int ShadowmapType)
 {
 	// Ambient
 	vec3 AmbientColor = Light.Ambient * DiffuseTextureColor;
@@ -195,9 +211,13 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	}
 
 	float ShadowMult = 1.f;
-	if (bUseShadowmap)
+	if (ShadowmapType == 1)
 	{
 		ShadowMult = 1.f - ShadowCalculation(vs_in.g_FragPosLightSpace, Normal, LightDirection);
+	}
+	else if (ShadowmapType == 2)
+	{
+		ShadowMult = 1.f - PointShadowCalculation(vs_in.g_FragPosWorld, Light.PositionWorld);
 	}
 
 	return Falloff * Attenuation * (AmbientColor + ShadowMult * (DiffuseColor + SpecularColor));
@@ -236,7 +256,7 @@ void main() {
 					SpecularTextureColor,
 					NormalizedNormal,
 					ViewDirection,
-					i == 0 && u_Shadowmaps
+					u_Shadowmaps ? (i == 0 ? 1 : 2) : 0
 				);
 			}
 

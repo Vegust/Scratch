@@ -22,6 +22,9 @@ public:
 	std::vector<glm::mat4> StaticCubes;
 	std::vector<glm::mat4> DynamicCubes;
 	
+	framebuffer PointShadowmap;
+	shader PointShadowmapShader;
+	
 	framebuffer DirectionalShadowmap;
 	shader DirectionalShadowmapShader;
 

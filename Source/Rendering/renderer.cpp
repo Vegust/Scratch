@@ -211,6 +211,7 @@ void renderer::DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth)
 	ScreenQuadVAO.Bind();
 	PostProcessShader.Bind();
 	PostProcessShader.SetUniform("u_Buffer", 0);
+	PostProcessShader.SetUniform("u_Depth", bDepth);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, bDepth ?  Framebuffer.DepthStencilTextureId : Framebuffer.ColorTextureId);

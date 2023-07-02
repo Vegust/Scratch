@@ -9,7 +9,8 @@
 enum class framebuffer_type
 {
 	scene,
-	shadowmap
+	shadowmap,
+	shadowmap_omni
 };
 
 struct framebuffer_params
