@@ -19,10 +19,12 @@ public:
 	texture DiffuseMap{};
 	texture SpecularMap{};
 	texture EmissionMap{};
+	texture NormalMap{};
 
 	uint32 DiffuseSlot = 0;
 	uint32 SpecularSlot = 1;
 	uint32 EmissionSlot = 2;
+	uint32 NormalSlot = 3;
 	
 	float Shininess{32.f};
 
@@ -32,7 +34,9 @@ public:
 		std::string_view SpecularPath,
 		uint32 InSpecularSlot,
 		std::string_view EmissionPath = {},
-		uint32 InEmissionSlot = 2)
+		uint32 InEmissionSlot = 2,
+		std::string_view InNormalPath = {},
+		uint32 InNormalSlot = 3)
 	{
 		DiffuseMap.Load(DiffusePath, true);
 		SpecularMap.Load(SpecularPath);
@@ -40,10 +44,15 @@ public:
 		{
 			EmissionMap.Load(EmissionPath);
 		}
+		if (!InNormalPath.empty())
+		{
+			NormalMap.Load(InNormalPath);
+		}
 		
 		DiffuseSlot = InDiffuseSlot;
 		SpecularSlot = InSpecularSlot;
 		EmissionSlot = InEmissionSlot;
+		NormalSlot = InNormalSlot;
 
 		// Order is important. First, create all, then bind all.
 		// because creating textures binds them to current active texture
@@ -52,6 +61,10 @@ public:
 		if (EmissionMap.Loaded())
 		{
 			EmissionMap.Bind(EmissionSlot);
+		}
+		if (NormalMap.Loaded())
+		{
+			NormalMap.Bind(NormalSlot);
 		}
 	}
 	
@@ -62,6 +75,10 @@ public:
 		if (EmissionMap.Loaded())
 		{
 			EmissionMap.Bind(EmissionSlot);
+		}
+		if (NormalMap.Loaded())
+		{
+			NormalMap.Bind(NormalSlot);
 		}
 	}
 };

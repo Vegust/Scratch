@@ -73,7 +73,7 @@ void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Tra
 	for (const auto& Transform : Transforms)
 	{
 		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+		GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
 	}
 }
 
@@ -95,7 +95,7 @@ void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4
 		Shader.SetUniform("u_ViewModel", ViewModel);
 		Shader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+		GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
 	}
 }
 
@@ -114,7 +114,7 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 		View = CameraHandle->GetViewTransform();
 		CameraPos = CameraHandle->Position;
 	}
-	
+
 	Material.Bind();
 
 	ActiveShader->Bind();
@@ -131,17 +131,19 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 		ActiveShader->SetUniform(
 			"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
-		GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
-		
+		GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
+
 		if (bNormals)
 		{
 			NormalsShader.Bind();
 			NormalsShader.SetUniform("u_ViewModel", ViewModel);
-			NormalsShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-			glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
+			NormalsShader.SetUniform(
+				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+			glm::mat4 ProjectionMatrix =
+				glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
 			NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
-		
-			GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
+
+			GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
 		}
 	}
 }
@@ -165,7 +167,8 @@ void renderer::Draw2(
 		View = CameraHandle->GetViewTransform();
 	}
 	glm::mat4 ViewModel = View * Transform;
-	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
+	glm::mat4 ProjectionMatrix =
+		glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
 
 	ActiveShader->Bind();
 	ActiveShader->SetUniform("u_Material", Material);
@@ -179,8 +182,11 @@ void renderer::Draw2(
 	if (bInstanced)
 	{
 		glDrawElementsInstanced(
-			GL_TRIANGLES, static_cast<GLsizei>(VertexArray.ElementBufferSize), GL_UNSIGNED_INT, 0, VertexArray.InstanceCount
-		);
+			DrawElementsMode,
+			static_cast<GLsizei>(VertexArray.ElementBufferSize),
+			GL_UNSIGNED_INT,
+			0,
+			VertexArray.InstanceCount);
 	}
 	else
 	{
@@ -189,14 +195,15 @@ void renderer::Draw2(
 			static_cast<GLsizei>(VertexArray.ElementBufferSize),
 			GL_UNSIGNED_INT,
 			nullptr));
-	
+
 		if (bNormals)
 		{
 			NormalsShader.Bind();
 			NormalsShader.SetUniform("u_ViewModel", ViewModel);
-			NormalsShader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+			NormalsShader.SetUniform(
+				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 			NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
-		
+
 			GL_CALL(glDrawElements(
 				DrawElementsMode,
 				static_cast<GLsizei>(VertexArray.ElementBufferSize),
@@ -214,7 +221,8 @@ void renderer::DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth)
 	PostProcessShader.SetUniform("u_Depth", bDepth);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, bDepth ?  Framebuffer.DepthStencilTextureId : Framebuffer.ColorTextureId);
+	glBindTexture(
+		GL_TEXTURE_2D, bDepth ? Framebuffer.DepthStencilTextureId : Framebuffer.ColorTextureId);
 	glDisable(GL_DEPTH_TEST);
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
 	glEnable(GL_DEPTH_TEST);
@@ -233,7 +241,8 @@ void renderer::DrawSkybox(const cubemap& Skybox)
 		auto CameraHandle = CustomCamera.lock();
 		CurrentFoV = CameraHandle->FoV;
 	}
-	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
+	glm::mat4 ProjectionMatrix =
+		glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
 	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
 	if (!CustomCamera.expired())
 	{
@@ -308,61 +317,62 @@ void renderer::InitCubeVAO()
 void renderer::InitNormalCubeVAO()
 {
 	constexpr uint32 NumVertices = 36;
-	constexpr uint32 ElementsPerVertex = 8;
+	constexpr uint32 ElementsPerVertex = 11;
 	constexpr uint32 SizeOfVertex = ElementsPerVertex * sizeof(float);
 	constexpr std::array<float, NumVertices* ElementsPerVertex> Vertices = {
 		// clang-format off
-		// positions          // normals           // texture coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
+		// positions          // normals           // texture coords // tangents
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, -1.f,0.f,0.f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, -1.f,0.f,0.f,
+		0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f, -1.f,0.f,0.f,
+		0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f, -1.f,0.f,0.f,
+		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, -1.f,0.f,0.f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f, -1.f,0.f,0.f,
 		
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f, 1.f,0.f,0.f,
+		0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f, 1.f,0.f,0.f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f, 1.f,0.f,0.f,
+		0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f, 1.f,0.f,0.f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f, 1.f,0.f,0.f,
+		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f, 1.f,0.f,0.f,
 
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,0.0f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,0.0f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,0.0f,  1.0f, 0.0f,
 
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,0.0f,  -1.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,0.0f,  -1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,0.0f,  -1.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,0.0f,  -1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,0.0f,  -1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,0.0f,  -1.0f, 0.0f,
 
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.f,0.f,0.f,
+		0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f, 1.f,0.f,0.f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, 1.f,0.f,0.f,
+		0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f, 1.f,0.f,0.f,
+		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.f,0.f,0.f,
+		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.f,0.f,0.f,
 
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.f,0.f,0.f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, 1.f,0.f,0.f,
+		0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f, 1.f,0.f,0.f,
+		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.f,0.f,0.f,
+		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.f,0.f,0.f,
+		0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f, 1.f,0.f,0.f
 
 		// clang-format on
 	};
 
 	NormalCubeVBO.SetData(Vertices.data(), NumVertices * SizeOfVertex);
 	vertex_buffer_layout VertexLayout{};
-	VertexLayout.Push<float>(3);
-	VertexLayout.Push<float>(3);
-	VertexLayout.Push<float>(2);
+	VertexLayout.Push<float>(3);	// Position
+	VertexLayout.Push<float>(3);	// Normals
+	VertexLayout.Push<float>(2);	// UV
+	VertexLayout.Push<float>(3);	// Tangents
 	NormalCubeVAO.AddBuffer(NormalCubeVBO, VertexLayout);
 }
 

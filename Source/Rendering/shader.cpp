@@ -122,6 +122,9 @@ void shader::SetUniform(std::string_view Name, const phong_material& Material) c
 	glUniform1i(
 		GetUniformLocation(std::string(Name) + ".EmissionMap"),
 		static_cast<int32>(Material.EmissionSlot));
+	glUniform1i(
+		GetUniformLocation(std::string(Name) + ".NormalMap"),
+		static_cast<int32>(Material.NormalSlot));
 	glUniform1f(GetUniformLocation(std::string(Name) + ".Shininess"), Material.Shininess);
 }
 

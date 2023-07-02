@@ -4,6 +4,7 @@
 layout (location = 0) in vec4 Position;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
+layout (location = 3) in vec3 Tangent;
 
 out GS_OUT {
 	vec3 g_Normal;
@@ -11,6 +12,7 @@ out GS_OUT {
 	vec2 g_TexCoords;
 	vec4 g_FragPosLightSpace;
 	vec3 g_FragPosWorld;
+	mat3 TBN;
 } vs_out;
 
 uniform mat4 u_MVP;
@@ -27,6 +29,11 @@ void main() {
 	vs_out.g_TexCoords = TexCoords;
 	vs_out.g_FragPosLightSpace = u_LightProjectionView * u_Model * Position;
 	gl_Position = u_MVP * Position;
+
+	vec3 T = normalize(vec3(u_ViewModel * vec4(Tangent, 0.0)));
+	vec3 N = normalize(vec3(u_ViewModel * vec4(Normal, 0.0)));
+	vec3 B = cross(N, T);
+	vs_out.TBN = mat3(T, B, N);
 };
 
 ////!shader geometry
@@ -65,6 +72,7 @@ struct material {
 	sampler2D DiffuseMap;
 	sampler2D SpecularMap;
 	sampler2D EmissionMap;
+	sampler2D NormalMap;
 	float Shininess;
 };
 
@@ -91,6 +99,7 @@ in GS_OUT {
 	vec2 g_TexCoords;
 	vec4 g_FragPosLightSpace;
 	vec3 g_FragPosWorld;
+	mat3 TBN;
 } vs_in;
 
 out vec4 Color;
@@ -228,7 +237,8 @@ void main() {
 
 	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, vs_in.g_TexCoords));
 	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, vs_in.g_TexCoords));
-	vec3 NormalizedNormal = normalize(vs_in.g_Normal);
+	vec3 TexturedNormal = texture(u_Material.NormalMap, vs_in.g_TexCoords).rgb;
+	vec3 NormalizedNormal = length(TexturedNormal) > 0.1 ? normalize(vs_in.TBN * (TexturedNormal * 2.0 - 1.0)) : normalize(vs_in.g_Normal);
 	vec3 ViewDirection = normalize(-vs_in.g_FragPos);
 
 	if (u_Depth)
