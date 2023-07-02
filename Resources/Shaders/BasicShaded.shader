@@ -114,11 +114,16 @@ float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection
 
 	ProjCoords = ProjCoords * 0.5 + 0.5;
 	float CurrentDepth = ProjCoords.z;
-	float Bias = max(0.003 * (1.0 - dot(Normal, LightDirection)), 0.0006);
 
-	// PCF
-	vec2 TexelSize = 1.0 / textureSize(u_Shadowmap, 0);
+
+	ivec2 TextureSize = textureSize(u_Shadowmap, 0);
+	vec2 TexelSize = 1.0 / TextureSize;
+	float LightDot = dot(Normal, LightDirection);
+	float Bias = TexelSize.x / 1.5 * (4 - pow(LightDot, 2.0) * 3);
 	float Shadow = 0;
+
+	// TODO: weighted on distance to pixels so each pixel linearly interpolates between shadowmap values
+	// PCF
 	for (int x = -2; x <= 2; ++x)
 	{
 		for (int y = -2; y <= 2; ++y)
@@ -127,8 +132,9 @@ float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection
 			Shadow += CurrentDepth - Bias > ClosestDepth ? 1.0 : 0.0;
 		}
 	}
+	Shadow = Shadow /= 25;
 
-	return Shadow /= 25;
+	return Shadow;
 }
 
 vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection, bool bUseShadowmap)

@@ -34,6 +34,8 @@ public:
 	float AccTime = 0.f;
 	float UpdateSpeed = 1.f;
 	
+	int32 ShadowmapResolution = 2048;
+	
 	void SetupCubeTransforms();
 	void UpdateDynamicCubeTransforms(float DeltaTime);
 };

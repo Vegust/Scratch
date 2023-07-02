@@ -4,6 +4,7 @@
 
 #include "framebuffer.h"
 
+#include "iostream"
 #include "glad/glad.h"
 #include "renderer.h"
 
@@ -106,6 +107,7 @@ void framebuffer::Reload(const framebuffer_params& InParams)
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
+		std::cout << "Bad framebuffer" << std::endl;
 		std::exit(1);
 	}
 

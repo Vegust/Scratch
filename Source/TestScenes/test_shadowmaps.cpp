@@ -114,7 +114,15 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 void test_shadowmaps::OnIMGuiRender()
 {
 	ImGui::SliderFloat("Slomo", &UpdateSpeed, 0.f, 2.f);
-	ImGui::Checkbox("Draw shadowmap", &bDrawShadowmap);
+	ImGui::Checkbox("Draw Shadowmap", &bDrawShadowmap);
+	if (ImGui::InputInt("Shadowmap Resolution", &ShadowmapResolution))
+	{
+		framebuffer_params Params;
+		Params.Type = framebuffer_type::shadowmap;
+		Params.Width = ShadowmapResolution;
+		Params.Height = ShadowmapResolution;
+		DirectionalShadowmap.Reload(Params);
+	}
 	if (ImGui::CollapsingHeader("Cubes"))
 	{
 		ImGui::InputFloat("Mat shininess", &CubeMaterial.Shininess);
