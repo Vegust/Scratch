@@ -29,6 +29,8 @@ public:
 	int32 LightEditIndex = 0;
 	framebuffer SceneFramebuffer;
 	
+	bool bDrawShadowmap = false;
+	
 	float AccTime = 0.f;
 	float UpdateSpeed = 1.f;
 	

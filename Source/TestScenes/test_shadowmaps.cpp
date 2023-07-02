@@ -48,13 +48,16 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	constexpr float NearPlane = 1.f;
-	constexpr float FarPlane = 50.f;
-	constexpr float SideDistance = 30.f;
+	constexpr float FarPlane = 70.f;
+	constexpr float SideDistance = 15.f;
 	glm::mat4 LightProjection =
 		glm::ortho(-SideDistance, SideDistance, -SideDistance, SideDistance, NearPlane, FarPlane);
 	// Directional light position is relative to player
 	glm::vec3 LightDirection = renderer::Get().SceneLights[0].Direction;
-	glm::vec3 LightPosition = Camera->Position + (-renderer::Get().SceneLights[0].Direction * 15.f);
+	glm::vec3 LightPosition =
+		Camera->Position +
+		glm::normalize(glm::vec3(Camera->Direction.x, 0.f, Camera->Direction.z)) * SideDistance +
+		(-renderer::Get().SceneLights[0].Direction * 35.f);
 	glm::mat4 LightView =
 		glm::lookAt(LightPosition, LightPosition + LightDirection, glm::vec3(0.f, 1.f, 0.f));
 	glm::mat4 LightProjectionView = LightProjection * LightView;
@@ -71,20 +74,20 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 
 		Renderer.DrawCubes(CubeMaterial, StaticCubes);
 		Renderer.DrawCubes(CubeMaterial, DynamicCubes);
+
 		Renderer.SetActiveShader(&Renderer.PhongShader);
 		framebuffer::SetDefault();
 		glViewport(0, 0, Renderer.CurrentWidth, Renderer.CurrentHeight);
 	}
 
-	// Debug shadow
-	//{
-	//	Renderer.PostProcessShader.SetUniform("u_Depth", true);
-	//	Renderer.DrawFrameBuffer(DirectionalShadowmap, true);
-	//	Renderer.PostProcessShader.SetUniform("u_Depth", false);
-	//	return;
-	//}
-
-	// Main pass
+	if (bDrawShadowmap)
+	{
+		Renderer.PostProcessShader.SetUniform("u_Depth", true);
+		Renderer.DrawFrameBuffer(DirectionalShadowmap, true);
+		Renderer.PostProcessShader.SetUniform("u_Depth", false);
+		return;
+	}
+	else
 	{
 		SceneFramebuffer.Bind();
 		glClearColor(0.8f, 0.8f, 1.0f, 0.f);
@@ -103,15 +106,15 @@ void test_shadowmaps::OnRender(renderer& Renderer)
 		Renderer.DrawCubes(CubeMaterial, DynamicCubes);
 
 		framebuffer::SetDefault();
-	}
 
-	// Post process
-	Renderer.DrawFrameBuffer(SceneFramebuffer);
+		Renderer.DrawFrameBuffer(SceneFramebuffer);
+	}
 }
 
 void test_shadowmaps::OnIMGuiRender()
 {
 	ImGui::SliderFloat("Slomo", &UpdateSpeed, 0.f, 2.f);
+	ImGui::Checkbox("Draw shadowmap", &bDrawShadowmap);
 	if (ImGui::CollapsingHeader("Cubes"))
 	{
 		ImGui::InputFloat("Mat shininess", &CubeMaterial.Shininess);
