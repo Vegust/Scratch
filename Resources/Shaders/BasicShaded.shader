@@ -32,7 +32,7 @@ void main() {
 
 	vec3 T = normalize(vec3(u_ViewModel * vec4(Tangent, 0.0)));
 	vec3 N = normalize(vec3(u_ViewModel * vec4(Normal, 0.0)));
-	vec3 B = cross(N, T);
+	vec3 B = cross(T, N);
 	vs_out.TBN = mat3(T, B, N);
 };
 
@@ -186,7 +186,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	//float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
 	// Blinn-Phong
 	vec3 HalfwayDirection = normalize(LightDirection + ViewDirection);
-	float SpecularImpact = pow(max(dot(HalfwayDirection, Normal), 0.0), u_Material.Shininess);
+	float SpecularImpact = max(dot(Normal, LightDirection),0.0) * pow(max(dot(HalfwayDirection, Normal), 0.0), u_Material.Shininess);
 
 	vec3 SpecularColor = Light.Specular * SpecularImpact * SpecularTextureColor;
 
