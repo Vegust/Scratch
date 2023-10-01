@@ -3,80 +3,11 @@
 #include "Templates/less.h"
 #include "Memory/memory.h"
 #include "core_utility.h"
+#include "array_iter.h"
 
 #include <initializer_list>
 #include <limits>
 
-template <typename array_type, bool Const>
-class dyn_array_iter {
-public:
-	using value_type = array_type::value_type;
-	using pointer = std::conditional<Const, const value_type*, value_type*>::type;
-	using reference = std::conditional<Const, const value_type&, value_type&>::type;
-
-private:
-	pointer mElement = nullptr;
-
-public:
-	FORCEINLINE dyn_array_iter() = default;
-	FORCEINLINE dyn_array_iter(const dyn_array_iter&) = default;
-	FORCEINLINE dyn_array_iter(dyn_array_iter&&) noexcept = default;
-	FORCEINLINE ~dyn_array_iter() = default;
-
-	FORCEINLINE explicit dyn_array_iter(pointer Element) : mElement(Element) {
-	}
-
-	// implicit conversion
-	FORCEINLINE operator pointer() const {
-		return mElement;
-	}
-
-	FORCEINLINE dyn_array_iter& operator++() {
-		mElement++;
-		return *this;
-	}
-
-	FORCEINLINE dyn_array_iter operator++(int) {
-		auto Tmp = *this;
-		mElement++;
-		return Tmp;
-	}
-
-	FORCEINLINE dyn_array_iter& operator--() {
-		mElement--;
-		return *this;
-	}
-
-	FORCEINLINE dyn_array_iter operator--(int) {
-		auto Tmp = *this;
-		mElement--;
-		return Tmp;
-	}
-
-	FORCEINLINE dyn_array_iter operator-(int Val) const {
-		return dyn_array_iter(mElement - Val);
-	}
-
-	FORCEINLINE dyn_array_iter operator+(int Val) const {
-		return dyn_array_iter(mElement + Val);
-	}
-
-	FORCEINLINE reference operator[](index_type Index) {
-		return *(mElement + Index);
-	}
-
-	FORCEINLINE pointer operator->() {
-		return mElement;
-	}
-
-	FORCEINLINE reference operator*() {
-		return *mElement;
-	}
-
-	FORCEINLINE bool operator==(const dyn_array_iter& Other) const {
-		return mElement == Other.mElement;
-	}
-};
 
 template <typename element_type, u64 StackSize>
 struct array_stack_storage {
@@ -101,9 +32,9 @@ public:
 	index_type mSize = 0;
 	index_type mCapacity = StackSize;
 
-	using iter = dyn_array_iter<dyn_array, false>;
+	using iter = array_iter<dyn_array, false>;
 	using value_type = element_type;
-	using const_iter = dyn_array_iter<dyn_array, true>;
+	using const_iter = array_iter<dyn_array, true>;
 	using alloc_base = allocator_instance<allocator_type>;
 	constexpr static bool FastCopy = trivially_copyable<element_type>;
 	constexpr static bool FastDestruct = trivially_destructible<element_type>;
