@@ -9,7 +9,7 @@
 class vertex_buffer
 {
 private:
-	uint32 RendererId{0};
+	u32 RendererId{0};
 
 public:
 	vertex_buffer() = default;
@@ -20,7 +20,7 @@ public:
 	vertex_buffer(vertex_buffer&& InVertexBuffer) noexcept;
 	vertex_buffer& operator=(vertex_buffer&& InVertexBuffer) noexcept;
 	
-	void SetData(const void* InData, uint32 InSize);
+	void SetData(const void* InData, u32 InSize);
 
 	void Bind() const;
 };

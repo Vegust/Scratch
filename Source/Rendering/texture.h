@@ -1,42 +1,38 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #pragma once
 
 #include "core_types.h"
+#include "Containers/str.h"
+#include "Containers/hash_table.h"
 
-#include <filesystem>
-#include <string_view>
-#include <unordered_map>
+struct texture {
+	u32 mRendererId{0};
+	str mPath{};
 
-class texture
-{
-private:
-	uint32 RendererId{0};
-	std::filesystem::path Path{};
-	uint8* LocalBuffer{nullptr};
-	
-public:
 	texture() = default;
 	~texture();
-	
-	texture(const texture& InTexture) = delete;
+
+	texture(const texture& Texture) = delete;
 	texture& operator=(const texture&) = delete;
-	texture(texture&& InTexture) noexcept;
-	texture& operator=(texture&& InTexture) noexcept;
-	
-	static std::unordered_map<std::string, std::pair<uint32, uint32>>& GetTextureCache()
-	{
-		static std::unordered_map<std::string, std::pair<uint32, uint32>> TextureCache{};
+	texture(texture&& Texture) noexcept;
+	texture& operator=(texture&& Texture) noexcept;
+
+	struct texture_record {
+		u32 mResourceId;
+		u32 mRefCount;
+	};
+
+	static hash_table<str, texture_record>& GetTextureCache() {
+		static hash_table<str, texture_record> TextureCache{};
 		return TextureCache;
 	}
-	
+
 	void ClearTextureHandle();
 
-	bool Loaded() const { return RendererId != 0; }
-	
-	void Load(std::string_view InPath, bool bSRGB = false);
-	
-	void Bind(uint32 Slot = 0) const;
+	bool Loaded() const {
+		return mRendererId != 0;
+	}
+
+	void Load(const str& Path, bool SRGB = false);
+
+	void Bind(u32 Slot = 0) const;
 };

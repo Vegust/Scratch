@@ -1,21 +1,14 @@
-//
-// Created by Vegust on 27.06.2023.
-//
-
 #include "mesh.h"
 
 #include "Rendering/renderer.h"
 
-void mesh::Init()
-{
-	VertexBuffer.SetData(
-		Vertices.data(),
-		static_cast<uint32>(Vertices.size()) * static_cast<uint32>(sizeof(vertex)));
-	ElementBuffer.SetData(Indices.data(), static_cast<uint32>(Indices.size()));
-	VertexArray.AddBuffer(VertexBuffer, ElementBuffer, vertex::GetLayout());
+void mesh::Init() {
+	mVertexBuffer.SetData(
+		mVertices.Data(), static_cast<u32>(mVertices.Size()) * static_cast<u32>(sizeof(vertex)));
+	mElementBuffer.SetData(mIndices.Data(), static_cast<u32>(mIndices.Size()));
+	mVertexArray.AddBuffer(mVertexBuffer, mElementBuffer, vertex::GetLayout());
 }
 
-void mesh::Draw(const renderer& Renderer, const glm::mat4& Transform)
-{
-	Renderer.Draw2(VertexArray, ElementBuffer, Material, Transform);
+void mesh::Draw(const renderer& Renderer, const glm::mat4& Transform) {
+	Renderer.Draw2(mVertexArray, mElementBuffer, mMaterial, Transform);
 }

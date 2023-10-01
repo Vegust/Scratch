@@ -5,21 +5,28 @@ set(CMAKE_CXX_STANDARD 23)
 include_directories(Source)
 include_directories(Source/Core)
 
+file(GLOB_RECURSE SCRATCH_CORE_SOURCES "Source/Core/*.cpp")
 file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
 file(GLOB_RECURSE SCRATCH_TEST_SCENES_SOURCES "Source/TestScenes/*.cpp")
 file(GLOB_RECURSE SCRATCH_SCENE_OBJECT_SOURCES "Source/SceneObjects/*.cpp")
 
+set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
+add_compile_definitions(NOMINMAX)
+add_compile_definitions(WIN32_LEAN_AND_MEAN)
+
 add_executable(Scratch
 		Source/main.cpp
+		${SCRATCH_CORE_SOURCES}
 		${SCRATCH_RENDERING_SOURCES}
 		${SCRATCH_TEST_SCENES_SOURCES}
 		${SCRATCH_SCENE_OBJECT_SOURCES}
-		)
+)
 
-target_compile_options(Scratch PRIVATE)
-#target_compile_options(Scratch PRIVATE -Wno-unused-function -Wno-unused-variable)
-#target_compile_options(Scratch PRIVATE /GX)
-#target_compile_options(Scratch PRIVATE -Wall -Wextra -Wpedantic -Werror -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-unused-parameter -Wno-extra-semi-stmt)
+# ----------- Testing ------------
+enable_testing()
+include(CTest)
+add_subdirectory(Testing)
+# --------------------------------
 
 # ------------ glfw --------------
 set(GLFW_BUILD_DOCS OFF)
@@ -41,7 +48,6 @@ add_library(stb STATIC Source/ThirdParty/stb/stb_image.cpp)
 target_link_libraries(Scratch stb)
 # --------------------------------
 
-# header only
 # ------------ glm ---------------
 include_directories(Source/ThirdParty/glm)
 # --------------------------------
@@ -57,14 +63,15 @@ add_library(imgui STATIC
 		# opengl and glfw backends
 		Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
 		Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
-		)
+)
 target_link_libraries(Scratch imgui)
 # --------------------------------
 
 # ----------- assimp -------------
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
-set(ASSIMP_INSTALL OFF CACHE BOOL "")
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
 add_subdirectory(Source/ThirdParty/assimp EXCLUDE_FROM_ALL)
 include_directories(Source/ThirdParty/assimp/include)
 target_link_libraries(Scratch assimp)

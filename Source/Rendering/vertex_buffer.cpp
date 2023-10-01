@@ -36,7 +36,7 @@ void vertex_buffer::Bind() const
 	glBindBuffer(GL_ARRAY_BUFFER, RendererId);
 }
 
-void vertex_buffer::SetData(const void* InData, uint32 InSize)
+void vertex_buffer::SetData(const void* InData, u32 InSize)
 {
 	if (RendererId == 0)
 	{

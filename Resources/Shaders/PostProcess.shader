@@ -9,7 +9,7 @@ out vec2 v_TexCoords;
 void main() {
 	gl_Position = vec4(Position.x, Position.y, 0.0, 1.0);
 	v_TexCoords = TexCoords;
-};
+}
 
 //!shader fragment
 #version 460 core
@@ -39,4 +39,4 @@ void main() {
 	{
 		Color = TextureColor;
 	}
-};
+}

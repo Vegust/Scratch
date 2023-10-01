@@ -1,303 +1,245 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #include "shader.h"
 
-#include "SceneObjects/light.h"
-#include "SceneObjects/phong_material.h"
-
-#include <string>
-
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
-SCRATCH_DISABLE_WARNINGS_END()
 
 #include <fstream>
 #include <iostream>
 
-shader::shader(shader&& InShader)
-{
-	RendererId = InShader.RendererId;
-	Path = std::move(InShader.Path);
-	UniformsCache = std::move(InShader.UniformsCache);
-	InShader.RendererId = 0;
-	InShader.Path = std::filesystem::path{};
-	InShader.UniformsCache.clear();
+shader::shader(shader&& Shader) {
+	mRendererId = Shader.mRendererId;
+	mPath = std::move(Shader.mPath);
+	mUniformsCache = std::move(Shader.mUniformsCache);
+	Shader.mRendererId = 0;
+	Shader.mPath = {};
+	Shader.mUniformsCache.Clear();
 }
 
-shader& shader::operator=(shader&& InShader)
-{
-	if (RendererId != 0)
-	{
-		glDeleteProgram(RendererId);
+shader& shader::operator=(shader&& Shader) {
+	if (mRendererId != 0) {
+		glDeleteProgram(mRendererId);
 	}
-	RendererId = InShader.RendererId;
-	Path = std::move(InShader.Path);
-	UniformsCache = std::move(InShader.UniformsCache);
-	InShader.RendererId = 0;
-	InShader.Path = std::filesystem::path{};
-	InShader.UniformsCache.clear();
+	mRendererId = Shader.mRendererId;
+	mPath = std::move(Shader.mPath);
+	mUniformsCache = std::move(Shader.mUniformsCache);
+	Shader.mRendererId = 0;
+	Shader.mPath = {};
+	Shader.mUniformsCache.Clear();
 	return *this;
 }
 
-void shader::Compile(const std::filesystem::path& InPath)
-{
-	if (RendererId == 0)
-	{
-		RendererId = glCreateProgram();
+void shader::Compile(const str& Path) {
+	if (mRendererId == 0) {
+		mRendererId = glCreateProgram();
 	}
 
-	Path = InPath;
-	auto ParsedShaders = ParseShader(InPath);
+	mPath = Path;
+	auto ParsedShaders = ParseShader(Path);
 
-	auto VSIndex = CompileShader(GL_VERTEX_SHADER, ParsedShaders.VertexShader);
-	auto FSIndex = CompileShader(GL_FRAGMENT_SHADER, ParsedShaders.FragmentShader);
-	glAttachShader(RendererId, VSIndex);
-	glAttachShader(RendererId, FSIndex);
+	auto VSIndex = CompileShader(GL_VERTEX_SHADER, ParsedShaders.mVertexShader);
+	auto FSIndex = CompileShader(GL_FRAGMENT_SHADER, ParsedShaders.mFragmentShader);
+	glAttachShader(mRendererId, VSIndex);
+	glAttachShader(mRendererId, FSIndex);
 
-	if (!ParsedShaders.GeometryShader.empty())
-	{
-		auto GSIndex = CompileShader(GL_GEOMETRY_SHADER, ParsedShaders.GeometryShader);
-		glAttachShader(RendererId, GSIndex);
+	if (!ParsedShaders.mGeometryShader.Empty()) {
+		auto GSIndex = CompileShader(GL_GEOMETRY_SHADER, ParsedShaders.mGeometryShader);
+		glAttachShader(mRendererId, GSIndex);
 	}
 
-	glLinkProgram(RendererId);
-	glValidateProgram(RendererId);
+	glLinkProgram(mRendererId);
+	glValidateProgram(mRendererId);
 
 	glDeleteShader(VSIndex);
 	glDeleteShader(FSIndex);
 }
 
-shader::~shader()
-{
-	if (RendererId != 0)
-	{
-		glDeleteProgram(RendererId);
+shader::~shader() {
+	if (mRendererId != 0) {
+		glDeleteProgram(mRendererId);
 	}
 }
 
-void shader::Bind() const
-{
-	glUseProgram(RendererId);
+void shader::Bind() const {
+	glUseProgram(mRendererId);
 }
 
-void shader::SetUniform(std::string_view Name, float V1, float V2, float V3, float V4) const
-{
+void shader::SetUniform(const str& Name, float V1, float V2, float V3, float V4) const {
 	glUniform4f(GetUniformLocation(Name), V1, V2, V3, V4);
 }
 
-void shader::SetUniform(std::string_view Name, int32 V1) const
-{
+void shader::SetUniform(const str& Name, s32 V1) const {
 	glUniform1i(GetUniformLocation(Name), V1);
 }
 
-void shader::SetUniform(std::string_view Name, const glm::mat4& Matrix) const
-{
+void shader::SetUniform(const str& Name, const glm::mat4& Matrix) const {
 	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
 }
 
-void shader::SetUniform(std::string_view Name, const std::vector<glm::mat4>& Matrix) const
-{
-	for (uint32 i = 0; i < Matrix.size(); ++i)
-	{
+void shader::SetUniform(const str& Name, const dyn_array<glm::mat4>& Matrix) const {
+	for (u32 i = 0; i < Matrix.Size(); ++i) {
 		glUniformMatrix4fv(
-			GetUniformLocation(std::string(Name) + "[" + std::to_string(i) + "]"),
-			1,
-			GL_FALSE,
-			glm::value_ptr(Matrix[i]));
+			GetUniformLocation(Name + "[" + str{i} + "]"), 1, GL_FALSE, glm::value_ptr(Matrix[i]));
 	}
 }
 
-void shader::SetUniform(std::string_view Name, const phong_material& Material) const
-{
+void shader::SetUniform(const str& Name, const phong_material& Material) const {
+	glUniform1i(GetUniformLocation(Name + ".DiffuseMap"), static_cast<s32>(Material.mDiffuseSlot));
 	glUniform1i(
-		GetUniformLocation(std::string(Name) + ".DiffuseMap"),
-		static_cast<int32>(Material.DiffuseSlot));
+		GetUniformLocation(Name + ".SpecularMap"), static_cast<s32>(Material.mSpecularSlot));
 	glUniform1i(
-		GetUniformLocation(std::string(Name) + ".SpecularMap"),
-		static_cast<int32>(Material.SpecularSlot));
-	glUniform1i(
-		GetUniformLocation(std::string(Name) + ".EmissionMap"),
-		static_cast<int32>(Material.EmissionSlot));
-	glUniform1i(
-		GetUniformLocation(std::string(Name) + ".NormalMap"),
-		static_cast<int32>(Material.NormalSlot));
-	glUniform1f(GetUniformLocation(std::string(Name) + ".Shininess"), Material.Shininess);
+		GetUniformLocation(Name + ".EmissionMap"), static_cast<s32>(Material.mEmissionSlot));
+	glUniform1i(GetUniformLocation(Name + ".NormalMap"), static_cast<s32>(Material.mNormalSlot));
+	glUniform1f(GetUniformLocation(Name + ".Shininess"), Material.mShininess);
 }
 
 void shader::SetUniform(
-	std::string_view Name,
-	std::string_view CountName,
-	const std::vector<light>& Lights,
-	const glm::mat4& View) const
-{
-	for (uint32 i = 0; i < Lights.size(); ++i)
-	{
-		SetUniform(std::string(Name) + "[" + std::to_string(i) + "]", Lights[i], View);
+	const str& Name,
+	const str& CountName,
+	const dyn_array<light>& Lights,
+	const glm::mat4& View) const {
+	for (u32 i = 0; i < Lights.Size(); ++i) {
+		SetUniform(Name + "[" + str{i} + "]", Lights[i], View);
 	}
-	SetUniform(CountName, static_cast<int32>(Lights.size()));
+	SetUniform(CountName, static_cast<s32>(Lights.Size()));
 }
 
-void shader::SetUniform(std::string_view Name, const class light& Light, const glm::mat4& View) const
-{
-	glUniform1i(GetUniformLocation(std::string(Name) + ".Type"), static_cast<int32>(Light.Type));
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Ambient"), 1, glm::value_ptr(Light.Ambient));
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Diffuse"), 1, glm::value_ptr(Light.Diffuse));
-	glUniform3fv(
-		GetUniformLocation(std::string(Name) + ".Specular"), 1, glm::value_ptr(Light.Specular));
+void shader::SetUniform(const str& Name, const class light& Light, const glm::mat4& View) const {
+	glUniform1i(GetUniformLocation(Name + ".Type"), static_cast<s32>(Light.mType));
+	glUniform3fv(GetUniformLocation(Name + ".Ambient"), 1, glm::value_ptr(Light.mAmbient));
+	glUniform3fv(GetUniformLocation(Name + ".Diffuse"), 1, glm::value_ptr(Light.mDiffuse));
+	glUniform3fv(GetUniformLocation(Name + ".Specular"), 1, glm::value_ptr(Light.mSpecular));
 
-	if (Light.Type == light_type::point)
-	{
+	if (Light.mType == light_type::point) {
 		glUniform3fv(
-			GetUniformLocation(std::string(Name) + ".Position"),
+			GetUniformLocation(Name + ".Position"),
 			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mPosition, 1.f))));
 		glUniform3fv(
-			GetUniformLocation(std::string(Name) + ".PositionWorld"),
+			GetUniformLocation(Name + ".PositionWorld"), 1, glm::value_ptr(Light.mPosition));
+		glUniform1f(GetUniformLocation(Name + ".AttenuationRadius"), Light.mAttenuationRadius);
+	} else if (Light.mType == light_type::directional) {
+		glUniform3fv(
+			GetUniformLocation(Name + ".Direction"),
 			1,
-			glm::value_ptr(Light.Position));
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mDirection, 0.f))));
+	} else if (Light.mType == light_type::spot) {
+		glUniform3fv(
+			GetUniformLocation(Name + ".Position"),
+			1,
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mPosition, 1.f))));
+		glUniform3fv(
+			GetUniformLocation(Name + ".Direction"),
+			1,
+			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mDirection, 0.f))));
+		glUniform1f(GetUniformLocation(Name + ".AttenuationRadius"), Light.mAttenuationRadius);
+		glUniform1f(GetUniformLocation(Name + ".AngularAttenuation"), Light.mAngularAttenuation);
 		glUniform1f(
-			GetUniformLocation(std::string(Name) + ".AttenuationRadius"), Light.AttenuationRadius);
-	}
-	else if (Light.Type == light_type::directional)
-	{
-		glUniform3fv(
-			GetUniformLocation(std::string(Name) + ".Direction"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Direction, 0.f))));
-	}
-	else if (Light.Type == light_type::spot)
-	{
-		glUniform3fv(
-			GetUniformLocation(std::string(Name) + ".Position"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Position, 1.f))));
-		glUniform3fv(
-			GetUniformLocation(std::string(Name) + ".Direction"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.Direction, 0.f))));
-		glUniform1f(
-			GetUniformLocation(std::string(Name) + ".AttenuationRadius"), Light.AttenuationRadius);
-		glUniform1f(
-			GetUniformLocation(std::string(Name) + ".AngularAttenuation"),
-			Light.AngularAttenuation);
-		glUniform1f(
-			GetUniformLocation(std::string(Name) + ".AngularAttenuationFalloffStart"),
-			Light.AngularAttenuationFalloffStart);
+			GetUniformLocation(Name + ".AngularAttenuationFalloffStart"),
+			Light.mAngularAttenuationFalloffStart);
 	}
 }
 
-void shader::SetUniform(std::string_view Name, const glm::mat3& Matrix) const
-{
+void shader::SetUniform(const str& Name, const glm::mat3& Matrix) const {
 	glUniformMatrix3fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
 }
 
-void shader::SetUniform(std::string_view Name, float V1) const
-{
+void shader::SetUniform(const str& Name, float V1) const {
 	glUniform1f(GetUniformLocation(Name), V1);
 }
 
-void shader::SetUniform(std::string_view Name, glm::vec3 V1) const
-{
+void shader::SetUniform(const str& Name, glm::vec3 V1) const {
 	glUniform3f(GetUniformLocation(Name), V1.x, V1.y, V1.z);
 }
 
-int32 shader::GetUniformLocation(std::string_view Name) const
-{
-	if (const auto Result = UniformsCache.find(Name); Result != UniformsCache.end())
-	{
-		return Result->second;
+s32 shader::GetUniformLocation(const str& Name) const {
+	if (const auto Result = mUniformsCache.Find(Name)) {
+		return *Result;
 	}
-	const auto Location = glGetUniformLocation(RendererId, Name.data());
-	UniformsCache[std::string{Name}] = Location;
+	const auto Location = glGetUniformLocation(mRendererId, Name.Raw());
+	mUniformsCache[Name] = Location;
 	return Location;
 }
 
-shader::parsed_shaders shader::ParseShader(const std::filesystem::path& Path)
-{
-	std::ifstream InputFile(Path.string(), std::ios::in);
-	std::string Line;
+static std::ifstream& GetLine(std::ifstream& Stream, str& String) {
+	String.Clear(false);
+	char Char;
+	while (Stream.get(Char)) {
+		if (Char == '\n') {
+			break;
+		}
+		String += Char;
+	}
+	return Stream;
+}
+
+shader::parsed_shaders shader::ParseShader(const str& Path) {
+	std::ifstream InputFile(Path.Raw(), std::ios::in);
+	str Line;
 	parsed_shaders Result;
-	std::optional<size_t> ShaderIndex{};
+	index_type ShaderIndex = InvalidIndex;
 	bool bHasGeometryShader = false;
-	while (getline(InputFile, Line))
-	{
-		if (Line.find("!shader") != std::string::npos && Line.find("////") == std::string::npos)
-		{
-			if (Line.find("vertex") != std::string::npos)
-			{
+	bool ReachedEOF = InputFile.eof();
+	while (!ReachedEOF) {
+		ReachedEOF = GetLine(InputFile, Line).eof();
+		if (Line.Find("!shader") != InvalidIndex && Line.Find("////") == InvalidIndex) {
+			if (Line.Find("vertex") != InvalidIndex) {
 				ShaderIndex = 0;
-			}
-			else if (Line.find("fragment") != std::string::npos)
-			{
+			} else if (Line.Find("fragment") != InvalidIndex) {
 				ShaderIndex = 1;
-			}
-			else if (Line.find("geometry") != std::string::npos)
-			{
+			} else if (Line.Find("geometry") != InvalidIndex) {
 				bHasGeometryShader = true;
 				ShaderIndex = 2;
-			}
-			else if (Line.find("shared") != std::string::npos)
-			{
+			} else if (Line.Find("shared") != InvalidIndex) {
 				ShaderIndex = 3;
 			}
-		}
-		else
-		{
-			if (ShaderIndex.has_value())
-			{
-				if (ShaderIndex.value() == 0)
-				{
-					Result.VertexShader.append(Line + "\n");
+		} else {
+			if (ShaderIndex != InvalidIndex) {
+				if (ShaderIndex == 0 || ShaderIndex == 3) {
+					if (!Result.mVertexShader.Empty() && !Line.Empty()) {
+						Result.mVertexShader += '\n';
+					}
+					Result.mVertexShader += Line;
 				}
-				if (ShaderIndex.value() == 1)
-				{
-					Result.FragmentShader.append(Line + "\n");
+				if (ShaderIndex == 1 || ShaderIndex == 3) {
+					if (!Result.mFragmentShader.Empty() && !Line.Empty()) {
+						Result.mFragmentShader += '\n';
+					}
+					Result.mFragmentShader += Line;
 				}
-				if (ShaderIndex.value() == 2)
-				{
-					Result.GeometryShader.append(Line + "\n");
-				}
-				if (ShaderIndex.value() == 3)
-				{
-					Result.VertexShader.append(Line + "\n");
-					Result.GeometryShader.append(Line + "\n");
-					Result.FragmentShader.append(Line + "\n");
+				if (ShaderIndex == 2 || ShaderIndex == 3) {
+					if (!Result.mGeometryShader.Empty() && !Line.Empty()) {
+						Result.mGeometryShader += '\n';
+					}
+					Result.mGeometryShader += Line;
 				}
 			}
 		}
 	}
 
-	if (!bHasGeometryShader)
-	{
-		Result.GeometryShader = {};
+	if (!bHasGeometryShader) {
+		Result.mGeometryShader = {};
 	}
 
 	return Result;
 }
 
-uint32 shader::CompileShader(uint32 Type, std::string_view Source)
-{
+u32 shader::CompileShader(u32 Type, const str& Source) {
 	auto Index = glCreateShader(Type);
-	const char* SourceData = Source.data();
+	const char* SourceData = Source.Raw();
 	glShaderSource(Index, 1, &SourceData, nullptr);
 	glCompileShader(Index);
 
-	int32 Result;
+	s32 Result;
 	glGetShaderiv(Index, GL_COMPILE_STATUS, &Result);
-	if (Result == GL_FALSE)
-	{
-		int32 Length;
+	if (Result == GL_FALSE) {
+		s32 Length;
 		glGetShaderiv(Index, GL_INFO_LOG_LENGTH, &Length);
-		char* Message = static_cast<char*>(alloca(static_cast<uint64>(Length) * sizeof(char)));
+		char* Message = static_cast<char*>(alloca(static_cast<u64>(Length) * sizeof(char)));
 		glGetShaderInfoLog(Index, Length, &Length, Message);
 		std::cout << Message << std::endl;
 		glDeleteShader(Index);
+		CHECK(false);
 		return 0;
 	}
 

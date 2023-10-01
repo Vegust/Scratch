@@ -5,23 +5,22 @@
 #pragma once
 
 #include "core_types.h"
+#include "Containers/array.h"
+#include "Containers/str.h"
 
-#include <vector>
-#include <string_view>
+struct cubemap {
+	u32 mRendererId{0};
+	constexpr static s32 CubemapSlot{15};
 
-struct cubemap
-{
-	uint32 RendererId{0};
-	constexpr static int32 CubemapSlot{15};
-	
 	cubemap() = default;
 	~cubemap();
-	
+
 	cubemap(const cubemap&) = delete;
 	cubemap& operator=(const cubemap&) = delete;
 	cubemap(cubemap&& InCubemap) noexcept;
 	cubemap& operator=(cubemap&& InCubemap) noexcept;
-	
-	void Load(const std::string_view& Directory, const std::vector<std::string_view>& TextureFacePaths = {});
+
+	void Load(const str& Directory);
+	void Load(const str& Directory, const array<str, 6>& TextureFacePaths);
 	void Bind() const;
 };

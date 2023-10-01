@@ -1,14 +1,9 @@
-//
-// Created by Vegust on 24.06.2023.
-//
-
 #include "test_cube.h"
 
 #include "core_types.h"
 
 #include <vector>
 
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -16,7 +11,6 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
-SCRATCH_DISABLE_WARNINGS_END()
 
 #include "Rendering/renderer.h"
 #include "Rendering/texture.h"
@@ -24,71 +18,65 @@ SCRATCH_DISABLE_WARNINGS_END()
 
 REGISTER_TEST_SCENE(test_cube, "04 Cubes")
 
-test_cube::test_cube()
-{
-	Texture.Load("Resources/Textures/Wall.jpg");
-	Texture.Bind();
+test_cube::test_cube() {
+	mTexture.Load("Resources/Textures/Wall.jpg");
+	mTexture.Bind();
 
-	Shader.Compile("Resources/Shaders/Basic.shader");
-	Shader.Bind();
-	Shader.SetUniform("u_Texture", 0);
+	mShader.Compile("Resources/Shaders/Basic.shader");
+	mShader.Bind();
+	mShader.SetUniform("u_Texture", 0);
 
-	std::srand(static_cast<uint32>(std::time(nullptr)));
-	Seed = static_cast<uint32>(std::rand());
+	std::srand(static_cast<u32>(std::time(nullptr)));
+	mSeed = static_cast<u32>(std::rand());
 }
 
-test_cube::~test_cube()
-{
+test_cube::~test_cube() {
 }
 
-void test_cube::OnUpdate(float DeltaTime)
-{
+void test_cube::OnUpdate(float DeltaTime) {
 	test_scene::OnUpdate(DeltaTime);
-	CurrentRotation += glm::pi<float>() / 2.f * DeltaTime;
+	mCurrentRotation += glm::pi<float>() / 2.f * DeltaTime;
 }
 
-void test_cube::OnRender(renderer& Renderer)
-{
+void test_cube::OnRender(renderer& Renderer) {
 	test_scene::OnRender(Renderer);
 	glClearColor(0.2f, 0.1f, 0.1f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	Renderer.CameraPosition = glm::vec3{0.f, 0.f, 3.f};
+	Renderer.mCameraPosition = glm::vec3{0.f, 0.f, 3.f};
 
-	std::srand(Seed);
-	std::vector<glm::mat4> Transforms;
-	for (int i = 0; i < NumCubes; ++i)
-	{
+	std::srand(mSeed);
+	dyn_array<glm::mat4> Transforms;
+	for (int i = 0; i < mNumCubes; ++i) {
 		glm::vec3 RandomOffset = glm::vec3{
 			(std::rand() % 2000 - 1000) / 100.f,
 			(std::rand() % 2000 - 1000) / 100.f,
 			(std::rand() % 2000 - 2000) / 100.f};
-		glm::vec3 Position = i == 0 ? Pic1Trans : Pic1Trans + RandomOffset;
+		glm::vec3 Position = i == 0 ? mPic1Trans : mPic1Trans + RandomOffset;
 		glm::mat4 ModelTransform = glm::rotate(
 			glm::rotate(
 				glm::rotate(
 					glm::rotate(
 						glm::translate(glm::mat4{1.0f}, Position),
-						Pic1Rot.x,
+						mPic1Rot.x,
 						glm::vec3(1.f, 0.f, 0.f)),
-					Pic1Rot.y,
+					mPic1Rot.y,
 					glm::vec3(0.f, 1.f, 0.f)),
-				Pic1Rot.z,
+				mPic1Rot.z,
 				glm::vec3(0.f, 0.f, 1.f)),
-			CurrentRotation + static_cast<float>(i) * glm::pi<float>() / 10.f,
+			mCurrentRotation + static_cast<float>(i) * glm::pi<float>() / 10.f,
 			glm::vec3(0.5f, 1.f, 0.f));
 
-		Transforms.push_back(ModelTransform);
+		Transforms.Add(ModelTransform);
 	}
 
-	Renderer.DrawCubes(Shader, Transforms);
+	Renderer.DrawCubes(mShader, Transforms);
 }
 
-void test_cube::OnIMGuiRender()
-{
+void test_cube::OnIMGuiRender() {
 	test_scene::OnIMGuiRender();
 	constexpr float Pi = glm::pi<float>();
-	ImGui::SliderFloat3("Cubes translation", glm::value_ptr(Pic1Trans), -5.f, 5.f);
-	ImGui::SliderFloat3("Cubes rotation", glm::value_ptr(Pic1Rot), -Pi, Pi);
-	ImGui::SliderInt("Num Cubes", &NumCubes, 1, 10000);
+	ImGui::SliderFloat3("Cubes translation", glm::value_ptr(mPic1Trans), -5.f, 5.f);
+	ImGui::SliderFloat3("Cubes rotation", glm::value_ptr(mPic1Rot), -Pi, Pi);
+	ImGui::SliderInt("Num Cubes", &mNumCubes, 1, 10000);
 }

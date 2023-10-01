@@ -1,9 +1,4 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #include "renderer.h"
-
 #include "element_buffer.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -13,21 +8,18 @@
 #include "vertex_array.h"
 #include "vertex_buffer_layout.h"
 
-#include <array>
 #include <iostream>
 
-void GlClearError()
-{
+void GlClearError() {
 	while (glGetError() != GL_NO_ERROR)
 		;
 }
 
-bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber)
-{
-	if (GLenum Error = glGetError())
-	{
+bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber) {
+	if (GLenum Error = glGetError()) {
 		std::cout << "OpenGl Error: (" << Error << "): " << FileName << ":" << LineNumber << ":"
 				  << FunctionName << std::endl;
+		CHECK(false);
 		return false;
 	}
 	return true;
@@ -36,8 +28,7 @@ bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber)
 void renderer::Draw(
 	const vertex_array& VertexArray,
 	const element_buffer& IndexBuffer,
-	const shader& Shader)
-{
+	const shader& Shader) {
 	Shader.Bind();
 	VertexArray.Bind();
 	IndexBuffer.Bind();
@@ -46,8 +37,7 @@ void renderer::Draw(
 		GL_TRIANGLES, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
-void renderer::Clear()
-{
+void renderer::Clear() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -55,61 +45,55 @@ void renderer::Draw(
 	const vertex_array& VertexArray,
 	const element_buffer& IndexBuffer,
 	const shader& Shader,
-	glm::mat4 Transform) const
-{
+	glm::mat4 Transform) const {
 	Shader.Bind();
 	VertexArray.Bind();
 	IndexBuffer.Bind();
 	Shader.Bind();
 	Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
 	GL_CALL(glDrawElements(
-		DrawElementsMode, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
+		mDrawElementsMode, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
-void renderer::DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
-{
-	CubeVAO.Bind();
+void renderer::DrawCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const {
+	mCubeVAO.Bind();
 	Shader.Bind();
-	for (const auto& Transform : Transforms)
-	{
+	for (const auto& Transform : Transforms) {
 		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-		GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
+		GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
 	}
 }
 
-void renderer::DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const
-{
-	NormalCubeVAO.Bind();
+void renderer::DrawNormalCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const {
+	mNormalCubeVAO.Bind();
 	Shader.Bind();
 
-	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
-	if (!CustomCamera.expired())
-	{
-		auto CameraHandle = CustomCamera.lock();
+	glm::mat4 View =
+		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
+	if (!mCustomCamera.expired()) {
+		auto CameraHandle = mCustomCamera.lock();
 		View = CameraHandle->GetViewTransform();
 	}
 
-	for (const auto& Transform : Transforms)
-	{
+	for (const auto& Transform : Transforms) {
 		glm::mat4 ViewModel = View * Transform;
 		Shader.SetUniform("u_ViewModel", ViewModel);
 		Shader.SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 		Shader.SetUniform("u_MVP", CalcMVPForTransform(Transform));
-		GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
+		GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
 	}
 }
 
-void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms)
-	const
-{
-	NormalCubeVAO.Bind();
+void renderer::DrawCubes(const phong_material& Material, const dyn_array<glm::mat4>& Transforms)
+	const {
+	mNormalCubeVAO.Bind();
 
-	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
+	glm::mat4 View =
+		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
 	glm::vec3 CameraPos{};
-	float CurrentFoV = FoV;
-	if (!CustomCamera.expired())
-	{
-		auto CameraHandle = CustomCamera.lock();
+	float CurrentFoV = mFoV;
+	if (!mCustomCamera.expired()) {
+		auto CameraHandle = mCustomCamera.lock();
 		CurrentFoV = CameraHandle->FoV;
 		View = CameraHandle->GetViewTransform();
 		CameraPos = CameraHandle->Position;
@@ -117,33 +101,31 @@ void renderer::DrawCubes(const phong_material& Material, const std::vector<glm::
 
 	Material.Bind();
 
-	ActiveShader->Bind();
-	ActiveShader->SetUniform("u_Material", Material);
-	ActiveShader->SetUniform("u_Lights", "u_NumLights", SceneLights, View);
-	for (const auto& Transform : Transforms)
-	{
+	mActiveShader->Bind();
+	mActiveShader->SetUniform("u_Material", Material);
+	mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
+	for (const auto& Transform : Transforms) {
 		glm::mat4 ViewModel = View * Transform;
-		ActiveShader->SetUniform("u_ViewModel", ViewModel);
-		ActiveShader->SetUniform("u_Model", Transform);
-		ActiveShader->SetUniform("u_CameraPos", CameraPos);
-		ActiveShader->SetUniform(
+		mActiveShader->SetUniform("u_ViewModel", ViewModel);
+		mActiveShader->SetUniform("u_Model", Transform);
+		mActiveShader->SetUniform("u_CameraPos", CameraPos);
+		mActiveShader->SetUniform(
 			"u_NormalModelMatrix", glm::mat3(glm::transpose(glm::inverse(Transform))));
-		ActiveShader->SetUniform(
+		mActiveShader->SetUniform(
 			"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-		ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
-		GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
+		mActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
+		GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
 
-		if (bNormals)
-		{
-			NormalsShader.Bind();
-			NormalsShader.SetUniform("u_ViewModel", ViewModel);
-			NormalsShader.SetUniform(
+		if (mNormals) {
+			mNormalsShader.Bind();
+			mNormalsShader.SetUniform("u_ViewModel", ViewModel);
+			mNormalsShader.SetUniform(
 				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
 			glm::mat4 ProjectionMatrix =
-				glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
-			NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+				glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
+			mNormalsShader.SetUniform("u_Projection", ProjectionMatrix);
 
-			GL_CALL(glDrawArrays(DrawElementsMode, 0, 36));
+			GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
 		}
 	}
 }
@@ -152,115 +134,106 @@ void renderer::Draw2(
 	const vertex_array& VertexArray,
 	const element_buffer& ElementBuffer,
 	const phong_material& Material,
-	const glm::mat4& Transform) const
-{
+	const glm::mat4& Transform) const {
 	VertexArray.Bind();
 	ElementBuffer.Bind();
 	Material.Bind();
 
-	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
-	float CurrentFoV = FoV;
-	if (!CustomCamera.expired())
-	{
-		auto CameraHandle = CustomCamera.lock();
+	glm::mat4 View =
+		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
+	float CurrentFoV = mFoV;
+	if (!mCustomCamera.expired()) {
+		auto CameraHandle = mCustomCamera.lock();
 		CurrentFoV = CameraHandle->FoV;
 		View = CameraHandle->GetViewTransform();
 	}
 	glm::mat4 ViewModel = View * Transform;
 	glm::mat4 ProjectionMatrix =
-		glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
+		glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
 
-	ActiveShader->Bind();
-	ActiveShader->SetUniform("u_Material", Material);
-	ActiveShader->SetUniform("u_Lights", "u_NumLights", SceneLights, View);
-	ActiveShader->SetUniform("u_ViewModel", ViewModel);
-	ActiveShader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-	ActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
-	ActiveShader->SetUniform("u_Projection", ProjectionMatrix);
-	ActiveShader->SetUniform("u_View", View);
+	mActiveShader->Bind();
+	mActiveShader->SetUniform("u_Material", Material);
+	mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
+	mActiveShader->SetUniform("u_ViewModel", ViewModel);
+	mActiveShader->SetUniform("u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+	mActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
+	mActiveShader->SetUniform("u_Projection", ProjectionMatrix);
+	mActiveShader->SetUniform("u_View", View);
 
-	if (bInstanced)
-	{
+	if (mInstanced) {
 		glDrawElementsInstanced(
-			DrawElementsMode,
-			static_cast<GLsizei>(VertexArray.ElementBufferSize),
+			mDrawElementsMode,
+			static_cast<GLsizei>(VertexArray.mElementBufferSize),
 			GL_UNSIGNED_INT,
 			0,
-			VertexArray.InstanceCount);
-	}
-	else
-	{
+			VertexArray.mInstanceCount);
+	} else {
 		GL_CALL(glDrawElements(
-			DrawElementsMode,
-			static_cast<GLsizei>(VertexArray.ElementBufferSize),
+			mDrawElementsMode,
+			static_cast<GLsizei>(VertexArray.mElementBufferSize),
 			GL_UNSIGNED_INT,
 			nullptr));
 
-		if (bNormals)
-		{
-			NormalsShader.Bind();
-			NormalsShader.SetUniform("u_ViewModel", ViewModel);
-			NormalsShader.SetUniform(
+		if (mNormals) {
+			mNormalsShader.Bind();
+			mNormalsShader.SetUniform("u_ViewModel", ViewModel);
+			mNormalsShader.SetUniform(
 				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-			NormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+			mNormalsShader.SetUniform("u_Projection", ProjectionMatrix);
 
 			GL_CALL(glDrawElements(
-				DrawElementsMode,
-				static_cast<GLsizei>(VertexArray.ElementBufferSize),
+				mDrawElementsMode,
+				static_cast<GLsizei>(VertexArray.mElementBufferSize),
 				GL_UNSIGNED_INT,
 				nullptr));
 		}
 	}
 }
 
-void renderer::DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth)
-{
-	ScreenQuadVAO.Bind();
-	PostProcessShader.Bind();
-	PostProcessShader.SetUniform("u_Buffer", 0);
-	PostProcessShader.SetUniform("u_Depth", bDepth);
+void renderer::DrawFrameBuffer(const framebuffer& Framebuffer, bool Depth) {
+	mScreenQuadVAO.Bind();
+	mPostProcessShader.Bind();
+	mPostProcessShader.SetUniform("u_Buffer", 0);
+	mPostProcessShader.SetUniform("u_Depth", Depth);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(
-		GL_TEXTURE_2D, bDepth ? Framebuffer.DepthStencilTextureId : Framebuffer.ColorTextureId);
+		GL_TEXTURE_2D, Depth ? Framebuffer.mDepthStencilTextureId : Framebuffer.mColorTextureId);
 	glDisable(GL_DEPTH_TEST);
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
 	glEnable(GL_DEPTH_TEST);
 }
 
-void renderer::DrawSkybox(const cubemap& Skybox)
-{
+void renderer::DrawSkybox(const cubemap& Skybox) {
 	glDepthFunc(GL_LEQUAL);
-	SkyboxVAO.Bind();
-	SkyboxShader.Bind();
+	mSkyboxVAO.Bind();
+	mSkyboxShader.Bind();
 	Skybox.Bind();
-	SkyboxShader.SetUniform("u_Cubemap", cubemap::CubemapSlot);
-	float CurrentFoV = FoV;
-	if (!CustomCamera.expired())
-	{
-		auto CameraHandle = CustomCamera.lock();
+	mSkyboxShader.SetUniform("u_Cubemap", cubemap::CubemapSlot);
+	float CurrentFoV = mFoV;
+	if (!mCustomCamera.expired()) {
+		auto CameraHandle = mCustomCamera.lock();
 		CurrentFoV = CameraHandle->FoV;
 	}
 	glm::mat4 ProjectionMatrix =
-		glm::perspective(glm::radians(CurrentFoV), AspectRatio, 0.001f, 100.f);
-	glm::mat4 View = glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
-	if (!CustomCamera.expired())
-	{
-		auto CameraHandle = CustomCamera.lock();
+		glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
+	glm::mat4 View =
+		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
+	if (!mCustomCamera.expired()) {
+		auto CameraHandle = mCustomCamera.lock();
 		View = CameraHandle->GetViewTransform();
 	}
 	View = glm::mat4(glm::mat3(View));
-	SkyboxShader.SetUniform("u_ProjectionView", ProjectionMatrix * View);
+	mSkyboxShader.SetUniform("u_ProjectionView", ProjectionMatrix * View);
 	GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 36));
 	glDepthFunc(GL_LESS);
 }
 
-void renderer::InitCubeVAO()
-{
-	constexpr uint32 NumVertices = 36;
-	constexpr uint32 ElementsPerVertex = 5;
-	constexpr uint32 SizeOfVertex = 5 * sizeof(float);
-	constexpr std::array<float, NumVertices* ElementsPerVertex> Vertices = {
+void renderer::InitCubeVAO() {
+	constexpr u32 NumVertices = 36;
+	constexpr u32 ElementsPerVertex = 5;
+	constexpr u32 SizeOfVertex = 5 * sizeof(float);
+	constexpr array<float, NumVertices * ElementsPerVertex> Vertices = {
 		// clang-format off
 		// Back face
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
@@ -307,19 +280,18 @@ void renderer::InitCubeVAO()
 		// clang-format on
 	};
 
-	CubeVBO.SetData(Vertices.data(), NumVertices * SizeOfVertex);
+	mCubeVBO.SetData(Vertices.Data(), NumVertices * SizeOfVertex);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);
 	VertexLayout.Push<float>(2);
-	CubeVAO.AddBuffer(CubeVBO, VertexLayout);
+	mCubeVAO.AddBuffer(mCubeVBO, VertexLayout);
 }
 
-void renderer::InitNormalCubeVAO()
-{
-	constexpr uint32 NumVertices = 36;
-	constexpr uint32 ElementsPerVertex = 11;
-	constexpr uint32 SizeOfVertex = ElementsPerVertex * sizeof(float);
-	constexpr std::array<float, NumVertices* ElementsPerVertex> Vertices = {
+void renderer::InitNormalCubeVAO() {
+	constexpr u32 NumVertices = 36;
+	constexpr u32 ElementsPerVertex = 11;
+	constexpr u32 SizeOfVertex = ElementsPerVertex * sizeof(float);
+	constexpr array<float, NumVertices * ElementsPerVertex> Vertices = {
 		// clang-format off
 		// positions          // normals           // texture coords // tangents
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f, -1.f,0.f,0.f,
@@ -367,18 +339,17 @@ void renderer::InitNormalCubeVAO()
 		// clang-format on
 	};
 
-	NormalCubeVBO.SetData(Vertices.data(), NumVertices * SizeOfVertex);
+	mNormalCubeVBO.SetData(Vertices.Data(), NumVertices * SizeOfVertex);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);	// Position
 	VertexLayout.Push<float>(3);	// Normals
 	VertexLayout.Push<float>(2);	// UV
 	VertexLayout.Push<float>(3);	// Tangents
-	NormalCubeVAO.AddBuffer(NormalCubeVBO, VertexLayout);
+	mNormalCubeVAO.AddBuffer(mNormalCubeVBO, VertexLayout);
 }
 
-void renderer::InitScreenQuadVAO()
-{
-	constexpr std::array<float, 6 * 4> Vertices = {
+void renderer::InitScreenQuadVAO() {
+	constexpr array<float, 6 * 4> Vertices = {
 		// clang-format off
 		-1.0f,  1.0f,  0.0f, 1.0f,
 		-1.0f, -1.0f,  0.0f, 0.0f,
@@ -389,16 +360,15 @@ void renderer::InitScreenQuadVAO()
 		// clang-format on
 	};
 
-	ScreenQuadBVO.SetData(Vertices.data(), Vertices.size() * sizeof(float));
+	mScreenQuadBVO.SetData(Vertices.Data(), Vertices.Size() * sizeof(float));
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(2);
 	VertexLayout.Push<float>(2);
-	ScreenQuadVAO.AddBuffer(ScreenQuadBVO, VertexLayout);
+	mScreenQuadVAO.AddBuffer(mScreenQuadBVO, VertexLayout);
 }
 
-void renderer::InitSkyboxVAO()
-{
-	constexpr std::array<float, 36 * 3> Vertices = {
+void renderer::InitSkyboxVAO() {
+	constexpr array<float, 36 * 3> Vertices = {
 		// clang-format off
  		-1.0f,  1.0f, -1.0f,
 		-1.0f, -1.0f, -1.0f,
@@ -444,22 +414,20 @@ void renderer::InitSkyboxVAO()
 		// clang-format on
 	};
 
-	SkyboxVBO.SetData(Vertices.data(), Vertices.size() * sizeof(float));
+	mSkyboxVBO.SetData(Vertices.Data(), Vertices.Size() * sizeof(float));
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);
-	SkyboxVAO.AddBuffer(SkyboxVBO, VertexLayout);
+	mSkyboxVAO.AddBuffer(mSkyboxVBO, VertexLayout);
 }
 
-glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
-{
-	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(FoV), AspectRatio, 0.001f, 100.f);
+glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const {
+	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(mFoV), mAspectRatio, 0.001f, 100.f);
 	glm::mat4 ViewMatrix =
-		glm::lookAt(CameraPosition, CameraPosition + CameraDirection, CameraUpVector);
-	if (!CustomCamera.expired())
-	{
-		auto CameraHandle = CustomCamera.lock();
+		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
+	if (!mCustomCamera.expired()) {
+		auto CameraHandle = mCustomCamera.lock();
 		ProjectionMatrix =
-			glm::perspective(glm::radians(CameraHandle->GetFoV()), AspectRatio, 0.001f, 1000.f);
+			glm::perspective(glm::radians(CameraHandle->GetFoV()), mAspectRatio, 0.001f, 1000.f);
 		ViewMatrix = CameraHandle->GetViewTransform();
 	}
 
@@ -467,8 +435,7 @@ glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const
 	return ProjectionMatrix * ViewMatrix * ModelMatrix;
 }
 
-void renderer::Init()
-{
+void renderer::Init() {
 	InitCubeVAO();
 	InitNormalCubeVAO();
 	InitDefaultShaders();
@@ -476,65 +443,57 @@ void renderer::Init()
 	InitSkyboxVAO();
 }
 
-void renderer::InitDefaultShaders()
-{
-	PhongShader.Compile("Resources/Shaders/BasicShaded.shader");
-	PhongShader.Bind();
-	PhongShader.SetUniform("u_Unlit", false);
-	PhongShader.SetUniform("u_Depth", false);
-	OutlineShader.Compile("Resources/Shaders/Outline.shader");
-	PostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
-	PostProcessShader.Bind();
-	PostProcessShader.SetUniform("u_Grayscale", false);
-	PostProcessShader.SetUniform("u_GammaCorrection", GammaCorrection);
-	SkyboxShader.Compile("Resources/Shaders/Skybox.shader");
-	NormalsShader.Compile("Resources/Shaders/Normals.shader");
+void renderer::InitDefaultShaders() {
+	mPhongShader.Compile("Resources/Shaders/BasicShaded.shader");
+	mPhongShader.Bind();
+	mPhongShader.SetUniform("u_Unlit", false);
+	mPhongShader.SetUniform("u_Depth", false);
+	mOutlineShader.Compile("Resources/Shaders/Outline.shader");
+	mPostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
+	mPostProcessShader.Bind();
+	mPostProcessShader.SetUniform("u_Grayscale", false);
+	mPostProcessShader.SetUniform("u_GammaCorrection", mGammaCorrection);
+	mSkyboxShader.Compile("Resources/Shaders/Skybox.shader");
+	mNormalsShader.Compile("Resources/Shaders/Normals.shader");
 }
 
-void renderer::ChangeViewMode(view_mode NewViewMode)
-{
-	if (NewViewMode != ViewMode)
-	{
-		ViewMode = NewViewMode;
-		PhongShader.Bind();
-		switch (ViewMode)
-		{
+void renderer::ChangeViewMode(view_mode NewViewMode) {
+	if (NewViewMode != mViewMode) {
+		mViewMode = NewViewMode;
+		mPhongShader.Bind();
+		switch (mViewMode) {
 			case view_mode::lit:
-				PhongShader.SetUniform("u_Unlit", false);
-				PhongShader.SetUniform("u_Depth", false);
-				DrawElementsMode = GL_TRIANGLES;
+				mPhongShader.SetUniform("u_Unlit", false);
+				mPhongShader.SetUniform("u_Depth", false);
+				mDrawElementsMode = GL_TRIANGLES;
 				break;
 			case view_mode::unlit:
-				PhongShader.SetUniform("u_Unlit", true);
-				PhongShader.SetUniform("u_Depth", false);
-				DrawElementsMode = GL_TRIANGLES;
+				mPhongShader.SetUniform("u_Unlit", true);
+				mPhongShader.SetUniform("u_Depth", false);
+				mDrawElementsMode = GL_TRIANGLES;
 				break;
 			case view_mode::wireframe:
-				PhongShader.SetUniform("u_Unlit", true);
-				PhongShader.SetUniform("u_Depth", false);
-				DrawElementsMode = GL_LINES;
+				mPhongShader.SetUniform("u_Unlit", true);
+				mPhongShader.SetUniform("u_Depth", false);
+				mDrawElementsMode = GL_LINES;
 				break;
 			case view_mode::depth:
-				PhongShader.SetUniform("u_Unlit", true);
-				PhongShader.SetUniform("u_Depth", true);
-				DrawElementsMode = GL_TRIANGLES;
+				mPhongShader.SetUniform("u_Unlit", true);
+				mPhongShader.SetUniform("u_Depth", true);
+				mDrawElementsMode = GL_TRIANGLES;
 				break;
 		}
 	}
 }
 
-void renderer::UIViewModeControl()
-{
-	constexpr std::array<view_mode, 4> Types = {
+void renderer::UIViewModeControl() {
+	constexpr array<view_mode, 4> Types = {
 		view_mode::lit, view_mode::unlit, view_mode::wireframe, view_mode::depth};
-	constexpr std::array<const char*, 4> Names = {"Lit", "Unlit", "Wireframe", "Depth"};
-	if (ImGui::BeginCombo("View mode", Names[static_cast<uint32>(ViewMode)]))
-	{
-		for (uint32 i = 0; i < Types.size(); ++i)
-		{
-			bool bIsSelected = ViewMode == Types[i];
-			if (ImGui::Selectable(Names[i], bIsSelected))
-			{
+	constexpr array<const char*, 4> Names = {"Lit", "Unlit", "Wireframe", "Depth"};
+	if (ImGui::BeginCombo("View mode", Names[static_cast<u32>(mViewMode)])) {
+		for (u32 i = 0; i < Types.Size(); ++i) {
+			bool bIsSelected = mViewMode == Types[i];
+			if (ImGui::Selectable(Names[i], bIsSelected)) {
 				ChangeViewMode(Types[i]);
 			}
 		}
@@ -542,17 +501,14 @@ void renderer::UIViewModeControl()
 	}
 }
 
-void renderer::UIPostProcessControl()
-{
-	bool bOldGrayscale = bGrayscale;
-	ImGui::Checkbox("Grayscale", &bGrayscale);
-	if (bOldGrayscale != bGrayscale)
-	{
-		PostProcessShader.SetUniform("u_Grayscale", bGrayscale);
+void renderer::UIPostProcessControl() {
+	bool OldGrayscale = mGrayscale;
+	ImGui::Checkbox("Grayscale", &mGrayscale);
+	if (OldGrayscale != mGrayscale) {
+		mPostProcessShader.SetUniform("u_Grayscale", mGrayscale);
 	}
-	ImGui::Checkbox("Draw normals", &bNormals);
-	if (ImGui::SliderFloat("Gamma", &GammaCorrection, 1.f, 5.f))
-	{
-		PostProcessShader.SetUniform("u_GammaCorrection", GammaCorrection);
+	ImGui::Checkbox("Draw normals", &mNormals);
+	if (ImGui::SliderFloat("Gamma", &mGammaCorrection, 1.f, 5.f)) {
+		mPostProcessShader.SetUniform("u_GammaCorrection", mGammaCorrection);
 	}
 }

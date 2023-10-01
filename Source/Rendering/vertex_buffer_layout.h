@@ -1,75 +1,55 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #pragma once
 
+#include "Containers/dyn_array.h"
 #include "core_types.h"
-SCRATCH_DISABLE_WARNINGS_BEGIN();
 #include "glad/glad.h"
-SCRATCH_DISABLE_WARNINGS_END();
 
-#include <vector>
+struct vertex_buffer_attribute {
+	u32 mType{0};
+	u32 mCount{0};
+	u8 mNormalized{0};
 
-struct vertex_buffer_attribute
-{
-	uint32 Type{0};
-	uint32 Count{0};
-	uint8 Normalized{0};
-
-	static uint32 GetSizeOfType(uint32 Type)
-	{
-		switch (Type)
-		{
+	static u32 GetSizeOfType(u32 Type) {
+		switch (Type) {
 			case GL_FLOAT:
 				return sizeof(float);
 			case GL_UNSIGNED_INT:
-				return sizeof(uint32);
+				return sizeof(u32);
 			case GL_UNSIGNED_BYTE:
-				return sizeof(uint8);
+				return sizeof(u8);
 			default:
-				std::unreachable();
+				return 0;
 		}
 	}
 };
 
 template <typename T>
-concept buffer_attribute_type = std::is_floating_point<T>::value || std::is_integral<T>::value;
+concept buffer_attribute_type = floating_point<T> || integral<T>;
 
-struct vertex_buffer_layout
-{
-	std::vector<vertex_buffer_attribute> Attributes{};
-	uint32 Stride{0};
+struct vertex_buffer_layout {
+	dyn_array<vertex_buffer_attribute> mAttributes{};
+	u32 mStride{0};
 
-	[[nodiscard]] const std::vector<vertex_buffer_attribute>& GetAttributes() const
-	{
-		return Attributes;
+	[[nodiscard]] const dyn_array<vertex_buffer_attribute>& GetAttributes() const {
+		return mAttributes;
 	}
 
-	[[nodiscard]] uint32 GetStride() const
-	{
-		return Stride;
+	[[nodiscard]] u32 GetStride() const {
+		return mStride;
 	}
 
 	template <buffer_attribute_type T>
-	void Push(uint32 Count)
-	{
-		Stride += sizeof(T) * Count;
-		if constexpr (std::is_same<T, float>::value)
-		{
-			Attributes.emplace_back(GL_FLOAT, Count, GL_FALSE);
+	void Push(u32 Count) {
+		mStride += sizeof(T) * Count;
+		if constexpr (std::is_same<T, float>::value) {
+			mAttributes.Emplace(GL_FLOAT, Count, GL_FALSE);
+			return;
+		} else if constexpr (std::is_same<T, u32>::value) {
+			mAttributes.Emplace(GL_UNSIGNED_INT, Count, GL_FALSE);
+			return;
+		} else if constexpr (std::is_same<T, u8>::value) {
+			mAttributes.Emplace(GL_UNSIGNED_BYTE, Count, GL_TRUE);
 			return;
 		}
-		else if constexpr (std::is_same<T, uint32>::value)
-		{
-			Attributes.emplace_back(GL_UNSIGNED_INT, Count, GL_FALSE);
-			return;
-		}
-		else if constexpr (std::is_same<T, uint8>::value)
-		{
-			Attributes.emplace_back(GL_UNSIGNED_BYTE, Count, GL_TRUE);
-			return;
-		}
-		std::unreachable();
 	}
 };

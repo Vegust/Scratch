@@ -6,9 +6,7 @@
 
 #include "core_types.h"
 
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "GLFW/glfw3.h"
-SCRATCH_DISABLE_WARNINGS_END()
 
 void camera::ProcessInput(struct GLFWwindow* Window, float DeltaTime)
 {

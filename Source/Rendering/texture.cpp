@@ -1,90 +1,63 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #include "texture.h"
-
 #include "core_types.h"
-
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "stb_image.h"
-SCRATCH_DISABLE_WARNINGS_END()
 
-texture::texture(texture&& InTexture) noexcept
-{
-	RendererId = InTexture.RendererId;
-	Path = std::move(InTexture.Path);
-	InTexture.RendererId = 0;
-	InTexture.Path = std::filesystem::path{};
+texture::texture(texture&& Texture) noexcept {
+	mRendererId = Texture.mRendererId;
+	mPath = std::move(Texture.mPath);
+	Texture.mRendererId = 0;
+	Texture.mPath = {};
 }
 
-texture& texture::operator=(texture&& InTexture) noexcept
-{
+texture& texture::operator=(texture&& Texture) noexcept {
 	ClearTextureHandle();
-	RendererId = InTexture.RendererId;
-	Path = std::move(InTexture.Path);
-	InTexture.RendererId = 0;
-	InTexture.Path = std::filesystem::path{};
+	mRendererId = Texture.mRendererId;
+	mPath = std::move(Texture.mPath);
+	Texture.mRendererId = 0;
+	Texture.mPath = {};
 	return *this;
 }
 
-void texture::ClearTextureHandle()
-{
-	if (RendererId != 0)
-	{
+void texture::ClearTextureHandle() {
+	if (mRendererId != 0) {
 		auto& Cache = GetTextureCache();
-		if (auto Found = Cache.find(Path.string()); Found != Cache.end())
-		{
-			Found->second.second -= 1;
-			if (Found->second.second == 0)
-			{
-				Cache.erase(Found);
-				glDeleteTextures(1, &RendererId);
+		if (auto Found = Cache.Find(mPath)) {
+			Found->mRefCount -= 1;
+			if (Found->mRefCount == 0) {
+				Cache.Remove(mPath);
+				glDeleteTextures(1, &mRendererId);
 			}
-			RendererId = 0;
-			return;
+			mRendererId = 0;
 		}
-		std::unreachable();
 	}
 }
 
-void texture::Load(std::string_view InPath, bool bSRGB)
-{
+void texture::Load(const str& Path, bool SRGB) {
 	ClearTextureHandle();
-
-	Path = InPath;
+	mPath = Path;
 	auto& Cache = GetTextureCache();
-	if (auto Found = Cache.find(Path.string()); Found != Cache.end())
-	{
-		Found->second.second += 1;
-		RendererId = Found->second.first;
-	}
-	else
-	{
-		int32 Width{0};
-		int32 Height{0};
-		int32 NumChannels{0};
+	if (auto Found = Cache.Find(Path)) {
+		Found->mRefCount += 1;
+		mRendererId = Found->mResourceId;
+	} else {
+		s32 Width{0};
+		s32 Height{0};
+		s32 NumChannels{0};
 		stbi_set_flip_vertically_on_load(1);
-		LocalBuffer = stbi_load(InPath.data(), &Width, &Height, &NumChannels, 4);
-		
-		if (LocalBuffer)
-		{
-			glGenTextures(1,&RendererId);
-			Cache[Path.string()] = std::make_pair(RendererId,1);
-			
-			glBindTexture(GL_TEXTURE_2D, RendererId);
+		stbi_uc* mLocalBuffer = stbi_load(Path.Raw(), &Width, &Height, &NumChannels, 4);
+		if (mLocalBuffer) {
+			glGenTextures(1, &mRendererId);
+			Cache[Path] = texture_record{mRendererId, 1};
+			glBindTexture(GL_TEXTURE_2D, mRendererId);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			
-			uint32 InternalType = GL_RGBA8;
-			if (bSRGB)
-			{
+			u32 InternalType = GL_RGBA8;
+			if (SRGB) {
 				InternalType = GL_SRGB8_ALPHA8;
 			}
-
 			glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
@@ -94,22 +67,19 @@ void texture::Load(std::string_view InPath, bool bSRGB)
 				0,
 				GL_RGBA,
 				GL_UNSIGNED_BYTE,
-				LocalBuffer);
+				mLocalBuffer);
 			glGenerateMipmap(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, 0);
-
-			stbi_image_free(LocalBuffer);
+			stbi_image_free(mLocalBuffer);
 		}
 	}
 }
 
-texture::~texture()
-{
+texture::~texture() {
 	ClearTextureHandle();
 }
 
-void texture::Bind(uint32 Slot) const
-{
+void texture::Bind(u32 Slot) const {
 	glActiveTexture(GL_TEXTURE0 + Slot);
-	glBindTexture(GL_TEXTURE_2D, RendererId);
+	glBindTexture(GL_TEXTURE_2D, mRendererId);
 }

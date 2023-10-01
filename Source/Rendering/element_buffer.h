@@ -9,8 +9,8 @@
 class element_buffer
 {
 private:
-	uint32 RendererId{0};
-	uint32 Count{0};
+	u32 RendererId{0};
+	u32 Count{0};
 
 public:
 	element_buffer() = default;
@@ -22,11 +22,11 @@ public:
 	element_buffer(element_buffer&& InIndexBuffer);
 	element_buffer& operator=(element_buffer&& InIndexBuffer);
 	
-	void SetData(const uint32* InData, uint32 InCount);
+	void SetData(const u32* InData, u32 InCount);
 
 	void Bind() const;
 
-	[[nodiscard]] uint32 GetCount() const
+	[[nodiscard]] u32 GetCount() const
 	{
 		return Count;
 	}

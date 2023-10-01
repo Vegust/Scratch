@@ -1,84 +1,65 @@
-//
-// Created by Vegust on 26.06.2023.
-//
-
 #pragma once
 
-#include "Rendering/texture.h"
 #include "core_types.h"
+#include "Rendering/texture.h"
 
-#include <memory>
-
-SCRATCH_DISABLE_WARNINGS_BEGIN()
-#include "glm/glm.hpp"
-SCRATCH_DISABLE_WARNINGS_END()
-
-class phong_material
-{
+struct phong_material {
 public:
-	texture DiffuseMap{};
-	texture SpecularMap{};
-	texture EmissionMap{};
-	texture NormalMap{};
+	texture mDiffuseMap{};
+	texture mSpecularMap{};
+	texture mEmissionMap{};
+	texture mNormalMap{};
 
-	uint32 DiffuseSlot = 0;
-	uint32 SpecularSlot = 1;
-	uint32 EmissionSlot = 2;
-	uint32 NormalSlot = 3;
-	
-	float Shininess{32.f};
+	u32 mDiffuseSlot = 0;
+	u32 mSpecularSlot = 1;
+	u32 mEmissionSlot = 2;
+	u32 mNormalSlot = 3;
+
+	float mShininess{32.f};
 
 	void InitTextures(
-		std::string_view DiffusePath,
-		uint32 InDiffuseSlot,
-		std::string_view SpecularPath,
-		uint32 InSpecularSlot,
-		std::string_view EmissionPath = {},
-		uint32 InEmissionSlot = 2,
-		std::string_view InNormalPath = {},
-		uint32 InNormalSlot = 3)
-	{
-		DiffuseMap.Load(DiffusePath, true);
-		SpecularMap.Load(SpecularPath);
-		if (!EmissionPath.empty())
-		{
-			EmissionMap.Load(EmissionPath);
+		const str& DiffusePath,
+		u32 DiffuseSlot,
+		const str& SpecularPath,
+		u32 SpecularSlot,
+		const str& EmissionPath = {},
+		u32 EmissionSlot = 2,
+		const str& NormalPath = {},
+		u32 NormalSlot = 3) {
+		mDiffuseMap.Load(DiffusePath, true);
+		mSpecularMap.Load(SpecularPath);
+		if (!EmissionPath.Empty()) {
+			mEmissionMap.Load(EmissionPath);
 		}
-		if (!InNormalPath.empty())
-		{
-			NormalMap.Load(InNormalPath);
+		if (!NormalPath.Empty()) {
+			mNormalMap.Load(NormalPath);
 		}
-		
-		DiffuseSlot = InDiffuseSlot;
-		SpecularSlot = InSpecularSlot;
-		EmissionSlot = InEmissionSlot;
-		NormalSlot = InNormalSlot;
+
+		mDiffuseSlot = DiffuseSlot;
+		mSpecularSlot = SpecularSlot;
+		mEmissionSlot = EmissionSlot;
+		mNormalSlot = NormalSlot;
 
 		// Order is important. First, create all, then bind all.
 		// because creating textures binds them to current active texture
-		DiffuseMap.Bind(DiffuseSlot);
-		SpecularMap.Bind(SpecularSlot);
-		if (EmissionMap.Loaded())
-		{
-			EmissionMap.Bind(EmissionSlot);
+		mDiffuseMap.Bind(mDiffuseSlot);
+		mSpecularMap.Bind(mSpecularSlot);
+		if (mEmissionMap.Loaded()) {
+			mEmissionMap.Bind(mEmissionSlot);
 		}
-		if (NormalMap.Loaded())
-		{
-			NormalMap.Bind(NormalSlot);
+		if (mNormalMap.Loaded()) {
+			mNormalMap.Bind(mNormalSlot);
 		}
 	}
-	
-	void Bind() const
-	{
-		DiffuseMap.Bind(DiffuseSlot);
-		SpecularMap.Bind(SpecularSlot);
-		if (EmissionMap.Loaded())
-		{
-			EmissionMap.Bind(EmissionSlot);
+
+	void Bind() const {
+		mDiffuseMap.Bind(mDiffuseSlot);
+		mSpecularMap.Bind(mSpecularSlot);
+		if (mEmissionMap.Loaded()) {
+			mEmissionMap.Bind(mEmissionSlot);
 		}
-		if (NormalMap.Loaded())
-		{
-			NormalMap.Bind(NormalSlot);
+		if (mNormalMap.Loaded()) {
+			mNormalMap.Bind(mNormalSlot);
 		}
 	}
 };

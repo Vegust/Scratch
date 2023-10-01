@@ -1,57 +1,53 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #pragma once
 
+#include "core_types.h"
 #include "SceneObjects/light.h"
 #include "SceneObjects/phong_material.h"
-#include "core_types.h"
 #include "glm/fwd.hpp"
 
-#include <filesystem>
-#include <map>
-#include <type_traits>
-
-class shader
-{
+class shader {
 private:
-	std::filesystem::path Path;
-	uint32 RendererId{0};
-	mutable std::map<std::string, int32, std::less<>> UniformsCache;
+	str mPath;
+	u32 mRendererId{0};
+	mutable hash_table<str, s32> mUniformsCache;
+
 public:
 	shader() = default;
 	~shader();
-	
+
 	shader(const shader&) = delete;
 	shader& operator=(const shader&) = delete;
-	
-	shader(shader&& InShader);
-	shader& operator=(shader&& InShader);
-	
-	void Compile(const std::filesystem::path& InPath);
+
+	shader(shader&& Shader);
+	shader& operator=(shader&& Shader);
+
+	void Compile(const str& Path);
 	void Bind() const;
-	
+
 	// Set uniforms
-	void SetUniform(std::string_view Name, float V1, float V2, float V3, float V4) const;
-	void SetUniform(std::string_view Name, int32 V1) const;
-	void SetUniform(std::string_view Name, float V1) const;
-	void SetUniform(std::string_view Name, glm::vec3 V1) const;
-	void SetUniform(std::string_view Name, const glm::mat4& Matrix) const;
-	void SetUniform(std::string_view Name, const std::vector<glm::mat4>& Matrix) const;
-	void SetUniform(std::string_view Name, const glm::mat3& Matrix) const;
-	void SetUniform(std::string_view Name, const phong_material& Material) const;
-	void SetUniform(std::string_view Name, const light& Light, const glm::mat4& View) const;
-	void SetUniform(std::string_view Name, std::string_view CountName, const std::vector<light>& Lights, const glm::mat4& View) const;
+	void SetUniform(const str& Name, float V1, float V2, float V3, float V4) const;
+	void SetUniform(const str& Name, s32 V1) const;
+	void SetUniform(const str& Name, float V1) const;
+	void SetUniform(const str& Name, glm::vec3 V1) const;
+	void SetUniform(const str& Name, const glm::mat4& Matrix) const;
+	void SetUniform(const str& Name, const dyn_array<glm::mat4>& Matrix) const;
+	void SetUniform(const str& Name, const glm::mat3& Matrix) const;
+	void SetUniform(const str& Name, const phong_material& Material) const;
+	void SetUniform(const str& Name, const light& Light, const glm::mat4& View) const;
+	void SetUniform(
+		const str& Name,
+		const str& CountName,
+		const dyn_array<light>& Lights,
+		const glm::mat4& View) const;
+
 private:
-	struct parsed_shaders
-	{
-		std::string VertexShader{};
-		std::string GeometryShader{};
-		std::string FragmentShader{};
+	struct parsed_shaders {
+		str mVertexShader{};
+		str mGeometryShader{};
+		str mFragmentShader{};
 	};
-	
-	[[nodiscard]] int32 GetUniformLocation(std::string_view Name) const;
-	static parsed_shaders ParseShader(const std::filesystem::path& Path);
-	static uint32 CompileShader(uint32 Type, std::string_view Source);
+
+	[[nodiscard]] s32 GetUniformLocation(const str& Name) const;
+	static parsed_shaders ParseShader(const str& Path);
+	static u32 CompileShader(u32 Type, const str& Source);
 };

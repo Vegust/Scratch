@@ -5,10 +5,8 @@
 #pragma once
 
 #include "core_types.h"
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/glm.hpp"
-SCRATCH_DISABLE_WARNINGS_END()
 
 struct camera
 {

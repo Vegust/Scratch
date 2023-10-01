@@ -273,4 +273,4 @@ void main() {
 			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, vs_in.g_TexCoords)), 1.0);
 		}
 	}
-};
+}

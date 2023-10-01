@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="dyn_array&lt;*&gt;">
+        <DisplayString Condition="mSize == 0">empty</DisplayString>
+        <DisplayString>size={mSize}</DisplayString>
+        <Expand>
+            <Item Name="[size]">mSize</Item>
+            <Item Name="[capacity]">mCapacity</Item>
+            <ArrayItems>
+                <Size>mSize</Size>
+                <ValuePointer Condition="mData != 0">mData</ValuePointer>
+                <ValuePointer>mStackStorage</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
+    <Type Name="hash_set&lt;*&gt;">
+        <DisplayString Condition="mSize == 0">empty</DisplayString>
+        <DisplayString>size={mSize}</DisplayString>
+        <Expand>
+            <Item Name="[size]">mSize</Item>
+            <Item Name="[capacity]">mCapacity</Item>
+            <CustomListItems MaxItemsPerView="5000">
+                <Variable Name="i" InitialValue="0"/>
+                <Size>mSize</Size>
+                <Loop>
+                    <Item Condition="(LastValidHash > mData[i].mHash)">mData[i].mValue</Item>
+                    <Exec>i++</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+    <Type Name="key_value_pair&lt;*&gt;">
+        <DisplayString>({mKey}, {mValue})</DisplayString>
+    </Type>
+    <Type Name="str">
+        <DisplayString Condition="mChars.mSize == 0">empty</DisplayString>
+        <DisplayString Condition="mChars.mData != 0">{mChars.mData, su}</DisplayString>
+        <DisplayString>{mChars.mStackStorage, su}</DisplayString>
+        <StringView>mChars.mData,su</StringView>
+        <StringView>mChars.mStackStorage,su</StringView>
+    </Type>
+    <Type Name="rb_set&lt;*&gt;">
+        <DisplayString>{{size = {mSize}}}</DisplayString>
+        <Expand>
+            <TreeItems>
+                <HeadPointer>mRoot</HeadPointer>
+                <LeftPointer>mLeftChild</LeftPointer>
+                <RightPointer>mRightChild</RightPointer>
+                <ValueNode>this->mValue</ValueNode>
+            </TreeItems>
+        </Expand>
+    </Type>
+    <Type Name="tag">
+        <DisplayString Condition="mIndex == EmptyIndex">empty</DisplayString>
+        <DisplayString>{tag::Pool.mStrings[mIndex]}</DisplayString>
+    </Type>
+</AutoVisualizer>

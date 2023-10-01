@@ -1,17 +1,8 @@
-//
-// Created by Vegust on 21.06.2023.
-//
-
 #pragma once
 
 #include "SceneObjects/camera.h"
 #include "core_types.h"
 #include "vertex_array.h"
-
-#include <memory>
-#include <vector>
-
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "cubemap.h"
 #include "framebuffer.h"
 #include "glad/glad.h"
@@ -20,7 +11,6 @@ SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
 #include "shader.h"
 #include "vertex_buffer.h"
-SCRATCH_DISABLE_WARNINGS_END()
 
 #define GL_CALL(x)  \
 	GlClearError(); \
@@ -29,28 +19,20 @@ SCRATCH_DISABLE_WARNINGS_END()
 
 class shader;
 
-enum class view_mode : uint8
-{
-	lit = 0,
-	unlit = 1,
-	wireframe = 2,
-	depth = 3
-};
+enum class view_mode : u8 { lit = 0, unlit = 1, wireframe = 2, depth = 3 };
 
 void GlClearError();
 bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber);
 
-class renderer
-{
+class renderer {
 public:
 	static void Clear();
 	static void Draw(
 		const vertex_array& VertexArray,
 		const element_buffer& IndexBuffer,
 		const shader& Shader);
-	
-	static renderer& Get()
-	{
+
+	static renderer& Get() {
 		static renderer Renderer;
 		return Renderer;
 	}
@@ -61,77 +43,82 @@ public:
 	void InitScreenQuadVAO();
 	void InitSkyboxVAO();
 	void InitDefaultShaders();
-	
+
 	void Draw(
 		const vertex_array& VertexArray,
 		const element_buffer& IndexBuffer,
 		const shader& Shader,
 		glm::mat4 Transform) const;
-	void DrawCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
-	void DrawCubes(const phong_material& Material, const std::vector<glm::mat4>& Transforms) const;
-	void DrawNormalCubes(const shader& Shader, const std::vector<glm::mat4>& Transforms) const;
-	void Draw2(const vertex_array& VertexArray, const element_buffer& ElementBuffer, const phong_material& Material, const glm::mat4& Transform) const;
+	void DrawCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const;
+	void DrawCubes(const phong_material& Material, const dyn_array<glm::mat4>& Transforms) const;
+	void DrawNormalCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const;
+	void Draw2(
+		const vertex_array& VertexArray,
+		const element_buffer& ElementBuffer,
+		const phong_material& Material,
+		const glm::mat4& Transform) const;
 	void DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth = false);
 	void DrawSkybox(const cubemap& Skybox);
 
-	void ResetCamera()
-	{
-		CameraPosition = glm::vec3{0.f, 0.f, 0.f};
-		CameraDirection = glm::vec3{0.f,0.f,-1.f};
-		CameraUpVector = glm::vec3{0.f,1.f,0.f};
+	void ResetCamera() {
+		mCameraPosition = glm::vec3{0.f, 0.f, 0.f};
+		mCameraDirection = glm::vec3{0.f, 0.f, -1.f};
+		mCameraUpVector = glm::vec3{0.f, 1.f, 0.f};
 	}
 
 	glm::mat4 CalcMVPForTransform(const glm::mat4& Transform) const;
 
-	float AspectRatio = 1.f;
-	uint32 CurrentHeight;
-	uint32 CurrentWidth;
-	
-	std::weak_ptr<camera> CustomCamera{};
-	
-	float FoV = 60.f;
-	glm::vec3 CameraPosition = glm::vec3{0.f, 0.f, 0.f};
-	glm::vec3 CameraDirection = glm::vec3{0.f,0.f,-1.f};
-	glm::vec3 CameraUpVector = glm::vec3{0.f,1.f,0.f};
-	
-	vertex_array ScreenQuadVAO{};
-	vertex_buffer ScreenQuadBVO{};
-		
-	vertex_array CubeVAO{};
-	vertex_buffer CubeVBO{};
-	
-	vertex_array NormalCubeVAO{};
-	vertex_buffer NormalCubeVBO{};
-	
-	vertex_array SkyboxVAO{};
-	vertex_buffer SkyboxVBO{};
-	int32 SkyboxTextureSlot = cubemap::CubemapSlot;
-	
-	shader PostProcessShader{};
-	
-	shader SkyboxShader{};
-	shader PhongShader{};
-	shader OutlineShader{};
-	shader NormalsShader{};
-	shader* ActiveShader = &PhongShader;
-	void SetActiveShader(shader* NewActiveShader) { ActiveShader = NewActiveShader; }
-	
-	std::vector<light> SceneLights{};
+	float mAspectRatio = 1.f;
+	u32 mCurrentHeight;
+	u32 mCurrentWidth;
 
-	void UIRendererControls()
-	{
+	std::weak_ptr<camera> mCustomCamera{};
+
+	float mFoV = 60.f;
+	glm::vec3 mCameraPosition = glm::vec3{0.f, 0.f, 0.f};
+	glm::vec3 mCameraDirection = glm::vec3{0.f, 0.f, -1.f};
+	glm::vec3 mCameraUpVector = glm::vec3{0.f, 1.f, 0.f};
+
+	vertex_array mScreenQuadVAO{};
+	vertex_buffer mScreenQuadBVO{};
+
+	vertex_array mCubeVAO{};
+	vertex_buffer mCubeVBO{};
+
+	vertex_array mNormalCubeVAO{};
+	vertex_buffer mNormalCubeVBO{};
+
+	vertex_array mSkyboxVAO{};
+	vertex_buffer mSkyboxVBO{};
+	s32 mSkyboxTextureSlot = cubemap::CubemapSlot;
+
+	shader mPostProcessShader{};
+
+	shader mSkyboxShader{};
+	shader mPhongShader{};
+	shader mOutlineShader{};
+	shader mNormalsShader{};
+	shader* mActiveShader = &mPhongShader;
+
+	void SetActiveShader(shader* NewActiveShader) {
+		mActiveShader = NewActiveShader;
+	}
+
+	dyn_array<light> mSceneLights{};
+
+	void UIRendererControls() {
 		UIViewModeControl();
 		UIPostProcessControl();
 	}
-	
+
 	void UIViewModeControl();
 	void ChangeViewMode(view_mode NewViewMode);
-	view_mode ViewMode = view_mode::lit;
-	int32 DrawElementsMode = GL_TRIANGLES;
+	view_mode mViewMode = view_mode::lit;
+	s32 mDrawElementsMode = GL_TRIANGLES;
 	void UIPostProcessControl();
-	bool bGrayscale = false;
-	bool bNormals = false;
-	float GammaCorrection = 2.2f;
-	
-	bool bInstanced = false;
+	bool mGrayscale = false;
+	bool mNormals = false;
+	float mGammaCorrection = 2.2f;
+
+	bool mInstanced = false;
 };

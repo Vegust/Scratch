@@ -1,12 +1,7 @@
-//
-// Created by Vegust on 25.06.2023.
-//
 #pragma once
 
 #include "core_types.h"
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glm/glm.hpp"
-SCRATCH_DISABLE_WARNINGS_END()
 
 #include "Rendering/element_buffer.h"
 #include "Rendering/shader.h"
@@ -16,28 +11,25 @@ SCRATCH_DISABLE_WARNINGS_END()
 #include "SceneObjects/phong_material.h"
 #include "test_scene.h"
 
-#include <array>
-
-class test_basic_light : public test_scene
-{
+class test_basic_light : public test_scene {
 public:
 	test_basic_light();
-	
+
 	virtual void OnUpdate(float DeltaTime) override;
 	virtual void OnRender(renderer& Renderer) override;
 	virtual void OnIMGuiRender() override;
-	
+
 private:
-	shader Shader{};
-	shader LightShader{};
-	
-	std::shared_ptr<camera> Camera{nullptr};
-	
-	glm::vec3 CubePosition{0.7f,0.f,-1.5f};
-	phong_material CubeMaterial{};
-	
-	std::vector<light> Lights{};
-	
-	float CurrentRotation = 0.f;
-	bool bRotating = true;
+	shader mShader{};
+	shader mLightShader{};
+
+	std::shared_ptr<camera> mCamera{nullptr};
+
+	glm::vec3 mCubePosition{0.7f, 0.f, -1.5f};
+	phong_material mCubeMaterial{};
+
+	dyn_array<light> mLights{};
+
+	float mCurrentRotation = 0.f;
+	bool mRotating = true;
 };

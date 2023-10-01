@@ -6,10 +6,8 @@
 #include "test_clear_color.h"
 #include "test_scene.h"
 
-SCRATCH_DISABLE_WARNINGS_BEGIN()
 #include "glad/glad.h"
 #include "imgui.h"
-SCRATCH_DISABLE_WARNINGS_END()
 
 REGISTER_TEST_SCENE(test_clear_color, "01 Clear Color")
 

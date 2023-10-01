@@ -39,7 +39,7 @@ void element_buffer::Bind() const
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
 }
 
-void element_buffer::SetData(const uint32* InData, uint32 InCount)
+void element_buffer::SetData(const u32* InData, u32 InCount)
 {
 	if (RendererId == 0)
 	{
@@ -47,5 +47,5 @@ void element_buffer::SetData(const uint32* InData, uint32 InCount)
 	}
 	Count = InCount;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(Count * sizeof(uint32)), InData, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, static_cast<GLsizeiptr>(Count * sizeof(u32)), InData, GL_STATIC_DRAW);
 }
