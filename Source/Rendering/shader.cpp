@@ -3,6 +3,7 @@
 #include "glad/glad.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "Containers/span.h"
 
 #include <fstream>
 #include <iostream>
@@ -76,7 +77,7 @@ void shader::SetUniform(const str& Name, const glm::mat4& Matrix) const {
 	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
 }
 
-void shader::SetUniform(const str& Name, const dyn_array<glm::mat4>& Matrix) const {
+void shader::SetUniform(const str& Name, const span<glm::mat4>& Matrix) const {
 	for (u32 i = 0; i < Matrix.Size(); ++i) {
 		glUniformMatrix4fv(
 			GetUniformLocation(Name + "[" + str{i} + "]"), 1, GL_FALSE, glm::value_ptr(Matrix[i]));
@@ -179,7 +180,7 @@ shader::parsed_shaders shader::ParseShader(const str& Path) {
 	parsed_shaders Result;
 	index_type ShaderIndex = InvalidIndex;
 	bool bHasGeometryShader = false;
-	bool ReachedEOF = InputFile.eof();
+	bool ReachedEOF = InputFile.eof() || !InputFile.is_open();
 	while (!ReachedEOF) {
 		ReachedEOF = GetLine(InputFile, Line).eof();
 		if (Line.Find("!shader") != InvalidIndex && Line.Find("////") == InvalidIndex) {

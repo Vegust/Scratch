@@ -3,6 +3,7 @@
 #include "core_types.h"
 #include "SceneObjects/light.h"
 #include "SceneObjects/phong_material.h"
+#include "Containers/span.h"
 #include "glm/fwd.hpp"
 
 class shader {
@@ -30,7 +31,7 @@ public:
 	void SetUniform(const str& Name, float V1) const;
 	void SetUniform(const str& Name, glm::vec3 V1) const;
 	void SetUniform(const str& Name, const glm::mat4& Matrix) const;
-	void SetUniform(const str& Name, const dyn_array<glm::mat4>& Matrix) const;
+	void SetUniform(const str& Name, const span<glm::mat4>& Matrix) const;
 	void SetUniform(const str& Name, const glm::mat3& Matrix) const;
 	void SetUniform(const str& Name, const phong_material& Material) const;
 	void SetUniform(const str& Name, const light& Light, const glm::mat4& View) const;

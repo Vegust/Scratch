@@ -654,11 +654,12 @@ s32 allocator_test::Test(const std::span<char*>& Args) {
 
 void allocator_test::Benchmark(const std::span<char*>& Args) {
 	TEST_PRINT_LINE();
+
 	Result TreeResult = BenchmarkAllocator<tree_allocator>();
 
 	tree_allocator::ClearStaticImpl();
 	Result MallocResult = BenchmarkAllocator<malloc_allocator>();
-	
+
 	std::vector<Result> results{TreeResult,MallocResult};
 	SaveResults(results);
 	std::cout << "Detailed results saved to results.html";

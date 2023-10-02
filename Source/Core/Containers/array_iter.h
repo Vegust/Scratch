@@ -2,74 +2,76 @@
 
 #include "core_types.h"
 
-//shared between array/dyn_array/span
+// shared between array/dyn_array/span
 template <typename array_type, bool Const>
 class array_iter {
 public:
 	using value_type = array_type::value_type;
 	using pointer = std::conditional<Const, const value_type*, value_type*>::type;
 	using reference = std::conditional<Const, const value_type&, value_type&>::type;
-	
+
+	constexpr static bool Contiguous = true;
+
 private:
 	pointer mElement = nullptr;
 
 public:
-	FORCEINLINE array_iter() = default;
-	FORCEINLINE array_iter(const array_iter&) = default;
-	FORCEINLINE array_iter(array_iter&&) noexcept = default;
-	FORCEINLINE ~array_iter() = default;
+	FORCEINLINE constexpr array_iter() = default;
+	FORCEINLINE constexpr array_iter(const array_iter&) = default;
+	FORCEINLINE constexpr array_iter(array_iter&&) noexcept = default;
+	FORCEINLINE constexpr ~array_iter() = default;
 
-	FORCEINLINE explicit array_iter(pointer Element) : mElement(Element) {
+	FORCEINLINE constexpr explicit array_iter(pointer Element) : mElement(Element) {
 	}
 
 	// implicit conversion
-	FORCEINLINE operator pointer() const {
+	FORCEINLINE constexpr operator pointer() const {
 		return mElement;
 	}
 
-	FORCEINLINE array_iter& operator++() {
+	FORCEINLINE constexpr array_iter& operator++() {
 		mElement++;
 		return *this;
 	}
 
-	FORCEINLINE const array_iter operator++(int) {
+	FORCEINLINE constexpr const array_iter operator++(int) {
 		auto Tmp = *this;
 		mElement++;
 		return Tmp;
 	}
 
-	FORCEINLINE array_iter& operator--() {
+	FORCEINLINE constexpr array_iter& operator--() {
 		mElement--;
 		return *this;
 	}
 
-	FORCEINLINE const array_iter operator--(int) {
+	FORCEINLINE constexpr const array_iter operator--(int) {
 		auto Tmp = *this;
 		mElement--;
 		return Tmp;
 	}
 
-	FORCEINLINE array_iter operator-(int Val) const {
+	FORCEINLINE constexpr array_iter operator-(int Val) const {
 		return array_iter(mElement - Val);
 	}
 
-	FORCEINLINE array_iter operator+(int Val) const {
+	FORCEINLINE constexpr array_iter operator+(int Val) const {
 		return array_iter(mElement + Val);
 	}
 
-	FORCEINLINE reference operator[](index_type Index) {
+	FORCEINLINE constexpr reference operator[](index_type Index) {
 		return *(mElement + Index);
 	}
 
-	FORCEINLINE pointer operator->() {
+	FORCEINLINE constexpr pointer operator->() {
 		return mElement;
 	}
 
-	FORCEINLINE reference operator*() {
+	FORCEINLINE constexpr reference operator*() {
 		return *mElement;
 	}
 
-	FORCEINLINE bool operator==(const array_iter& Other) const {
+	FORCEINLINE constexpr bool operator==(const array_iter& Other) const {
 		return mElement == Other.mElement;
 	}
 };

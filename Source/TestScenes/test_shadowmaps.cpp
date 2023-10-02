@@ -71,7 +71,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	constexpr float Far = 25.0f;
 	const auto& PointLight = renderer::Get().mSceneLights[1];
 	mat4 PointLightProjection = perspective(glm::radians(90.0f), Aspect, Near, Far);
-	const dyn_array<mat4> PointLightViews{
+	const array<mat4, 6> PointLightViews{
 		PointLightProjection * lookAt(
 								   PointLight.mPosition,
 								   PointLight.mPosition + vec3(1.0, 0.0, 0.0),

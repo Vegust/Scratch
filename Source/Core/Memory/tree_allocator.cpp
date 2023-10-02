@@ -306,7 +306,7 @@ bool tree_allocator::ExpandImpl(void* Ptr, u64 NewSize) {
 }
 
 void tree_allocator::ClearStaticImpl() {
-	//tree_allocator_impl::Impl.Clear();
+	tree_allocator_impl::Impl.Clear();
 }
 
 static_assert(sizeof(tree_allocator_impl::header) == tree_allocator_impl::Granularity);

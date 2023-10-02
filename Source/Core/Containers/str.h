@@ -9,8 +9,11 @@
 
 struct str final : trait_memcopy_relocatable {
 	using char_type = char;
+	using value_type = char;
 	constexpr static index_type StackSize = 14;
 	using array_type = dyn_array<char_type, default_allocator, StackSize>;
+	using iter = array_type::iter;
+	using const_iter = array_type::const_iter;
 
 	array_type mChars{};
 
@@ -119,19 +122,19 @@ struct str final : trait_memcopy_relocatable {
 		return mChars[Position];
 	}
 
-	FORCEINLINE array_type::iter begin() {
+	FORCEINLINE iter begin() {
 		return mChars.begin();
 	}
 
-	FORCEINLINE array_type::iter end() {
+	FORCEINLINE iter end() {
 		return mChars.end() - (Length() > 0 ? 1 : 0);
 	}
 
-	[[nodiscard]] FORCEINLINE array_type::const_iter begin() const {
+	[[nodiscard]] FORCEINLINE const_iter begin() const {
 		return mChars.begin();
 	}
 
-	[[nodiscard]] FORCEINLINE array_type::const_iter end() const {
+	[[nodiscard]] FORCEINLINE const_iter end() const {
 		return mChars.end() - (Length() > 0 ? 1 : 0);
 	}
 
@@ -310,7 +313,7 @@ struct str final : trait_memcopy_relocatable {
 		return hash::MurmurHash(Data(), (s32) Length());
 	}
 
-	template<bool SubstringCmp = false>
+	template <bool SubstringCmp = false>
 	[[nodiscard]] FORCEINLINE s32 Strcmp(const char* Lhs, const char* Rhs) const {
 		for (;;) {
 			u8 LhsChar = static_cast<u8>(*Lhs++);
@@ -333,7 +336,7 @@ struct str final : trait_memcopy_relocatable {
 			}
 		}
 	}
-	
+
 	FORCEINLINE void Clear(bool Deallocate = true) {
 		mChars.Clear(Deallocate);
 	}
