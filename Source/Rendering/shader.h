@@ -13,21 +13,24 @@ private:
 	mutable hash_table<str, s32> mUniformsCache;
 
 public:
-
-	struct resource_path_element {
-		enum class type {
-			index,
-			name
-		} mType;
+	struct uniform_value {
 		union {
-			index_type mIndex{};
-			str mName;
+			s32 mInt{};
+			float mFloat;
+			glm::mat4 mMat4;
+			glm::mat3 mMat3;
+			glm::vec4 mVec4;
+			glm::vec3 mVec3;
 		};
-	};
 
-	struct resource_path {
-		resource_path(const span<resource_path_element>& Path);
-		str Join() const;
+		enum class type : u8 {
+			integer,
+			floating_point,
+			matrix4,
+			matrix3,
+			vector4,
+			vector3
+		} mType{type::integer};
 	};
 
 	shader() = default;

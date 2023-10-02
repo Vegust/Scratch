@@ -2,6 +2,7 @@
 
 #include "core_types.h"
 #include "array_iter.h"
+#include <cstring>
 
 // const non-owning view into str/array/dyn_array/C string
 template <typename element_type>
@@ -52,12 +53,12 @@ struct span {
 		Source.Clear();
 	}
 
-	FORCEINLINE constexpr span& operator=(const span& Other) const {
+	FORCEINLINE constexpr span& operator=(const span& Other) {
 		mData = Other.mData;
 		mSize = Other.mSize;
 	}
 
-	FORCEINLINE constexpr span& operator=(span&& Other) const {
+	FORCEINLINE constexpr span& operator=(span&& Other) {
 		mData = Other.mData;
 		mSize = Other.mSize;
 		Other.Clear();
