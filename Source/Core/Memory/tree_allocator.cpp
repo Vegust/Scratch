@@ -131,7 +131,7 @@ struct tree_allocator_impl {
 															   // as much as needed
 	dyn_array<void*, malloc_allocator> mAllocations{};
 	// set allocates nodes using this allocator but because nodes are small they are allocated
-	// using pools and not set
+	// using pools so there is no recursion
 	rb_set<
 		free_header_data,
 		free_header_less_op,

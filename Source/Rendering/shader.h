@@ -13,6 +13,23 @@ private:
 	mutable hash_table<str, s32> mUniformsCache;
 
 public:
+
+	struct resource_path_element {
+		enum class type {
+			index,
+			name
+		} mType;
+		union {
+			index_type mIndex{};
+			str mName;
+		};
+	};
+
+	struct resource_path {
+		resource_path(const span<resource_path_element>& Path);
+		str Join() const;
+	};
+
 	shader() = default;
 	~shader();
 
@@ -38,7 +55,7 @@ public:
 	void SetUniform(
 		const str& Name,
 		const str& CountName,
-		const dyn_array<light>& Lights,
+		const span<light>& Lights,
 		const glm::mat4& View) const;
 
 private:

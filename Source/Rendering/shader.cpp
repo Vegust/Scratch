@@ -97,7 +97,7 @@ void shader::SetUniform(const str& Name, const phong_material& Material) const {
 void shader::SetUniform(
 	const str& Name,
 	const str& CountName,
-	const dyn_array<light>& Lights,
+	const span<light>& Lights,
 	const glm::mat4& View) const {
 	for (u32 i = 0; i < Lights.Size(); ++i) {
 		SetUniform(Name + "[" + str{i} + "]", Lights[i], View);
@@ -157,7 +157,7 @@ s32 shader::GetUniformLocation(const str& Name) const {
 	if (const auto Result = mUniformsCache.Find(Name)) {
 		return *Result;
 	}
-	const auto Location = glGetUniformLocation(mRendererId, Name.Raw());
+	const auto Location = glGetProgramResourceLocation(mRendererId, GL_UNIFORM, Name.Raw());
 	mUniformsCache[Name] = Location;
 	return Location;
 }
