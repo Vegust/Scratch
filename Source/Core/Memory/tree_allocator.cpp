@@ -122,9 +122,10 @@ struct tree_allocator_impl {
 
 	static tree_allocator_impl Impl;
 	static constexpr index_type Granularity = 16;
+	constexpr static u32 NumPools = 4;
 	// all sizes in this file are in multiples of 16 (Granularity)
 	constexpr static u32 HeaderSize = 1;
-	constexpr static u32 MinAllocSize = 1;
+	constexpr static u32 MinAllocSize = NumPools + 1;
 	constexpr static u32 BlockSize = 1024;					   // * 16 = 16384 bytes
 	constexpr static u32 MaxDoublingSize = 1024 * 1024 * 8;	   // 128 MB after that we allocate only
 															   // as much as needed
@@ -136,7 +137,6 @@ struct tree_allocator_impl {
 		free_header_less_op,
 		free_header_equals_op>
 		mFreeHeaders{};
-	constexpr static u32 NumPools = 4;
 	array<pool, NumPools> mPools{};	// 16,32,48,64
 	s32 mNumBlocks = 0;
 
