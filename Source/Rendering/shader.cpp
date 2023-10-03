@@ -8,25 +8,25 @@
 #include <fstream>
 #include <iostream>
 
-shader::shader(shader&& Shader) {
+shader::shader(shader&& Shader) noexcept {
 	mRendererId = Shader.mRendererId;
 	mPath = std::move(Shader.mPath);
-	mUniformsCache = std::move(Shader.mUniformsCache);
+	mUniformCache = std::move(Shader.mUniformCache);
 	Shader.mRendererId = 0;
 	Shader.mPath = {};
-	Shader.mUniformsCache.Clear();
+	Shader.mUniformCache.Clear();
 }
 
-shader& shader::operator=(shader&& Shader) {
+shader& shader::operator=(shader&& Shader) noexcept {
 	if (mRendererId != 0) {
 		glDeleteProgram(mRendererId);
 	}
 	mRendererId = Shader.mRendererId;
 	mPath = std::move(Shader.mPath);
-	mUniformsCache = std::move(Shader.mUniformsCache);
+	mUniformCache = std::move(Shader.mUniformCache);
 	Shader.mRendererId = 0;
 	Shader.mPath = {};
-	Shader.mUniformsCache.Clear();
+	Shader.mUniformCache.Clear();
 	return *this;
 }
 
