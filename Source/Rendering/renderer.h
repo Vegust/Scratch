@@ -49,9 +49,9 @@ public:
 		const element_buffer& IndexBuffer,
 		const shader& Shader,
 		glm::mat4 Transform) const;
-	void DrawCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const;
-	void DrawCubes(const phong_material& Material, const dyn_array<glm::mat4>& Transforms) const;
-	void DrawNormalCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const;
+	void DrawCubes(const shader& Shader, span<glm::mat4> Transforms) const;
+	void DrawCubes(const phong_material& Material, span<glm::mat4> Transforms) const;
+	void DrawNormalCubes(const shader& Shader, span<glm::mat4> Transforms) const;
 	void Draw2(
 		const vertex_array& VertexArray,
 		const element_buffer& ElementBuffer,

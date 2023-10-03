@@ -4,8 +4,11 @@
 #include "Containers/dyn_array.h"
 #include "core_types.h"
 #include "hash.h"
+#include "span.h"
 
 #include <iostream>
+
+using str_view = span<char>;
 
 struct str final : trait_memcopy_relocatable {
 	using char_type = char;
@@ -341,6 +344,17 @@ struct str final : trait_memcopy_relocatable {
 		mChars.Clear(Deallocate);
 	}
 };
+
+FORCEINLINE str operator+(char Char, const str& String) {
+	str Result;
+	const index_type RequiredSize = String.Length() + 2;
+	Result.mChars.EnsureCapacity(RequiredSize);
+	Result.mChars.mSize = String.mChars.mSize + 1;
+	std::memcpy(Result.Raw() + 1, String.Raw(), String.Length());
+	Result.mChars[String.Length() + 1] = 0;
+	Result.mChars[0] = Char;
+	return Result;
+}
 
 inline std::ostream& operator<<(std::ostream& Os, const str& String) {
 	return Os << String.mChars.Data();

@@ -82,7 +82,7 @@ public:
 	using const_iter = hash_set_iter<hash_set, true>;
 	using set_element_container_type = set_elem_container;
 	using value_type = element_type;
-	constexpr static index_type MinCapacity = 32;
+	constexpr static index_type MinCapacity = 4;
 	constexpr static float MaxLoadFactor = 0.7f;
 	constexpr static float MaxLoadFactorInverse = 1.f / MaxLoadFactor;
 	constexpr static bool FastCopy = trivially_copyable<element_type>;

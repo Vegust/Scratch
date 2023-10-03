@@ -44,7 +44,7 @@ void test_basic_light::OnRender(renderer& Renderer) {
 	const glm::mat4 View = mCamera->GetViewTransform();
 
 	std::srand(0);
-	dyn_array<glm::mat4> Transforms;
+	array<glm::mat4,10> Transforms;
 	for (int i = 0; i < 10; ++i) {
 		glm::vec3 RandomOffset = glm::vec3{
 			(std::rand() % 2000 - 1000) / 200.f,
@@ -55,7 +55,7 @@ void test_basic_light::OnRender(renderer& Renderer) {
 			glm::translate(glm::mat4{1.0f}, Position),
 			mCurrentRotation + static_cast<float>(i) * glm::pi<float>() / 10.f,
 			glm::vec3(0.5f, 1.f, 0.f));
-		Transforms.Add(ModelTransform);
+		Transforms[i] = ModelTransform;
 	}
 
 	mShader.Bind();

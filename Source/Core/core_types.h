@@ -35,6 +35,10 @@ constexpr index_type InvalidIndex = 0xffffffff;
 #define NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif
 
+// stupid templates
+template<typename printed_type>
+struct compile_print : printed_type::this_field_does_not_exist {};
+
 // works as flags for types
 struct trait_memcopy_relocatable {};
 

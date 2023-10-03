@@ -55,7 +55,7 @@ void renderer::Draw(
 		mDrawElementsMode, static_cast<GLsizei>(IndexBuffer.GetCount()), GL_UNSIGNED_INT, nullptr));
 }
 
-void renderer::DrawCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const {
+void renderer::DrawCubes(const shader& Shader, span<glm::mat4> Transforms) const {
 	mCubeVAO.Bind();
 	Shader.Bind();
 	for (const auto& Transform : Transforms) {
@@ -64,7 +64,7 @@ void renderer::DrawCubes(const shader& Shader, const dyn_array<glm::mat4>& Trans
 	}
 }
 
-void renderer::DrawNormalCubes(const shader& Shader, const dyn_array<glm::mat4>& Transforms) const {
+void renderer::DrawNormalCubes(const shader& Shader, span<glm::mat4> Transforms) const {
 	mNormalCubeVAO.Bind();
 	Shader.Bind();
 
@@ -84,8 +84,7 @@ void renderer::DrawNormalCubes(const shader& Shader, const dyn_array<glm::mat4>&
 	}
 }
 
-void renderer::DrawCubes(const phong_material& Material, const dyn_array<glm::mat4>& Transforms)
-	const {
+void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transforms) const {
 	mNormalCubeVAO.Bind();
 
 	glm::mat4 View =

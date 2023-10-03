@@ -7,15 +7,20 @@
 // const non-owning view into str/array/dyn_array/C string
 template <typename element_type>
 struct span {
-	const element_type* mData;
-	index_type mSize;
+	const element_type* mData{nullptr};
+	index_type mSize{0};
 
-	using iter = array_iter<span, false>;
-	using value_type = element_type;
+	// both iterators are const because you can't change span data (for now?) // TODO
+	using iter = array_iter<span, true>;
 	using const_iter = array_iter<span, true>;
+	using value_type = element_type;
 
 	span() = default;
 	~span() = default;
+	span(const span&) = default;
+	span(span&&) = default;
+	span& operator=(const span&) = default;
+	span& operator=(span&&) = default;
 
 	FORCEINLINE constexpr explicit span(const element_type* Source, const index_type Count)
 		: mData{Source}, mSize{Count} {
@@ -25,15 +30,20 @@ struct span {
 		: mData{Begin}, mSize{static_cast<index_type>(End - Begin)} {
 	}
 
-	FORCEINLINE constexpr span(const char* Source) : mData{Source} {
+	// conversion to span can be implicit
+	FORCEINLINE constexpr span(const char* Source)	  // NOLINT(*-explicit-constructor)
+		: mData{Source} {
 		mSize = static_cast<index_type>(strlen(Source));
 	}
 
 	// conversion to span can be implicit
-	template <typename container_type> requires(
+	template <typename container_type>
+		requires(
 			container_type::const_iter::Contiguous &&
-			std::is_same<typename container_type::value_type, value_type>::value)
-	FORCEINLINE constexpr span(const container_type& Container)
+			std::is_same<
+				typename std::remove_const<typename container_type::value_type>::type,
+				typename std::remove_const<value_type>::type>::value)
+	FORCEINLINE constexpr span(const container_type& Container)	   // NOLINT(*-explicit-constructor)
 		: span{Container.begin(), Container.end()} {
 	}
 
@@ -41,27 +51,15 @@ struct span {
 	template <typename container_type>
 		requires(
 			container_type::const_iter::Contiguous &&
-			std::is_same<typename container_type::value_type, value_type>::value)
-	FORCEINLINE explicit operator container_type() {
-		return container_type{mData, mSize};
-	}
-
-	FORCEINLINE constexpr span(const span& Source) : mData{Source.mData}, mSize{Source.mSize} {
-	}
-
-	FORCEINLINE constexpr span(span&& Source) : mData{Source.mData}, mSize{Source.mSize} {
-		Source.Clear();
-	}
-
-	FORCEINLINE constexpr span& operator=(const span& Other) {
-		mData = Other.mData;
-		mSize = Other.mSize;
-	}
-
-	FORCEINLINE constexpr span& operator=(span&& Other) {
-		mData = Other.mData;
-		mSize = Other.mSize;
-		Other.Clear();
+			std::is_same<
+				typename std::remove_const<typename container_type::value_type>::type,
+				typename std::remove_const<value_type>::type>::value)
+	FORCEINLINE explicit operator container_type() const {
+		if (mSize == 0) {
+			return {};
+		} else {
+			return container_type{mData, mSize};
+		}
 	}
 
 	FORCEINLINE constexpr bool operator==(const span& Other) const {
@@ -80,15 +78,15 @@ struct span {
 		return mData[Index];
 	}
 
-	FORCEINLINE constexpr value_type* Data() const {
+	FORCEINLINE constexpr const value_type* Data() const {
 		return mData;
 	}
 
-	FORCEINLINE constexpr index_type Size() const {
+	[[nodiscard]] FORCEINLINE constexpr index_type Size() const {
 		return mSize;
 	}
 
-	FORCEINLINE constexpr bool Empty() const {
+	[[nodiscard]] FORCEINLINE constexpr bool Empty() const {
 		return !mData || mSize == 0;
 	}
 
@@ -111,5 +109,12 @@ struct span {
 
 	FORCEINLINE constexpr const_iter end() const {
 		return const_iter(mData + mSize);
+	}
+
+	// hasher for string-like spans, should result in identical hashes to strings with same data
+	template <typename cur_type = value_type>
+		requires(std::is_same<typename std::remove_const<cur_type>::type, char>::value)
+	[[nodiscard]] FORCEINLINE hash::hash_type GetHash() const {
+		return hash::MurmurHash(Data(), (s32) mSize);
 	}
 };

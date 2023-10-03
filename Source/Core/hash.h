@@ -18,7 +18,7 @@ using hash_type = u32;
 	return Hash;
 }
 
-[[nodiscard]] constexpr FORCEINLINE hash_type MurmurHash(const void* Key, s32 Length) {
+[[nodiscard]] constexpr FORCEINLINE hash_type MurmurHash(const void* const Key, s32 Length) {
 	const u8* Data = (const u8*) Key;
 	const s32 NumBlocks = Length / 4;
 	hash_type Hash = DefaultSeed;
