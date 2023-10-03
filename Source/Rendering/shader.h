@@ -60,7 +60,7 @@ public:
 		hash_table<uniform_identifier, cached_uniform<glm::mat4>> mMat4s;
 
 		template <typename value_type>
-		auto& GetCache() {
+		FORCEINLINE auto& GetCache() {
 			if constexpr (std::is_same_v<value_type, s32>) {
 				return mInts;
 			} else if constexpr (std::is_same_v<value_type, float>) {
@@ -83,7 +83,7 @@ public:
 		static void SetValue(s32 ResourceId, const glm::mat3& Value);
 		static void SetValue(s32 ResourceId, const glm::mat4& Value);
 
-		void Clear() {
+		FORCEINLINE void Clear() {
 			mInts.Clear();
 			mFloats.Clear();
 			mVec3s.Clear();
@@ -117,9 +117,12 @@ public:
 	void SetUniform(str_view Name, str_view CountName, span<light> Lights, const glm::mat4& View)
 		const;
 
+	// TODO: completely remove strings from hot path, do it preemtively and cache actual uniform ids
+	// think about that after renderer refactor and shader tangent space refactor
 	template <typename input_type>
 	void MaybeSetUniform(const input_type& Value, str_view First, s32 Index = -1, str_view Second = {})
 		const {
+		// Hot path:
 		using value_type = std::remove_const<input_type>::type;
 		const auto Hash = uniform_identifier::hasher::Hash(First, Index, Second);
 		if (auto* Existing = mUniformsCache.GetCache<value_type>().FindByPredicate(
@@ -135,6 +138,7 @@ public:
 				return;
 			}
 		}
+		// Cold path:
 		str FirstString{First};
 		str FullName = FirstString;
 		if (Index != -1) {
@@ -152,7 +156,7 @@ public:
 	}
 
 	template <typename value_type>
-	void MaybeSetUniform(const value_type& Value, str_view First, str_view Second) const {
+	FORCEINLINE void MaybeSetUniform(const value_type& Value, str_view First, str_view Second) const {
 		return MaybeSetUniform(Value, First, -1, Second);
 	}
 
