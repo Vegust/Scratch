@@ -62,6 +62,26 @@ struct span {
 		}
 	}
 
+	template <typename container_type>
+		requires(
+			container_type::const_iter::Contiguous &&
+			std::is_same<
+				typename std::remove_const<typename container_type::value_type>::type,
+				typename std::remove_const<value_type>::type>::value)
+	FORCEINLINE constexpr bool operator==(const container_type& Other) const {
+		const value_type* OtherBegin = Other.begin();
+		const index_type OtherSize = Other.end() - OtherBegin;
+		if (mSize != OtherSize) {
+			return false;
+		}
+		for (int i = 0; i < mSize; ++i) {
+			if (mData[i] != OtherBegin[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	FORCEINLINE constexpr bool operator==(const span& Other) const {
 		if (mSize != Other.mSize) {
 			return false;

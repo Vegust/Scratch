@@ -11,10 +11,10 @@
 shader::shader(shader&& Shader) noexcept {
 	mRendererId = Shader.mRendererId;
 	mPath = std::move(Shader.mPath);
-	mUniformCache = std::move(Shader.mUniformCache);
+	mUniformsCache = std::move(Shader.mUniformsCache);
 	Shader.mRendererId = 0;
 	Shader.mPath = {};
-	Shader.mUniformCache.Clear();
+	Shader.mUniformsCache.Clear();
 }
 
 shader& shader::operator=(shader&& Shader) noexcept {
@@ -23,10 +23,10 @@ shader& shader::operator=(shader&& Shader) noexcept {
 	}
 	mRendererId = Shader.mRendererId;
 	mPath = std::move(Shader.mPath);
-	mUniformCache = std::move(Shader.mUniformCache);
+	mUniformsCache = std::move(Shader.mUniformsCache);
 	Shader.mRendererId = 0;
 	Shader.mPath = {};
-	Shader.mUniformCache.Clear();
+	Shader.mUniformsCache.Clear();
 	return *this;
 }
 
@@ -65,37 +65,30 @@ void shader::Bind() const {
 	glUseProgram(mRendererId);
 }
 
-void shader::SetUniform(str_view Name, float V1, float V2, float V3, float V4) const {
-	glUniform4f(GetUniformLocation(Name), V1, V2, V3, V4);
-}
-
 void shader::SetUniform(str_view Name, s32 V1) const {
-	glUniform1i(GetUniformLocation(Name), V1);
+	MaybeSetUniform(V1, Name);
 }
 
 void shader::SetUniform(str_view Name, const glm::mat4& Matrix) const {
-	glUniformMatrix4fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
+	MaybeSetUniform(Matrix, Name);
 }
 
 void shader::SetUniform(str_view Name, span<glm::mat4> Matrix) const {
 	for (s32 i = 0; i < Matrix.Size(); ++i) {
-		glUniformMatrix4fv(GetUniformLocation(Name, i), 1, GL_FALSE, glm::value_ptr(Matrix[i]));
+		MaybeSetUniform(Matrix[i], Name, i);
 	}
 }
 
 void shader::SetUniform(str_view Name, const phong_material& Material) const {
-	glUniform1i(GetUniformLocation(Name, "DiffuseMap"), static_cast<s32>(Material.mDiffuseSlot));
-	glUniform1i(GetUniformLocation(Name, "SpecularMap"), static_cast<s32>(Material.mSpecularSlot));
-	glUniform1i(GetUniformLocation(Name, "EmissionMap"), static_cast<s32>(Material.mEmissionSlot));
-	glUniform1i(GetUniformLocation(Name, "NormalMap"), static_cast<s32>(Material.mNormalSlot));
-	glUniform1f(GetUniformLocation(Name, "Shininess"), Material.mShininess);
+	MaybeSetUniform(static_cast<s32>(Material.mDiffuseSlot), Name, "DiffuseMap");
+	MaybeSetUniform(static_cast<s32>(Material.mSpecularSlot), Name, "SpecularMap");
+	MaybeSetUniform(static_cast<s32>(Material.mEmissionSlot), Name, "EmissionMap");
+	MaybeSetUniform(static_cast<s32>(Material.mNormalSlot), Name, "NormalMap");
+	MaybeSetUniform(Material.mShininess, Name, "Shininess");
 }
 
-void shader::SetUniform(
-	str_view Name,
-	str_view CountName,
-	span<light> Lights,
-	const glm::mat4& View) const {
+void shader::SetUniform(str_view Name, str_view CountName, span<light> Lights, const glm::mat4& View)
+	const {
 	for (s32 i = 0; i < Lights.Size(); ++i) {
 		SetUniform(Name, Lights[i], View, i);
 	}
@@ -104,51 +97,37 @@ void shader::SetUniform(
 
 void shader::SetUniform(str_view Name, const class light& Light, const glm::mat4& View, s32 Index)
 	const {
-	glUniform1i(GetUniformLocation(Name, Index, "Type"), static_cast<s32>(Light.mType));
-	glUniform3fv(GetUniformLocation(Name, Index, "Ambient"), 1, glm::value_ptr(Light.mAmbient));
-	glUniform3fv(GetUniformLocation(Name, Index, "Diffuse"), 1, glm::value_ptr(Light.mDiffuse));
-	glUniform3fv(GetUniformLocation(Name, Index, "Specular"), 1, glm::value_ptr(Light.mSpecular));
+	glm::vec3 Position = glm::vec3(View * glm::vec4(Light.mPosition, 1.f));
+	glm::vec3 Direction = glm::vec3(View * glm::vec4(Light.mDirection, 0.f));
+	MaybeSetUniform(static_cast<s32>(Light.mType), Name, Index, "Type");
+	MaybeSetUniform(Light.mAmbient, Name, Index, "Ambient");
+	MaybeSetUniform(Light.mDiffuse, Name, Index, "Diffuse");
+	MaybeSetUniform(Light.mSpecular, Name, Index, "Specular");
 	if (Light.mType == light_type::point) {
-		glUniform3fv(
-			GetUniformLocation(Name, Index, "Position"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mPosition, 1.f))));
-		glUniform3fv(
-			GetUniformLocation(Name, Index, "PositionWorld"), 1, glm::value_ptr(Light.mPosition));
-		glUniform1f(GetUniformLocation(Name, Index, "AttenuationRadius"), Light.mAttenuationRadius);
+		MaybeSetUniform(Position, Name, Index, "Position");
+		MaybeSetUniform(Light.mPosition, Name, Index, "PositionWorld");
+		MaybeSetUniform(Light.mAttenuationRadius, Name, Index, "AttenuationRadius");
 	} else if (Light.mType == light_type::directional) {
-		glUniform3fv(
-			GetUniformLocation(Name, Index, "Direction"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mDirection, 0.f))));
+		MaybeSetUniform(Direction, Name, Index, "Direction");
 	} else if (Light.mType == light_type::spot) {
-		glUniform3fv(
-			GetUniformLocation(Name, Index, "Position"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mPosition, 1.f))));
-		glUniform3fv(
-			GetUniformLocation(Name, Index, "Direction"),
-			1,
-			glm::value_ptr(glm::vec3(View * glm::vec4(Light.mDirection, 0.f))));
-		glUniform1f(GetUniformLocation(Name, Index, "AttenuationRadius"), Light.mAttenuationRadius);
-		glUniform1f(
-			GetUniformLocation(Name, Index, "AngularAttenuation"), Light.mAngularAttenuation);
-		glUniform1f(
-			GetUniformLocation(Name, Index, "AngularAttenuationFalloffStart"),
-			Light.mAngularAttenuationFalloffStart);
+		MaybeSetUniform(Position, Name, Index, "Position");
+		MaybeSetUniform(Direction, Name, Index, "Direction");
+		MaybeSetUniform(Light.mAttenuationRadius, Name, Index, "AttenuationRadius");
+		MaybeSetUniform(Light.mAngularAttenuation, Name, Index, "AngularAttenuation");
+		MaybeSetUniform(Light.mAngularAttenuationFalloffStart, Name, Index, "AngularAttenuationFalloffStart");
 	}
 }
 
 void shader::SetUniform(str_view Name, const glm::mat3& Matrix) const {
-	glUniformMatrix3fv(GetUniformLocation(Name), 1, GL_FALSE, glm::value_ptr(Matrix));
+	MaybeSetUniform(Matrix, Name);
 }
 
 void shader::SetUniform(str_view Name, float V1) const {
-	glUniform1f(GetUniformLocation(Name), V1);
+	MaybeSetUniform(V1, Name);
 }
 
 void shader::SetUniform(str_view Name, glm::vec3 V1) const {
-	glUniform3f(GetUniformLocation(Name), V1.x, V1.y, V1.z);
+	MaybeSetUniform(V1, Name);
 }
 
 static std::ifstream& GetLine(std::ifstream& Stream, str& String) {
@@ -236,29 +215,30 @@ u32 shader::CompileShader(u32 Type, const str& Source) {
 	return Index;
 }
 
-s32 shader::GetUniformLocation(str_view First, s32 Index, str_view Second) const {
-	const auto Hash = uniform_identifier::hasher::Hash(First, Index, Second);
-	if (const auto* Existing =
-			mUniformCache.FindByPredicate(Hash, [First, Index, Second](auto& Identifier) {
-				return Identifier.mKey.mFirstName == First && Identifier.mKey.mIndex == Index &&
-					   Identifier.mKey.mSecondName == Second;
-			})) {
-		return Existing->mValue;
-	}
-	str FirstString{First};
-	str FullName = FirstString;
-	if (Index != -1) {
-		FullName += '[' + str{Index} + ']';
-	}
-	str SecondString{Second};
-	if (!Second.Empty()) {
-		FullName += '.' + SecondString;
-	}
-	const auto Location = glGetProgramResourceLocation(mRendererId, GL_UNIFORM, FullName.Raw());
-	mUniformCache[uniform_identifier{std::move(FirstString), Index, std::move(SecondString)}] = Location;
-	return Location;
+s32 shader::GetUniformLocation(str_view FullName) const {
+	return glGetProgramResourceLocation(mRendererId, GL_UNIFORM, FullName.Data());
 }
 
-s32 shader::GetUniformLocation(str_view First, str_view Second) const {
-	return GetUniformLocation(First, -1, Second);
+void shader::uniforms_cache::SetValue(s32 ResourceId, s32 Value) {
+	glUniform1i(ResourceId, Value);
+}
+
+void shader::uniforms_cache::SetValue(s32 ResourceId, float Value) {
+	glUniform1f(ResourceId, Value);
+}
+
+void shader::uniforms_cache::SetValue(s32 ResourceId, const glm::vec3& Value) {
+	glUniform3f(ResourceId, Value.x, Value.y, Value.z);
+}
+
+void shader::uniforms_cache::SetValue(s32 ResourceId, const glm::vec4& Value) {
+	glUniform4f(ResourceId, Value.x, Value.y, Value.z, Value.w);
+}
+
+void shader::uniforms_cache::SetValue(s32 ResourceId, const glm::mat3& Value) {
+	glUniformMatrix3fv(ResourceId, 1, GL_FALSE, glm::value_ptr(Value));
+}
+
+void shader::uniforms_cache::SetValue(s32 ResourceId, const glm::mat4& Value) {
+	glUniformMatrix4fv(ResourceId, 1, GL_FALSE, glm::value_ptr(Value));
 }

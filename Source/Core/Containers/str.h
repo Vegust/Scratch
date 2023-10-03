@@ -117,6 +117,10 @@ struct str final : trait_memcopy_relocatable {
 		return Length() == 0;
 	}
 
+	FORCEINLINE const char_type& operator[](const index_type Index) const {
+		return mChars[Index];
+	}
+
 	FORCEINLINE char_type& At(index_type Position) {
 		return mChars[Position];
 	}
