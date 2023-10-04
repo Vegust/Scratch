@@ -13,7 +13,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "Rendering/renderer.h"
+#include "Rendering/OldRender/renderer.h"
 #include "TestScenes/test_3d_texture.h"
 #include "TestScenes/test_clear_color.h"
 #include "TestScenes/test_scene.h"

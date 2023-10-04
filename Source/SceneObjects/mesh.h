@@ -1,11 +1,11 @@
 #pragma once
 
 #include "core_types.h"
-#include "Rendering/element_buffer.h"
-#include "Rendering/texture.h"
-#include "Rendering/vertex.h"
-#include "Rendering/vertex_array.h"
-#include "Rendering/vertex_buffer.h"
+#include "Rendering/OldRender/element_buffer.h"
+#include "Rendering/OldRender/texture.h"
+#include "Rendering/OldRender/vertex.h"
+#include "Rendering/OldRender/vertex_array.h"
+#include "Rendering/OldRender/vertex_buffer.h"
 #include "phong_material.h"
 #include "glm/glm.hpp"
 

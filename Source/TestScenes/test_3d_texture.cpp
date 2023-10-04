@@ -8,8 +8,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
-#include "Rendering/renderer.h"
-#include "Rendering/vertex_buffer_layout.h"
+#include "Rendering/OldRender/renderer.h"
+#include "Rendering/OldRender/vertex_buffer_layout.h"
 
 REGISTER_TEST_SCENE(test_3d_texture, "03 3D Texture")
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "test_scene.h"
-#include "Rendering/cubemap.h"
+#include "Rendering/OldRender/cubemap.h"
 
 class test_cubemap : public test_scene {
 public:

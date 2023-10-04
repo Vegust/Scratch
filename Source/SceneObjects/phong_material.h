@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core_types.h"
-#include "Rendering/texture.h"
+#include "Rendering/OldRender/texture.h"
 
 struct phong_material {
 public:

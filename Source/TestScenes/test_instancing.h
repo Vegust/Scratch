@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Rendering/cubemap.h"
+#include "Rendering/OldRender/cubemap.h"
 #include "SceneObjects/model.h"
 #include "test_scene.h"
 

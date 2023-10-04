@@ -27,7 +27,16 @@ test_shadowmaps::test_shadowmaps() {
 	mPointShadowmapShader.Compile("Resources/Shaders/PointShadowMap.shader");
 
 	mCubeMaterial.InitTextures(
-		"Resources/Textures/Wood.png", 0, "Resources/Textures/DefaultSpecular.jpg", 1);
+		"Resources/Textures/Bricks/brickwall.jpg",
+		0,
+		"Resources/Textures/DefaultSpecular.jpg",
+		1,
+		"",
+		2,
+		"Resources/Textures/Bricks/brickwall_normal.jpg",
+		3);
+	
+	mSkybox.Load({"Resources/Textures/Skybox_Mountains"});
 
 	mSceneFramebuffer.Reload();
 
@@ -161,6 +170,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 
 		Renderer.DrawCubes(mCubeMaterial, mStaticCubes);
 		Renderer.DrawCubes(mCubeMaterial, mDynamicCubes);
+		Renderer.DrawSkybox(mSkybox);
 
 		framebuffer::SetDefault();
 

@@ -26,6 +26,8 @@ public:
 	s32 mCubeEditIndex = 0;
 	s32 mLightEditIndex = 0;
 	framebuffer mSceneFramebuffer;
+	
+	cubemap mSkybox;
 
 	bool mDrawShadowmap = false;
 

@@ -1,7 +1,7 @@
 #include "test_texture.h"
 
-#include "Rendering/renderer.h"
-#include "Rendering/vertex_buffer_layout.h"
+#include "Rendering/OldRender/renderer.h"
+#include "Rendering/OldRender/vertex_buffer_layout.h"
 #include "core_types.h"
 
 #include "glad/glad.h"

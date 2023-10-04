@@ -12,9 +12,9 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 
-#include "Rendering/renderer.h"
-#include "Rendering/texture.h"
-#include "Rendering/vertex_buffer_layout.h"
+#include "Rendering/OldRender/renderer.h"
+#include "Rendering/OldRender/texture.h"
+#include "Rendering/OldRender/vertex_buffer_layout.h"
 
 REGISTER_TEST_SCENE(test_cube, "04 Cubes")
 
