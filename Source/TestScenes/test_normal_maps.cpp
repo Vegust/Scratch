@@ -9,7 +9,6 @@ test_normal_maps::test_normal_maps() {
 	auto& SceneLights = renderer::Get().mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];
 	Light.mPosition = {0.f, 0.f, 2.f};
-	Light.mSpecular = {0.5f, 0.5f, 0.5f};
 
 	mLightShader.Compile("Resources/Shaders/BasicLight.shader");
 

@@ -34,10 +34,10 @@ void main() {
 
 in vec4 g_FragPos;
 
-uniform vec3 u_PointLightPos;
-uniform float u_PointLightFarPlane;
+uniform vec3 u_LightPos;
+uniform float u_Attenuation;
 
 void main() {
-	float LightDistance = length(g_FragPos.xyz - u_PointLightPos);
-	gl_FragDepth = LightDistance / u_PointLightFarPlane;
+	float LightDistance = length(g_FragPos.xyz - u_LightPos);
+	gl_FragDepth = LightDistance / u_Attenuation;
 };

@@ -6,7 +6,7 @@ layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in mat4 InstanceTransform;
 
-out GS_OUT {
+out VS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
@@ -77,7 +77,7 @@ struct light {
 	float AngularAttenuationFalloffStart;
 };
 
-in GS_OUT {
+in VS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;

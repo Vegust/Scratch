@@ -31,9 +31,8 @@ void light::UIControlPanel(const str& Prefix) {
 		ImGui::EndCombo();
 	}
 
-	ImGui::ColorEdit3((Prefix + "Light Diffuse Color").Raw(), glm::value_ptr(mDiffuse));
-	ImGui::ColorEdit3((Prefix + "Light Ambient Color").Raw(), glm::value_ptr(mAmbient));
-	ImGui::ColorEdit3((Prefix + "Light Specular Color").Raw(), glm::value_ptr(mSpecular));
+	ImGui::ColorEdit3((Prefix + "Light Color").Raw(), glm::value_ptr(mColor));
+	ImGui::InputFloat((Prefix + "Light Ambient Strength").Raw(), &mAmbientStrength);
 
 	if (mType == light_type::point) {
 		ImGui::InputFloat3((Prefix + "Light Position").Raw(), glm::value_ptr(mPosition));

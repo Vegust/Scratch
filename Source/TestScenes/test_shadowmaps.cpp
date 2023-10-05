@@ -9,7 +9,9 @@ test_shadowmaps::test_shadowmaps() {
 	auto& SceneLights = renderer::Get().mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];
 	Light.mType = light_type::directional;
-	Light.mAmbient = {0.2f, 0.2f, 0.2f};
+	Light.mAmbientStrength = 0.2f;
+
+	mSkybox.Load({"Resources/Textures/Skybox_Mountains"});
 
 	Light.mDirection = {0.29, -0.58, -0.53};
 
@@ -35,8 +37,6 @@ test_shadowmaps::test_shadowmaps() {
 		2,
 		"Resources/Textures/Bricks/brickwall_normal.jpg",
 		3);
-	
-	mSkybox.Load({"Resources/Textures/Skybox_Mountains"});
 
 	mSceneFramebuffer.Reload();
 
@@ -79,7 +79,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	constexpr float Near = 0.1f;
 	constexpr float Far = 25.0f;
 	const auto& PointLight = renderer::Get().mSceneLights[1];
-	mat4 PointLightProjection = perspective(glm::radians(90.0f), Aspect, Near, Far);
+	mat4 PointLightProjection = perspective(glm::radians(90.0f), Aspect, Near, PointLight.mAttenuationRadius);
 	const array<mat4, 6> PointLightViews{
 		PointLightProjection * lookAt(
 								   PointLight.mPosition,
@@ -133,8 +133,8 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 
 		Renderer.SetActiveShader(&mPointShadowmapShader);
 		mPointShadowmapShader.Bind();
-		mPointShadowmapShader.SetUniform("u_PointLightFarPlane", Far);
-		mPointShadowmapShader.SetUniform("u_PointLightPos", PointLight.mPosition);
+		mPointShadowmapShader.SetUniform("u_LightPos", PointLight.mPosition);
+		mPointShadowmapShader.SetUniform("u_Attenuation", PointLight.mAttenuationRadius);
 		mPointShadowmapShader.SetUniform("u_PointLightViews", PointLightViews);
 
 		Renderer.DrawCubes(mCubeMaterial, mStaticCubes);
@@ -166,7 +166,6 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 		Renderer.mActiveShader->SetUniform("u_Shadowmaps", true);
 		Renderer.mActiveShader->SetUniform("u_Shadowmap", ShadowmapSlot);
 		Renderer.mActiveShader->SetUniform("u_PointShadowmap", PointShadowmapSlot);
-		Renderer.mActiveShader->SetUniform("u_PointLightFarPlane", Far);
 
 		Renderer.DrawCubes(mCubeMaterial, mStaticCubes);
 		Renderer.DrawCubes(mCubeMaterial, mDynamicCubes);
@@ -176,6 +175,8 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 
 		Renderer.DrawFrameBuffer(mSceneFramebuffer);
 	}
+
+
 }
 
 void test_shadowmaps::OnIMGuiRender() {

@@ -100,9 +100,8 @@ void shader::SetUniform(str_view Name, const class light& Light, const glm::mat4
 	glm::vec3 Position = glm::vec3(View * glm::vec4(Light.mPosition, 1.f));
 	glm::vec3 Direction = glm::vec3(View * glm::vec4(Light.mDirection, 0.f));
 	MaybeSetUniform(static_cast<s32>(Light.mType), Name, Index, "Type");
-	MaybeSetUniform(Light.mAmbient, Name, Index, "Ambient");
-	MaybeSetUniform(Light.mDiffuse, Name, Index, "Diffuse");
-	MaybeSetUniform(Light.mSpecular, Name, Index, "Specular");
+	MaybeSetUniform(Light.mColor, Name, Index, "Color");
+	MaybeSetUniform(Light.mAmbientStrength, Name, Index, "AmbientStrength");
 	if (Light.mType == light_type::point) {
 		MaybeSetUniform(Position, Name, Index, "Position");
 		MaybeSetUniform(Light.mPosition, Name, Index, "PositionWorld");

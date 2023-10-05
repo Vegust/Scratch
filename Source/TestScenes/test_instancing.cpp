@@ -22,7 +22,6 @@ test_instancing::test_instancing() {
 	auto& Light = SceneLights[SceneLights.Emplace()];
 	Light.mType = light_type::point;
 	Light.mAttenuationRadius = 1000.f;
-	Light.mAmbient = {0.f, 0.f, 0.f};
 
 	mCamera = std::make_shared<camera>();
 	mCamera->Position = glm::vec3{0.f, 1.f, 10.f};

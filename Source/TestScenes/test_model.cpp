@@ -9,8 +9,6 @@ test_model::test_model() {
 	auto& SceneLights = renderer::Get().mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];
 	Light.mType = light_type::directional;
-	Light.mAmbient = glm::vec3{0.5f, 0.5f, 0.5f};
-	Light.mDiffuse = glm::vec3{0.5f, 0.5f, 0.5};
 
 	mSceneFramebuffer.Reload();
 

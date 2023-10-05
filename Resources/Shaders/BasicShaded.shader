@@ -1,12 +1,29 @@
-//!shader vertex
+//!shader shared
 #version 460 core
 
+struct light {
+	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
+	vec3 Color;
+	float AmbientStrength;
+	vec3 Position;
+	vec3 Direction;
+	vec3 PositionWorld;
+	float AttenuationRadius;
+	float AngularAttenuation;
+	float AngularAttenuationFalloffStart;
+};
+
+#define MAX_LIGHTS 100
+uniform light u_Lights[MAX_LIGHTS];
+uniform int u_NumLights;
+
+//!shader vertex
 layout (location = 0) in vec4 Position;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in vec3 Tangent;
 
-out GS_OUT {
+out VS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
@@ -36,38 +53,7 @@ void main() {
 	vs_out.TBN = mat3(T, B, N);
 };
 
-////!shader geometry
-//#version 460 core
-//layout (triangles) in;
-//layout (triangle_strip, max_vertices = 3) out;
-//
-//in VS_OUT {
-//	vec3 v_Normal;
-//	vec3 v_FragPos;
-//	vec2 v_TexCoords;
-//} gs_in[];
-//
-//out GS_OUT {
-//	vec3 g_Normal;
-//	vec3 g_FragPos;
-//	vec2 g_TexCoords;
-//} gs_out;
-//
-//void main() {
-//	for (int i = 0; i < 3; ++i)
-//	{
-//		gl_Position = gl_in[i].gl_Position;
-//		gs_out.g_Normal = gs_in[i].v_Normal;
-//		gs_out.g_FragPos = gs_in[i].v_FragPos;
-//		gs_out.g_TexCoords = gs_in[i].v_TexCoords;
-//		EmitVertex();
-//	}
-//	EndPrimitive();
-//}
-
 //!shader fragment
-#version 460 core
-
 struct material {
 	sampler2D DiffuseMap;
 	sampler2D SpecularMap;
@@ -76,24 +62,7 @@ struct material {
 	float Shininess;
 };
 
-struct light {
-	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
-
-	vec3 Ambient;
-	vec3 Diffuse;
-	vec3 Specular;
-
-	vec3 Position;
-	vec3 Direction;
-
-	vec3 PositionWorld;
-
-	float AttenuationRadius;
-	float AngularAttenuation;
-	float AngularAttenuationFalloffStart;
-};
-
-in GS_OUT {
+in VS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
@@ -106,25 +75,17 @@ out vec4 Color;
 
 uniform material u_Material;
 
-#define MAX_LIGHTS 100
-uniform light u_Lights[MAX_LIGHTS];
-uniform int u_NumLights;
-
-uniform mat4 u_LightProjectionView;
-
-uniform float u_PointLightFarPlane;
-uniform samplerCube u_PointShadowmap;
-
 uniform bool u_Shadowmaps;
 uniform sampler2D u_Shadowmap;
+uniform samplerCube u_PointShadowmap;
 
 uniform bool u_Unlit;
 uniform bool u_Depth;
 
-float PointShadowCalculation(vec3 FragPosWorld, vec3 PointLightPosition)
+float PointShadowCalculation(vec3 FragPosWorld, vec3 PointLightPosition, float AttenuationRadius)
 {
 	vec3 FragToLight = FragPosWorld - PointLightPosition;
-	float ClothestDepth = texture(u_PointShadowmap, normalize(FragToLight)).r * u_PointLightFarPlane;
+	float ClothestDepth = texture(u_PointShadowmap, normalize(FragToLight)).r * AttenuationRadius;
 	float CurrentDepth = length(FragToLight);
 	float Shadow = CurrentDepth - 0.1 > ClothestDepth ? 1.0 : 0.0;
 	return Shadow;
@@ -165,7 +126,7 @@ float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection
 vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureColor, vec3 Normal, vec3 ViewDirection, int ShadowmapType)
 {
 	// Ambient
-	vec3 AmbientColor = Light.Ambient * DiffuseTextureColor;
+	vec3 AmbientColor = Light.AmbientStrength * Light.Color * DiffuseTextureColor;
 
 	// Diffuse
 	vec3 LightDirection;
@@ -178,7 +139,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 		LightDirection = normalize(Light.Position - vs_in.g_FragPos);
 	}
 	float DiffuseImpact = max(dot(Normal, LightDirection), 0.0);
-	vec3 DiffuseColor = DiffuseImpact * Light.Diffuse * DiffuseTextureColor;
+	vec3 DiffuseColor = DiffuseImpact * Light.Color * DiffuseTextureColor;
 
 	// Specular
 	// Phong
@@ -186,9 +147,9 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	//float SpecularImpact = pow(max(dot(ViewDirection, ReflectDirection), 0.0), u_Material.Shininess);
 	// Blinn-Phong
 	vec3 HalfwayDirection = normalize(LightDirection + ViewDirection);
-	float SpecularImpact = max(dot(Normal, LightDirection),0.0) * pow(max(dot(HalfwayDirection, Normal), 0.0), u_Material.Shininess);
+	float SpecularImpact = max(dot(Normal, LightDirection), 0.0) * pow(max(dot(HalfwayDirection, Normal), 0.0), u_Material.Shininess);
 
-	vec3 SpecularColor = Light.Specular * SpecularImpact * SpecularTextureColor;
+	vec3 SpecularColor = Light.Color * SpecularImpact * SpecularTextureColor;
 
 	// Attenuation
 	float Attenuation = 1.0;
@@ -226,7 +187,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	}
 	else if (ShadowmapType == 2)
 	{
-		ShadowMult = 1.f - PointShadowCalculation(vs_in.g_FragPosWorld, Light.PositionWorld);
+		ShadowMult = 1.f - PointShadowCalculation(vs_in.g_FragPosWorld, Light.PositionWorld, Light.AttenuationRadius);
 	}
 
 	return Falloff * Attenuation * (AmbientColor + ShadowMult * (DiffuseColor + SpecularColor));
