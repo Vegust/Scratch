@@ -89,6 +89,7 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 
 	glm::mat4 View =
 		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
+	glm::mat4 Projection = glm::perspective(glm::radians(mFoV), mAspectRatio, 0.001f, 100.f);
 	glm::vec3 CameraPos{};
 	float CurrentFoV = mFoV;
 	if (!mCustomCamera.expired()) {
@@ -101,32 +102,38 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 	Material.Bind();
 
 	mActiveShader->Bind();
-	mActiveShader->SetUniform("u_Material", Material);
+
+	// global
+	mActiveShader->SetUniform("u_Projection", Projection);
+
+	// view
+	mActiveShader->SetUniform("u_View", View);
 	mActiveShader->SetUniform("u_InvertedView", glm::inverse(View));
+
+	// material
+	mActiveShader->SetUniform("u_Material", Material);
+
+	// lights
 	mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
+
 	for (const auto& Transform : Transforms) {
-		glm::mat4 ViewModel = View * Transform;
-		mActiveShader->SetUniform("u_ViewModel", ViewModel);
+
+		// model
 		mActiveShader->SetUniform("u_Model", Transform);
-		mActiveShader->SetUniform("u_CameraPos", CameraPos);
-		mActiveShader->SetUniform(
-			"u_NormalModelMatrix", glm::mat3(glm::transpose(glm::inverse(Transform))));
-		mActiveShader->SetUniform(
-			"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-		mActiveShader->SetUniform("u_MVP", CalcMVPForTransform(Transform));
+		mActiveShader->SetUniform("u_ModelNormal", glm::transpose(glm::inverse(Transform)));
 		GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
 
-		if (mNormals) {
-			mNormalsShader.Bind();
-			mNormalsShader.SetUniform("u_ViewModel", ViewModel);
-			mNormalsShader.SetUniform(
-				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-			glm::mat4 ProjectionMatrix =
-				glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
-			mNormalsShader.SetUniform("u_Projection", ProjectionMatrix);
-
-			GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
-		}
+//		if (mNormals) {
+//			mNormalsShader.Bind();
+//			mNormalsShader.SetUniform("u_ViewModel", ViewModel);
+//			mNormalsShader.SetUniform(
+//				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+//			glm::mat4 ProjectionMatrix =
+//				glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
+//			mNormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+//
+//			GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
+//		}
 	}
 }
 

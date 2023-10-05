@@ -1,5 +1,51 @@
-//!shader vertex
+//!shader shared
 #version 460 core
+
+struct material {
+	sampler2D DiffuseMap;
+	sampler2D SpecularMap;
+	sampler2D EmissionMap;
+	sampler2D NormalMap;
+	float Shininess;
+};
+
+struct light {
+	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
+	vec3 Color;
+	float AmbientStrength;
+	vec3 Position;
+	vec3 Direction;
+	float AttenuationRadius;
+	float AngularAttenuation;
+	float AngularAttenuationFalloffStart;
+	mat4 ShadowMatrix;
+};
+
+// global
+uniform mat4 u_Projection;
+uniform bool u_Unlit;
+uniform bool u_Depth;
+
+// view
+uniform mat4 u_View;
+uniform mat4 u_InvertedView;
+
+// material
+uniform material u_Material;
+
+// lights
+#define MAX_LIGHTS 10
+uniform light u_Lights[MAX_LIGHTS];
+uniform int u_NumLights;
+uniform bool u_Shadowmaps;
+uniform sampler2D u_Shadowmap;
+uniform samplerCube u_PointShadowmap;
+
+// model
+uniform mat4 u_Model;
+uniform mat4 u_ModelNormal;
+
+//!shader vertex
 layout (location = 0) in vec4 Position;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
@@ -13,49 +59,21 @@ out VS_OUT {
 	mat3 TBN;
 } vs_out;
 
-uniform mat4 u_MVP;
-uniform mat4 u_Model;
-uniform mat4 u_ViewModel;
-uniform mat3 u_NormalMatrix;
-
 void main() {
-	vs_out.g_Normal = u_NormalMatrix * Normal;
-	vs_out.g_FragPos = vec3(u_ViewModel * Position);
+	mat4 ViewModel = u_View * u_Model;
+	mat4 ViewModelNormal = u_View * u_ModelNormal;
+	vs_out.g_Normal = vec3(ViewModelNormal * vec4(Normal, 0.0));
+	vs_out.g_FragPos = vec3(ViewModel * Position);
 	vs_out.g_TexCoords = TexCoords;
-	gl_Position = u_MVP * Position;
+	gl_Position = u_Projection * vec4(vs_out.g_FragPos, 1);
 
-	vec3 T = normalize(vec3(u_ViewModel * vec4(Tangent, 0.0)));
-	vec3 N = normalize(vec3(u_ViewModel * vec4(Normal, 0.0)));
+	vec3 T = normalize(vec3(ViewModel * vec4(Tangent, 0.0)));
+	vec3 N = normalize(vec3(ViewModel * vec4(Normal, 0.0)));
 	vec3 B = cross(T, N);
 	vs_out.TBN = mat3(T, B, N);
 };
 
 //!shader fragment
-#version 460 core
-struct light {
-	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
-	vec3 Color;
-	float AmbientStrength;
-	vec3 Position;
-	vec3 Direction;
-	float AttenuationRadius;
-	float AngularAttenuation;
-	float AngularAttenuationFalloffStart;
-	mat4 ShadowMatrix;
-};
-
-#define MAX_LIGHTS 10
-uniform light u_Lights[MAX_LIGHTS];
-uniform int u_NumLights;
-
-struct material {
-	sampler2D DiffuseMap;
-	sampler2D SpecularMap;
-	sampler2D EmissionMap;
-	sampler2D NormalMap;
-	float Shininess;
-};
-
 in VS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
@@ -65,20 +83,10 @@ in VS_OUT {
 
 out vec4 Color;
 
-uniform material u_Material;
-uniform mat4 u_InvertedView;
-
-uniform bool u_Shadowmaps;
-uniform sampler2D u_Shadowmap;
-uniform samplerCube u_PointShadowmap;
-
-uniform bool u_Unlit;
-uniform bool u_Depth;
-
 float PointShadowCalculation(vec3 FragPos, vec3 PointLightPosition, float AttenuationRadius)
 {
 	vec3 FragToLight = FragPos - PointLightPosition;
-	FragToLight = vec3(u_InvertedView * vec4(FragToLight,0));
+	FragToLight = vec3(u_InvertedView * vec4(FragToLight, 0));
 	float ClothestDepth = texture(u_PointShadowmap, normalize(FragToLight)).r * AttenuationRadius;
 	float CurrentDepth = length(FragToLight);
 	float Shadow = CurrentDepth - 0.1 > ClothestDepth ? 1.0 : 0.0;
@@ -87,7 +95,7 @@ float PointShadowCalculation(vec3 FragPos, vec3 PointLightPosition, float Attenu
 
 float ShadowCalculation(vec3 FragPos, vec3 Normal, vec3 LightDirection, mat4 ShadowMatrix)
 {
-	vec4 FragPosLightSpace = ShadowMatrix * u_InvertedView * vec4(FragPos,1);
+	vec4 FragPosLightSpace = ShadowMatrix * u_InvertedView * vec4(FragPos, 1);
 	vec3 ProjCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
 	if (ProjCoords.z > 1.0)
 	{
