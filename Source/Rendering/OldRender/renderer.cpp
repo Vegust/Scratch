@@ -102,6 +102,7 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 
 	mActiveShader->Bind();
 	mActiveShader->SetUniform("u_Material", Material);
+	mActiveShader->SetUniform("u_InvertedView", glm::inverse(View));
 	mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
 	for (const auto& Transform : Transforms) {
 		glm::mat4 ViewModel = View * Transform;

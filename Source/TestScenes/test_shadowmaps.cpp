@@ -61,7 +61,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	constexpr float NearPlane = 1.f;
 	constexpr float FarPlane = 70.f;
 	constexpr float SideDistance = 15.f;
-	const auto& Light = renderer::Get().mSceneLights[0];
+	auto& Light = renderer::Get().mSceneLights[0];
 	mat4 LightProjection =
 		ortho(-SideDistance, SideDistance, -SideDistance, SideDistance, NearPlane, FarPlane);
 	// Directional light position is relative to player
@@ -72,6 +72,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 		(-Light.mDirection * 35.f);
 	mat4 LightView = lookAt(LightPosition, LightPosition + LightDirection, vec3(0.f, 1.f, 0.f));
 	mat4 LightProjectionView = LightProjection * LightView;
+	Light.mShadowMatrix = LightProjectionView;
 
 	// Point Light transforms
 	const float Aspect = static_cast<float>(mDirectionalShadowmap.mParams.mWidth) /
@@ -79,32 +80,21 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	constexpr float Near = 0.1f;
 	constexpr float Far = 25.0f;
 	const auto& PointLight = renderer::Get().mSceneLights[1];
-	mat4 PointLightProjection = perspective(glm::radians(90.0f), Aspect, Near, PointLight.mAttenuationRadius);
-	const array<mat4, 6> PointLightViews{
-		PointLightProjection * lookAt(
-								   PointLight.mPosition,
-								   PointLight.mPosition + vec3(1.0, 0.0, 0.0),
-								   vec3(0.0, -1.0, 0.0)),
-		PointLightProjection * lookAt(
-								   PointLight.mPosition,
-								   PointLight.mPosition + vec3(-1.0, 0.0, 0.0),
-								   vec3(0.0, -1.0, 0.0)),
-		PointLightProjection * lookAt(
-								   PointLight.mPosition,
-								   PointLight.mPosition + vec3(0.0f, 1.0, 0.0),
-								   vec3(0.0, 0.0, 1.0)),
-		PointLightProjection * lookAt(
-								   PointLight.mPosition,
-								   PointLight.mPosition + vec3(0.0, -1.0, 0.0),
-								   vec3(0.0, 0.0, -1.0)),
-		PointLightProjection * lookAt(
-								   PointLight.mPosition,
-								   PointLight.mPosition + vec3(0.0, 0.0, 1.0),
-								   vec3(0.0, -1.0, 0.0)),
-		PointLightProjection * lookAt(
-								   PointLight.mPosition,
-								   PointLight.mPosition + vec3(0.0, 0.0, -1.0),
-								   vec3(0.0, -1.0, 0.0))};
+	mat4 PointLightProjection =
+		perspective(glm::radians(90.0f), Aspect, Near, PointLight.mAttenuationRadius);
+	static const array<mat4, 6> PointLightViews{
+		PointLightProjection *
+			lookAt(vec3(0.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0)),
+		PointLightProjection *
+			lookAt(vec3(0.0, 0.0, 0.0), vec3(-1.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0)),
+		PointLightProjection *
+			lookAt(vec3(0.0, 0.0, 0.0), vec3(0.0f, 1.0, 0.0), vec3(0.0, 0.0, 1.0)),
+		PointLightProjection *
+			lookAt(vec3(0.0, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0, 0.0, -1.0)),
+		PointLightProjection *
+			lookAt(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), vec3(0.0, -1.0, 0.0)),
+		PointLightProjection *
+			lookAt(vec3(0.0, 0.0, 0.0), vec3(0.0, 0.0, -1.0), vec3(0.0, -1.0, 0.0))};
 
 	// Directional shadow map pass
 	{
@@ -115,7 +105,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 
 		Renderer.SetActiveShader(&mDirectionalShadowmapShader);
 		mDirectionalShadowmapShader.Bind();
-		mDirectionalShadowmapShader.SetUniform("u_LightProjectionView", LightProjectionView);
+		mDirectionalShadowmapShader.SetUniform("u_ShadowMatrix", Light.mShadowMatrix);
 
 		Renderer.DrawCubes(mCubeMaterial, mStaticCubes);
 		Renderer.DrawCubes(mCubeMaterial, mDynamicCubes);
@@ -162,7 +152,6 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, mPointShadowmap.mDepthStencilTextureId);
 
 		Renderer.mActiveShader->Bind();
-		Renderer.mActiveShader->SetUniform("u_LightProjectionView", LightProjectionView);
 		Renderer.mActiveShader->SetUniform("u_Shadowmaps", true);
 		Renderer.mActiveShader->SetUniform("u_Shadowmap", ShadowmapSlot);
 		Renderer.mActiveShader->SetUniform("u_PointShadowmap", PointShadowmapSlot);
@@ -175,8 +164,6 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 
 		Renderer.DrawFrameBuffer(mSceneFramebuffer);
 	}
-
-
 }
 
 void test_shadowmaps::OnIMGuiRender() {

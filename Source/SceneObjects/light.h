@@ -16,6 +16,7 @@ struct light {
 	float mAttenuationRadius{20.f};
 	float mAngularAttenuation{12.5f};
 	float mAngularAttenuationFalloffStart{10.0f};
+	glm::mat4 mShadowMatrix{};
 
 	void UIControlPanel(const str& Prefix);
 };

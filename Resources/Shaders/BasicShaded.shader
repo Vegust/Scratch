@@ -1,34 +1,15 @@
-//!shader shared
-#version 460 core
-
-struct light {
-	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
-	vec3 Color;
-	float AmbientStrength;
-	vec3 Position;
-	vec3 Direction;
-	vec3 PositionWorld;
-	float AttenuationRadius;
-	float AngularAttenuation;
-	float AngularAttenuationFalloffStart;
-};
-
-#define MAX_LIGHTS 100
-uniform light u_Lights[MAX_LIGHTS];
-uniform int u_NumLights;
-
 //!shader vertex
+#version 460 core
 layout (location = 0) in vec4 Position;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in vec3 Tangent;
 
 out VS_OUT {
+	// all in view space
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
-	vec4 g_FragPosLightSpace;
-	vec3 g_FragPosWorld;
 	mat3 TBN;
 } vs_out;
 
@@ -36,15 +17,11 @@ uniform mat4 u_MVP;
 uniform mat4 u_Model;
 uniform mat4 u_ViewModel;
 uniform mat3 u_NormalMatrix;
-uniform mat4 u_LightProjectionView;
-uniform bool u_Shadowmaps;
 
 void main() {
 	vs_out.g_Normal = u_NormalMatrix * Normal;
 	vs_out.g_FragPos = vec3(u_ViewModel * Position);
-	vs_out.g_FragPosWorld = vec3(u_Model * Position);
 	vs_out.g_TexCoords = TexCoords;
-	vs_out.g_FragPosLightSpace = u_LightProjectionView * u_Model * Position;
 	gl_Position = u_MVP * Position;
 
 	vec3 T = normalize(vec3(u_ViewModel * vec4(Tangent, 0.0)));
@@ -54,6 +31,23 @@ void main() {
 };
 
 //!shader fragment
+#version 460 core
+struct light {
+	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
+	vec3 Color;
+	float AmbientStrength;
+	vec3 Position;
+	vec3 Direction;
+	float AttenuationRadius;
+	float AngularAttenuation;
+	float AngularAttenuationFalloffStart;
+	mat4 ShadowMatrix;
+};
+
+#define MAX_LIGHTS 10
+uniform light u_Lights[MAX_LIGHTS];
+uniform int u_NumLights;
+
 struct material {
 	sampler2D DiffuseMap;
 	sampler2D SpecularMap;
@@ -66,14 +60,13 @@ in VS_OUT {
 	vec3 g_Normal;
 	vec3 g_FragPos;
 	vec2 g_TexCoords;
-	vec4 g_FragPosLightSpace;
-	vec3 g_FragPosWorld;
 	mat3 TBN;
 } vs_in;
 
 out vec4 Color;
 
 uniform material u_Material;
+uniform mat4 u_InvertedView;
 
 uniform bool u_Shadowmaps;
 uniform sampler2D u_Shadowmap;
@@ -82,18 +75,20 @@ uniform samplerCube u_PointShadowmap;
 uniform bool u_Unlit;
 uniform bool u_Depth;
 
-float PointShadowCalculation(vec3 FragPosWorld, vec3 PointLightPosition, float AttenuationRadius)
+float PointShadowCalculation(vec3 FragPos, vec3 PointLightPosition, float AttenuationRadius)
 {
-	vec3 FragToLight = FragPosWorld - PointLightPosition;
+	vec3 FragToLight = FragPos - PointLightPosition;
+	FragToLight = vec3(u_InvertedView * vec4(FragToLight,0));
 	float ClothestDepth = texture(u_PointShadowmap, normalize(FragToLight)).r * AttenuationRadius;
 	float CurrentDepth = length(FragToLight);
 	float Shadow = CurrentDepth - 0.1 > ClothestDepth ? 1.0 : 0.0;
 	return Shadow;
 }
 
-float ShadowCalculation(vec4 FragPosLightSpace, vec3 Normal, vec3 LightDirection)
+float ShadowCalculation(vec3 FragPos, vec3 Normal, vec3 LightDirection, mat4 ShadowMatrix)
 {
-	vec3 ProjCoords = vs_in.g_FragPosLightSpace.xyz / vs_in.g_FragPosLightSpace.w;
+	vec4 FragPosLightSpace = ShadowMatrix * u_InvertedView * vec4(FragPos,1);
+	vec3 ProjCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
 	if (ProjCoords.z > 1.0)
 	{
 		return 0.0;
@@ -183,11 +178,11 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	float ShadowMult = 1.f;
 	if (ShadowmapType == 1)
 	{
-		ShadowMult = 1.f - ShadowCalculation(vs_in.g_FragPosLightSpace, Normal, LightDirection);
+		ShadowMult = 1.f - ShadowCalculation(vs_in.g_FragPos, Normal, LightDirection, Light.ShadowMatrix);
 	}
 	else if (ShadowmapType == 2)
 	{
-		ShadowMult = 1.f - PointShadowCalculation(vs_in.g_FragPosWorld, Light.PositionWorld, Light.AttenuationRadius);
+		ShadowMult = 1.f - PointShadowCalculation(vs_in.g_FragPos, Light.Position, Light.AttenuationRadius);
 	}
 
 	return Falloff * Attenuation * (AmbientColor + ShadowMult * (DiffuseColor + SpecularColor));
@@ -195,7 +190,6 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 
 void main() {
 	vec3 CombinedLightColor = vec3(0.f, 0.f, 0.f);
-
 	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, vs_in.g_TexCoords));
 	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, vs_in.g_TexCoords));
 	vec3 TexturedNormal = texture(u_Material.NormalMap, vs_in.g_TexCoords).rgb;

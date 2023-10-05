@@ -4,10 +4,10 @@
 layout (location = 0) in vec4 Position;
 
 uniform mat4 u_Model;
-uniform mat4 u_LightProjectionView;
+uniform mat4 u_ShadowMatrix;
 
 void main() {
-	gl_Position = u_LightProjectionView * u_Model * Position;
+	gl_Position = u_ShadowMatrix * u_Model * Position;
 };
 
 //!shader fragment

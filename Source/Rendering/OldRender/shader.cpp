@@ -104,10 +104,10 @@ void shader::SetUniform(str_view Name, const class light& Light, const glm::mat4
 	MaybeSetUniform(Light.mAmbientStrength, Name, Index, "AmbientStrength");
 	if (Light.mType == light_type::point) {
 		MaybeSetUniform(Position, Name, Index, "Position");
-		MaybeSetUniform(Light.mPosition, Name, Index, "PositionWorld");
 		MaybeSetUniform(Light.mAttenuationRadius, Name, Index, "AttenuationRadius");
 	} else if (Light.mType == light_type::directional) {
 		MaybeSetUniform(Direction, Name, Index, "Direction");
+		MaybeSetUniform(Light.mShadowMatrix, Name, Index, "ShadowMatrix");
 	} else if (Light.mType == light_type::spot) {
 		MaybeSetUniform(Position, Name, Index, "Position");
 		MaybeSetUniform(Direction, Name, Index, "Direction");
