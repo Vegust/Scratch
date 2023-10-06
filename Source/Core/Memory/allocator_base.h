@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "core_types.h"
+#include "Logger/logger.h"
 
 #include <iostream>
 
@@ -42,7 +43,7 @@ struct allocator_base {
 			return;
 		}
 		if constexpr (Debug) {
-			std::cout << Ptr << " dealloc" << std::endl;
+			logger::Log("%d dealloc", (u64)Ptr);
 		}
 		static_cast<sub_type*>(this)->FreeImpl(Ptr);
 	}

@@ -20,7 +20,6 @@
 #include "TestScenes/test_texture.h"
 
 #include <array>
-#include <iostream>
 
 static test_scene*& GetCurrentScene() {
 	[[clang::no_destroy]] static test_scene* Scene = nullptr;
@@ -236,10 +235,6 @@ int main() {
 			glfwSwapBuffers(Window);
 			glfwPollEvents();
 		}
-
-		std::cout << "Max uniform buffer bindings: " << GL_MAX_UNIFORM_BUFFER_BINDINGS << std::endl;
-		std::cout << "Max fragment uniform blocks: " << GL_MAX_FRAGMENT_UNIFORM_BLOCKS << std::endl;
-		std::cout << "Max uniform block size in bytes: " << GL_MAX_UNIFORM_BLOCK_SIZE << std::endl;
 	}
 
 	glfwTerminate();

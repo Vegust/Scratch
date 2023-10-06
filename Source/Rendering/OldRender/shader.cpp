@@ -4,9 +4,9 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "Containers/span.h"
+#include "Logger/logger.h"
 
 #include <fstream>
-#include <iostream>
 
 shader::shader(shader&& Shader) noexcept {
 	mRendererId = Shader.mRendererId;
@@ -205,7 +205,7 @@ u32 shader::CompileShader(u32 Type, const str& Source) {
 		glGetShaderiv(Index, GL_INFO_LOG_LENGTH, &Length);
 		char* Message = static_cast<char*>(alloca(static_cast<u64>(Length) * sizeof(char)));
 		glGetShaderInfoLog(Index, Length, &Length, Message);
-		std::cout << Message << std::endl;
+		logger::Log("%s", Message);
 		glDeleteShader(Index);
 		CHECK(false)
 		return 0;

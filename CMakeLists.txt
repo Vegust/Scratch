@@ -7,6 +7,7 @@ include_directories(Source/Core)
 
 file(GLOB_RECURSE SCRATCH_CORE_SOURCES "Source/Core/*.cpp")
 file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
+file(GLOB_RECURSE SCRATCH_RESOURCE_SOURCES "Source/Resource/*.cpp")
 file(GLOB_RECURSE SCRATCH_TEST_SCENES_SOURCES "Source/TestScenes/*.cpp")
 file(GLOB_RECURSE SCRATCH_SCENE_OBJECT_SOURCES "Source/SceneObjects/*.cpp")
 
@@ -18,6 +19,7 @@ add_executable(Scratch
 		Source/main.cpp
 		${SCRATCH_CORE_SOURCES}
 		${SCRATCH_RENDERING_SOURCES}
+		${SCRATCH_RESOURCE_SOURCES}
 		${SCRATCH_TEST_SCENES_SOURCES}
 		${SCRATCH_SCENE_OBJECT_SOURCES}
 )

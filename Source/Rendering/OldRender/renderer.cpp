@@ -7,8 +7,7 @@
 #include "shader.h"
 #include "vertex_array.h"
 #include "vertex_buffer_layout.h"
-
-#include <iostream>
+#include "Logger/logger.h"
 
 void GlClearError() {
 	while (glGetError() != GL_NO_ERROR)
@@ -17,8 +16,7 @@ void GlClearError() {
 
 bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber) {
 	if (GLenum Error = glGetError()) {
-		std::cout << "OpenGl Error: (" << Error << "): " << FileName << ":" << LineNumber << ":"
-				  << FunctionName << std::endl;
+		logger::Log("OpenGL Error (%s): %s:%s:%s", Error, FileName, LineNumber, FunctionName);
 		CHECK(false);
 		return false;
 	}
@@ -89,7 +87,6 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 
 	glm::mat4 View =
 		glm::lookAt(mCameraPosition, mCameraPosition + mCameraDirection, mCameraUpVector);
-	glm::mat4 Projection = glm::perspective(glm::radians(mFoV), mAspectRatio, 0.001f, 100.f);
 	glm::vec3 CameraPos{};
 	float CurrentFoV = mFoV;
 	if (!mCustomCamera.expired()) {
@@ -98,6 +95,7 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 		View = CameraHandle->GetViewTransform();
 		CameraPos = CameraHandle->Position;
 	}
+	glm::mat4 Projection = glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
 
 	Material.Bind();
 
