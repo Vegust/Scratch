@@ -23,9 +23,9 @@ struct light {
 
 // global
 layout (std140, binding = 0) uniform u_Global {
-	uniform mat4 u_Projection;
-	uniform bool u_Unlit;
-	uniform bool u_Depth;
+	mat4 u_Projection;
+	bool u_Unlit;
+	bool u_Depth;
 };
 
 // view
@@ -47,42 +47,37 @@ uniform samplerCube u_PointShadowmap;
 uniform mat4 u_Model;
 uniform mat4 u_ModelNormal;
 
+struct VertexOutput {
+	vec3 g_Normal;
+	vec3 g_FragPos;
+	vec2 g_TexCoords;
+	mat3 TBN;
+};
+
 //!shader vertex
 layout (location = 0) in vec4 Position;
 layout (location = 1) in vec3 Normal;
 layout (location = 2) in vec2 TexCoords;
 layout (location = 3) in vec3 Tangent;
 
-out VS_OUT {
-	// all in view space
-	vec3 g_Normal;
-	vec3 g_FragPos;
-	vec2 g_TexCoords;
-	mat3 TBN;
-} vs_out;
+layout (location = 0) out VertexOutput Output;
 
 void main() {
 	mat4 ViewModel = u_View * u_Model;
 	mat4 ViewModelNormal = u_View * u_ModelNormal;
-	vs_out.g_Normal = vec3(ViewModelNormal * vec4(Normal, 0.0));
-	vs_out.g_FragPos = vec3(ViewModel * Position);
-	vs_out.g_TexCoords = TexCoords;
-	gl_Position = u_Projection * vec4(vs_out.g_FragPos, 1);
+	Output.g_Normal = vec3(ViewModelNormal * vec4(Normal, 0.0));
+	Output.g_FragPos = vec3(ViewModel * Position);
+	Output.g_TexCoords = TexCoords;
+	gl_Position = u_Projection * vec4(Output.g_FragPos, 1);
 	vec3 T = normalize(vec3(ViewModel * vec4(Tangent, 0.0)));
 	vec3 N = normalize(vec3(ViewModel * vec4(Normal, 0.0)));
 	vec3 B = cross(T, N);
-	vs_out.TBN = mat3(T, B, N);
+	Output.TBN = mat3(T, B, N);
 };
 
 //!shader fragment
-in VS_OUT {
-	vec3 g_Normal;
-	vec3 g_FragPos;
-	vec2 g_TexCoords;
-	mat3 TBN;
-} vs_in;
-
-out vec4 Color;
+layout (location = 0) in VertexOutput Input;
+layout (location = 0) out vec4 Color;
 
 float PointShadowCalculation(vec3 FragPos, vec3 PointLightPosition, float AttenuationRadius)
 {
@@ -140,7 +135,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	}
 	else
 	{
-		LightDirection = normalize(Light.Position - vs_in.g_FragPos);
+		LightDirection = normalize(Light.Position - Input.g_FragPos);
 	}
 	float DiffuseImpact = max(dot(Normal, LightDirection), 0.0);
 	vec3 DiffuseColor = DiffuseImpact * Light.Color * DiffuseTextureColor;
@@ -161,7 +156,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	{
 		// Normalized to max distance of 100. Coefficients for 100 are from
 		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
-		float Distance = length(Light.Position - vs_in.g_FragPos);
+		float Distance = length(Light.Position - Input.g_FragPos);
 		//float NormalizedDistance = 100.0 * Distance / Light.AttenuationRadius;
 		//Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
 
@@ -187,11 +182,11 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	float ShadowMult = 1.f;
 	if (ShadowmapType == 1)
 	{
-		ShadowMult = 1.f - ShadowCalculation(vs_in.g_FragPos, Normal, LightDirection, Light.ShadowMatrix);
+		ShadowMult = 1.f - ShadowCalculation(Input.g_FragPos, Normal, LightDirection, Light.ShadowMatrix);
 	}
 	else if (ShadowmapType == 2)
 	{
-		ShadowMult = 1.f - PointShadowCalculation(vs_in.g_FragPos, Light.Position, Light.AttenuationRadius);
+		ShadowMult = 1.f - PointShadowCalculation(Input.g_FragPos, Light.Position, Light.AttenuationRadius);
 	}
 
 	return Falloff * Attenuation * (AmbientColor + ShadowMult * (DiffuseColor + SpecularColor));
@@ -199,11 +194,11 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 
 void main() {
 	vec3 CombinedLightColor = vec3(0.f, 0.f, 0.f);
-	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, vs_in.g_TexCoords));
-	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, vs_in.g_TexCoords));
-	vec3 TexturedNormal = texture(u_Material.NormalMap, vs_in.g_TexCoords).rgb;
-	vec3 NormalizedNormal = length(TexturedNormal) > 0.1 ? normalize(vs_in.TBN * (TexturedNormal * 2.0 - 1.0)) : normalize(vs_in.g_Normal);
-	vec3 ViewDirection = normalize(-vs_in.g_FragPos);
+	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, Input.g_TexCoords));
+	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, Input.g_TexCoords));
+	vec3 TexturedNormal = texture(u_Material.NormalMap, Input.g_TexCoords).rgb;
+	vec3 NormalizedNormal = length(TexturedNormal) > 0.1 ? normalize(Input.TBN * (TexturedNormal * 2.0 - 1.0)) : normalize(Input.g_Normal);
+	vec3 ViewDirection = normalize(-Input.g_FragPos);
 
 	if (u_Depth)
 	{
@@ -234,7 +229,7 @@ void main() {
 				);
 			}
 
-			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, vs_in.g_TexCoords)), 1.0);
+			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, Input.g_TexCoords)), 1.0);
 		}
 	}
 }
