@@ -293,20 +293,20 @@ struct tree_allocator_impl {
 	}
 };
 
-void* tree_allocator::AllocateImpl(u64 Size, u8 Alignment) {
+void tree_allocator::ClearStaticImpl() {
+	tree_allocator_impl::Impl.Clear();
+}
+
+void* tree_allocator::StaticAllocateImpl(u64 Size, u8 Alignment) {
 	return tree_allocator_impl::Impl.Allocate(tree_allocator_impl::GranularSize(Size));
 }
 
-void tree_allocator::FreeImpl(void* Ptr) {
+void tree_allocator::StaticFreeImpl(void* Ptr) {
 	tree_allocator_impl::Impl.Free(Ptr);
 }
 
-bool tree_allocator::ExpandImpl(void* Ptr, u64 NewSize) {
+bool tree_allocator::StaticExpandImpl(void* Ptr, u64 NewSize) {
 	return tree_allocator_impl::Impl.Expand(Ptr, tree_allocator_impl::GranularSize(NewSize));
-}
-
-void tree_allocator::ClearStaticImpl() {
-	tree_allocator_impl::Impl.Clear();
 }
 
 static_assert(sizeof(tree_allocator_impl::header) == tree_allocator_impl::Granularity);

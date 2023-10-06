@@ -51,6 +51,32 @@ struct allocator_base {
 	FORCEINLINE bool Expand(void* Ptr, u64 NewSize) {
 		return static_cast<sub_type*>(this)->ExpandImpl(Ptr, NewSize);
 	}
+
+	FORCEINLINE static void* StaticAllocate(u64 Size, u8 Alignment = 8) {
+		if constexpr (Debug) {
+			auto* Ptr = sub_type::StaticAllocateImpl(Size);
+			std::cout << Ptr << " alloc   " << Size << " bytes" << std::endl;
+			return Ptr;
+		} else {
+			auto* Ptr = sub_type::StaticAllocateImpl(Size, Alignment);;
+			CHECK(Ptr)
+			return Ptr;
+		}
+	}
+
+	FORCEINLINE static void StaticFree(void* Ptr) {
+		if (!Ptr) {
+			return;
+		}
+		if constexpr (Debug) {
+			logger::Log("%d dealloc", (u64)Ptr);
+		}
+		sub_type::StaticFreeImpl(Ptr);
+	}
+
+	FORCEINLINE static bool StaticExpand(void* Ptr, u64 NewSize) {
+		return sub_type::StaticExpandImpl(Ptr, NewSize);
+	}
 };
 
 struct malloc_allocator : allocator_base<malloc_allocator> {

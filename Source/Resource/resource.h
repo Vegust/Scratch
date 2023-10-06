@@ -1,5 +1,6 @@
 #pragma once
 
-struct resource_storage {
+#include "ref.h"
 
+struct resource : ref_counted {
 };
