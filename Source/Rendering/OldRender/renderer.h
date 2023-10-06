@@ -38,6 +38,7 @@ public:
 	}
 
 	void Init();
+	void InitGlobalUBO();
 	void InitCubeVAO();
 	void InitNormalCubeVAO();
 	void InitScreenQuadVAO();
@@ -50,7 +51,7 @@ public:
 		const shader& Shader,
 		glm::mat4 Transform) const;
 	void DrawCubes(const shader& Shader, span<glm::mat4> Transforms) const;
-	void DrawCubes(const phong_material& Material, span<glm::mat4> Transforms) const;
+	void DrawCubes(const phong_material& Material, span<glm::mat4> Transforms);
 	void DrawNormalCubes(const shader& Shader, span<glm::mat4> Transforms) const;
 	void Draw2(
 		const vertex_array& VertexArray,
@@ -99,6 +100,18 @@ public:
 	shader mOutlineShader{};
 	shader mNormalsShader{};
 	shader* mActiveShader = &mPhongShader;
+
+	u32 GlobalUBOBindingPoint = 0;
+	u32 GlobalUBOId = 0;
+	struct global_ubo {
+		glm::mat4 mProjection;
+		bool mUnlit;
+		u16: 16;
+		bool mDepth;
+		u64 : 48;
+	} GlobalUBO;
+
+	void UpdateGlobalUBO();
 
 	void SetActiveShader(shader* NewActiveShader) {
 		mActiveShader = NewActiveShader;

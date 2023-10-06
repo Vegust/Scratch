@@ -84,7 +84,7 @@ void renderer::DrawNormalCubes(const shader& Shader, span<glm::mat4> Transforms)
 	}
 }
 
-void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transforms) const {
+void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transforms) {
 	mNormalCubeVAO.Bind();
 
 	glm::mat4 View =
@@ -104,7 +104,10 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 	mActiveShader->Bind();
 
 	// global
-	mActiveShader->SetUniform("u_Projection", Projection);
+	if (GlobalUBO.mProjection != Projection) {
+		GlobalUBO.mProjection = Projection;
+		UpdateGlobalUBO();
+	}
 
 	// view
 	mActiveShader->SetUniform("u_View", View);
@@ -443,6 +446,7 @@ glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const {
 }
 
 void renderer::Init() {
+	InitGlobalUBO();
 	InitCubeVAO();
 	InitNormalCubeVAO();
 	InitDefaultShaders();
@@ -453,8 +457,9 @@ void renderer::Init() {
 void renderer::InitDefaultShaders() {
 	mPhongShader.Compile("Resources/Shaders/BasicShaded.shader");
 	mPhongShader.Bind();
-	mPhongShader.SetUniform("u_Unlit", false);
-	mPhongShader.SetUniform("u_Depth", false);
+	GlobalUBO.mUnlit = false;
+	GlobalUBO.mDepth = false;
+	UpdateGlobalUBO();
 	mOutlineShader.Compile("Resources/Shaders/Outline.shader");
 	mPostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
 	mPostProcessShader.Bind();
@@ -470,26 +475,27 @@ void renderer::ChangeViewMode(view_mode NewViewMode) {
 		mPhongShader.Bind();
 		switch (mViewMode) {
 			case view_mode::lit:
-				mPhongShader.SetUniform("u_Unlit", false);
-				mPhongShader.SetUniform("u_Depth", false);
+				GlobalUBO.mUnlit = false;
+				GlobalUBO.mDepth = false;
 				mDrawElementsMode = GL_TRIANGLES;
 				break;
 			case view_mode::unlit:
-				mPhongShader.SetUniform("u_Unlit", true);
-				mPhongShader.SetUniform("u_Depth", false);
+				GlobalUBO.mUnlit = true;
+				GlobalUBO.mDepth = false;
 				mDrawElementsMode = GL_TRIANGLES;
 				break;
 			case view_mode::wireframe:
-				mPhongShader.SetUniform("u_Unlit", true);
-				mPhongShader.SetUniform("u_Depth", false);
+				GlobalUBO.mUnlit = true;
+				GlobalUBO.mDepth = false;
 				mDrawElementsMode = GL_LINES;
 				break;
 			case view_mode::depth:
-				mPhongShader.SetUniform("u_Unlit", true);
-				mPhongShader.SetUniform("u_Depth", true);
+				GlobalUBO.mUnlit = true;
+				GlobalUBO.mDepth = true;
 				mDrawElementsMode = GL_TRIANGLES;
 				break;
 		}
+		UpdateGlobalUBO();
 	}
 }
 
@@ -518,4 +524,18 @@ void renderer::UIPostProcessControl() {
 	if (ImGui::SliderFloat("Gamma", &mGammaCorrection, 1.f, 5.f)) {
 		mPostProcessShader.SetUniform("u_GammaCorrection", mGammaCorrection);
 	}
+}
+
+void renderer::InitGlobalUBO() {
+	glGenBuffers(1, &GlobalUBOId);
+	glBindBuffer(GL_UNIFORM_BUFFER, GlobalUBOId);
+	glBufferData(GL_UNIFORM_BUFFER, 80, nullptr, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, GlobalUBOBindingPoint, GlobalUBOId);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void renderer::UpdateGlobalUBO() {
+	glBindBuffer(GL_UNIFORM_BUFFER, GlobalUBOId);
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, 80, &GlobalUBO);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
