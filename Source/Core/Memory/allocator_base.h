@@ -7,6 +7,10 @@
 template <typename allocator_type>
 struct allocator_instance {
 	NO_UNIQUE_ADDRESS allocator_type mAllocator{};
+	
+	void SetAllocator(allocator_type& Allocator) {
+		mAllocator = Allocator;
+	}
 };
 
 FORCEINLINE static void* MemoryMalloc(u64 Size) {

@@ -42,8 +42,10 @@ uniform sampler2D u_Shadowmap;
 uniform samplerCube u_PointShadowmap;
 
 // model
-uniform mat4 u_Model;
-uniform mat4 u_ModelNormal;
+layout (std140) uniform u_Model {
+	mat4 u_Transform;
+	mat4 u_TransformNormal;
+};
 
 //!shader vertex
 layout (location = 0) in vec4 Position;
@@ -60,8 +62,8 @@ out VS_OUT {
 } vs_out;
 
 void main() {
-	mat4 ViewModel = u_View * u_Model;
-	mat4 ViewModelNormal = u_View * u_ModelNormal;
+	mat4 ViewModel = u_View * u_Transform;
+	mat4 ViewModelNormal = u_View * u_TransformNormal;
 	vs_out.g_Normal = vec3(ViewModelNormal * vec4(Normal, 0.0));
 	vs_out.g_FragPos = vec3(ViewModel * Position);
 	vs_out.g_TexCoords = TexCoords;
