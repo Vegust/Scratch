@@ -80,10 +80,6 @@ void shader::SetUniform(str_view Name, span<glm::mat4> Matrix) const {
 }
 
 void shader::SetUniform(str_view Name, const phong_material& Material) const {
-	MaybeSetUniform(static_cast<s32>(Material.mDiffuseSlot), Name, "DiffuseMap");
-	MaybeSetUniform(static_cast<s32>(Material.mSpecularSlot), Name, "SpecularMap");
-	MaybeSetUniform(static_cast<s32>(Material.mEmissionSlot), Name, "EmissionMap");
-	MaybeSetUniform(static_cast<s32>(Material.mNormalSlot), Name, "NormalMap");
 	MaybeSetUniform(Material.mShininess, Name, "Shininess");
 }
 

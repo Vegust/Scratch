@@ -20,7 +20,7 @@ test_basic_light::test_basic_light() {
 	mLightShader.Compile("Resources/Shaders/BasicLight.shader");
 
 	mCubeMaterial.InitTextures(
-		"Resources/Textures/Box/BoxDiffuse.png", 0, "Resources/Textures/Box/BoxSpecular.png", 1);
+		"Resources/Textures/Box/BoxDiffuse.png", "Resources/Textures/Box/BoxSpecular.png");
 	//"Resources/Textures/OpenGL_Logo.png",
 	// 2);
 

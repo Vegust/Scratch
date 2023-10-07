@@ -1,7 +1,3 @@
-//
-// Created by Vegust on 17.06.2023.
-//
-
 #include "core_types.h"
 
 #include "backends/imgui_impl_glfw.h"
@@ -90,9 +86,6 @@ static void ProcessInput(GLFWwindow* Window, float DeltaTime) {
 
 int main() {
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	constexpr u32 WindowWidth = 1000;
 	constexpr u32 WindowHeight = 800;
@@ -106,12 +99,13 @@ int main() {
 		glfwTerminate();
 		return -1;
 	}
+
 	glfwMakeContextCurrent(Window);
+	
+	auto GLLoadingResult = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
+	CHECK(GLLoadingResult);
 	glfwSwapInterval(1);
 	glfwSetFramebufferSizeCallback(Window, OnWindowResize);
-
-	auto GLLoadingResult = gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
-	assert(GLLoadingResult);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

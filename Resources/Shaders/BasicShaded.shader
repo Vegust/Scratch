@@ -2,10 +2,6 @@
 #version 460 core
 
 struct material {
-	sampler2D DiffuseMap;
-	sampler2D SpecularMap;
-	sampler2D EmissionMap;
-	sampler2D NormalMap;
 	float Shininess;
 };
 
@@ -33,7 +29,12 @@ uniform mat4 u_View;
 uniform mat4 u_InvertedView;
 
 // material
+#define DIFFUSE_TEXTURE_SLOT 0
+#define SPECULAR_TEXTURE_SLOT 1
+#define EMISSION_TEXTURE_SLOT 2
+#define NORMAL_TEXTURE_SLOT 3
 uniform material u_Material;
+layout (binding = 0) uniform sampler2D u_Textures[8];
 
 // lights
 #define MAX_LIGHTS 10
@@ -42,6 +43,19 @@ uniform int u_NumLights;
 uniform bool u_Shadowmaps;
 uniform sampler2D u_Shadowmap;
 uniform samplerCube u_PointShadowmap;
+
+//#define DIR_SHADOWMAP_BINDING 9
+//#define OMNI_SHADOWMAP_BINDING 10
+//
+//should be
+//layout (std430, binding = 0) restrict readonly buffer ssbo_Lights {
+//	light u_Lights[];
+//	int u_NumLights;
+//	bool u_Shadowmaps;
+//};
+//
+//layout (binding = DIR_SHADOWMAP_BINDING) uniform sampler2D u_Shadowmap;
+//layout (binding = OMNI_SHADOWMAP_BINDING) uniform samplerCube u_PointShadowmap;
 
 // model
 uniform mat4 u_Model;
@@ -194,9 +208,9 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 
 void main() {
 	vec3 CombinedLightColor = vec3(0.f, 0.f, 0.f);
-	vec3 DiffuseTextureColor = vec3(texture(u_Material.DiffuseMap, Input.g_TexCoords));
-	vec3 SpecularTextureColor = vec3(texture(u_Material.SpecularMap, Input.g_TexCoords));
-	vec3 TexturedNormal = texture(u_Material.NormalMap, Input.g_TexCoords).rgb;
+	vec3 DiffuseTextureColor = vec3(texture(u_Textures[DIFFUSE_TEXTURE_SLOT], Input.g_TexCoords));
+	vec3 SpecularTextureColor = vec3(texture(u_Textures[SPECULAR_TEXTURE_SLOT], Input.g_TexCoords));
+	vec3 TexturedNormal = texture(u_Textures[NORMAL_TEXTURE_SLOT], Input.g_TexCoords).rgb;
 	vec3 NormalizedNormal = length(TexturedNormal) > 0.1 ? normalize(Input.TBN * (TexturedNormal * 2.0 - 1.0)) : normalize(Input.g_Normal);
 	vec3 ViewDirection = normalize(-Input.g_FragPos);
 
@@ -229,7 +243,7 @@ void main() {
 				);
 			}
 
-			Color = vec4(CombinedLightColor + vec3(texture(u_Material.EmissionMap, Input.g_TexCoords)), 1.0);
+			Color = vec4(CombinedLightColor + vec3(texture(u_Textures[EMISSION_TEXTURE_SLOT], Input.g_TexCoords)), 1.0);
 		}
 	}
 }

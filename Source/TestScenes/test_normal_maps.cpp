@@ -14,13 +14,9 @@ test_normal_maps::test_normal_maps() {
 
 	mCubeMaterial.InitTextures(
 		"Resources/Textures/Bricks/brickwall.jpg",
-		0,
 		"Resources/Textures/DefaultSpecular.jpg",
-		1,
 		"",
-		2,
-		"Resources/Textures/Bricks/brickwall_normal.jpg",
-		3);
+		"Resources/Textures/Bricks/brickwall_normal.jpg");
 	mCubeMaterial.mShininess = 8.f;
 	mSceneFramebuffer.Reload();
 

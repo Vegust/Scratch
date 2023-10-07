@@ -6,7 +6,7 @@ REGISTER_TEST_SCENE(test_cubemap, "07 Cubemap")
 
 test_cubemap::test_cubemap() {
 	mCubeMaterial.InitTextures(
-		"Resources/Textures/Box/BoxDiffuse.png", 0, "Resources/Textures/Box/BoxSpecular.png", 1);
+		"Resources/Textures/Box/BoxDiffuse.png", "Resources/Textures/Box/BoxSpecular.png");
 
 	mSkybox.Load({"Resources/Textures/Skybox_Mountains"});
 
