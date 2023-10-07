@@ -1,20 +1,28 @@
 //!shader shared
 #version 460 core
 
+#define DIFFUSE_TEXTURE_SLOT 0
+#define SPECULAR_TEXTURE_SLOT 1
+#define EMISSION_TEXTURE_SLOT 2
+#define NORMAL_TEXTURE_SLOT 3
+
+#define DIR_SHADOWMAP_BINDING 9
+#define OMNI_SHADOWMAP_BINDING 10
+
 struct material {
 	float Shininess;
 };
 
 struct light {
-	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
 	vec3 Color;
 	float AmbientStrength;
 	vec3 Position;
-	vec3 Direction;
 	float AttenuationRadius;
+	vec3 Direction;
 	float AngularAttenuation;
-	float AngularAttenuationFalloffStart;
 	mat4 ShadowMatrix;
+	float AngularAttenuationFalloffStart;
+	int Type; // light_type: 0 - point, 1 - directional, 2 - spot
 };
 
 // global
@@ -29,33 +37,16 @@ uniform mat4 u_View;
 uniform mat4 u_InvertedView;
 
 // material
-#define DIFFUSE_TEXTURE_SLOT 0
-#define SPECULAR_TEXTURE_SLOT 1
-#define EMISSION_TEXTURE_SLOT 2
-#define NORMAL_TEXTURE_SLOT 3
 uniform material u_Material;
 layout (binding = 0) uniform sampler2D u_Textures[8];
 
 // lights
-#define MAX_LIGHTS 10
-uniform light u_Lights[MAX_LIGHTS];
 uniform int u_NumLights;
-uniform bool u_Shadowmaps;
-uniform sampler2D u_Shadowmap;
-uniform samplerCube u_PointShadowmap;
-
-//#define DIR_SHADOWMAP_BINDING 9
-//#define OMNI_SHADOWMAP_BINDING 10
-//
-//should be
-//layout (std430, binding = 0) restrict readonly buffer ssbo_Lights {
-//	light u_Lights[];
-//	int u_NumLights;
-//	bool u_Shadowmaps;
-//};
-//
-//layout (binding = DIR_SHADOWMAP_BINDING) uniform sampler2D u_Shadowmap;
-//layout (binding = OMNI_SHADOWMAP_BINDING) uniform samplerCube u_PointShadowmap;
+layout (std140, binding = 0) restrict readonly buffer ssbo_Lights {
+	light u_Lights[];
+};
+layout (binding = DIR_SHADOWMAP_BINDING) uniform sampler2D u_Shadowmap;
+layout (binding = OMNI_SHADOWMAP_BINDING) uniform samplerCube u_PointShadowmap;
 
 // model
 uniform mat4 u_Model;
@@ -140,16 +131,19 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 {
 	// Ambient
 	vec3 AmbientColor = Light.AmbientStrength * Light.Color * DiffuseTextureColor;
+	
+	vec3 LightViewPosition = vec3(u_View * vec4(Light.Position, 1));
+	vec3 LightViewDirection = vec3(u_View * vec4(Light.Direction, 0));
 
 	// Diffuse
 	vec3 LightDirection;
 	if (Light.Type == 1) //directional
 	{
-		LightDirection = normalize(-Light.Direction);
+		LightDirection = normalize(-LightViewDirection);
 	}
 	else
 	{
-		LightDirection = normalize(Light.Position - Input.g_FragPos);
+		LightDirection = normalize(LightViewPosition - Input.g_FragPos);
 	}
 	float DiffuseImpact = max(dot(Normal, LightDirection), 0.0);
 	vec3 DiffuseColor = DiffuseImpact * Light.Color * DiffuseTextureColor;
@@ -170,7 +164,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	{
 		// Normalized to max distance of 100. Coefficients for 100 are from
 		// https://wiki.ogre3d.org/tiki-index.php?page=-Point+Light+Attenuation
-		float Distance = length(Light.Position - Input.g_FragPos);
+		float Distance = length(LightViewPosition - Input.g_FragPos);
 		//float NormalizedDistance = 100.0 * Distance / Light.AttenuationRadius;
 		//Attenuation = 1.0 / (1.0 + NormalizedDistance * 0.045 + NormalizedDistance * NormalizedDistance * 0.0075);
 
@@ -184,7 +178,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	{
 		float Cutoff = cos(radians(Light.AngularAttenuation));
 		float FalloffStart = max(Cutoff, cos(radians(Light.AngularAttenuationFalloffStart)));
-		float Theta = dot(LightDirection, normalize(-Light.Direction));
+		float Theta = dot(LightDirection, normalize(-LightViewDirection));
 
 		Falloff = clamp(1.0 - (FalloffStart - Theta) / (FalloffStart - Cutoff), 0.0, 1.0);
 		if (Theta < Cutoff)
@@ -200,7 +194,7 @@ vec3 CalcLightColor(light Light, vec3 DiffuseTextureColor, vec3 SpecularTextureC
 	}
 	else if (ShadowmapType == 2)
 	{
-		ShadowMult = 1.f - PointShadowCalculation(Input.g_FragPos, Light.Position, Light.AttenuationRadius);
+		ShadowMult = 1.f - PointShadowCalculation(Input.g_FragPos, LightViewPosition, Light.AttenuationRadius);
 	}
 
 	return Falloff * Attenuation * (AmbientColor + ShadowMult * (DiffuseColor + SpecularColor));
@@ -239,7 +233,7 @@ void main() {
 					SpecularTextureColor,
 					NormalizedNormal,
 					ViewDirection,
-					u_Shadowmaps ? (i == 0 ? 1 : 2) : 0
+					i == 0 ? 1 : 2
 				);
 			}
 

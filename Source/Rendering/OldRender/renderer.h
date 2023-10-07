@@ -39,6 +39,7 @@ public:
 
 	void Init();
 	void InitGlobalUBO();
+	void InitLightsSSBO();
 	void InitCubeVAO();
 	void InitNormalCubeVAO();
 	void InitScreenQuadVAO();
@@ -110,14 +111,18 @@ public:
 		bool mDepth;
 		u64 : 48;
 	} GlobalUBO;
-
 	void UpdateGlobalUBO();
+	
+	u32 LightsSSBOBindingPoint = 0;
+	u32 LightsSSBO{0};
+	u32 LastUpdateSize = 0;
+	dyn_array<light> mSceneLights{};
+	void UpdateLightsSSBO();
+	
 
 	void SetActiveShader(shader* NewActiveShader) {
 		mActiveShader = NewActiveShader;
 	}
-
-	dyn_array<light> mSceneLights{};
 
 	void UIRendererControls() {
 		UIViewModeControl();

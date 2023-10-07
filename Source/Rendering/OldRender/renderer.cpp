@@ -115,26 +115,27 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 	mActiveShader->SetUniform("u_Material", Material);
 
 	// lights
-	mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
+	mActiveShader->SetUniform("u_NumLights", 2);
+	UpdateLightsSSBO();
+	//mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
 
 	for (const auto& Transform : Transforms) {
-
 		// model
 		mActiveShader->SetUniform("u_Model", Transform);
 		mActiveShader->SetUniform("u_ModelNormal", glm::transpose(glm::inverse(Transform)));
 		GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
 
-//		if (mNormals) {
-//			mNormalsShader.Bind();
-//			mNormalsShader.SetUniform("u_ViewModel", ViewModel);
-//			mNormalsShader.SetUniform(
-//				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
-//			glm::mat4 ProjectionMatrix =
-//				glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
-//			mNormalsShader.SetUniform("u_Projection", ProjectionMatrix);
-//
-//			GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
-//		}
+		//		if (mNormals) {
+		//			mNormalsShader.Bind();
+		//			mNormalsShader.SetUniform("u_ViewModel", ViewModel);
+		//			mNormalsShader.SetUniform(
+		//				"u_NormalMatrix", glm::mat3(glm::transpose(glm::inverse(ViewModel))));
+		//			glm::mat4 ProjectionMatrix =
+		//				glm::perspective(glm::radians(CurrentFoV), mAspectRatio, 0.001f, 100.f);
+		//			mNormalsShader.SetUniform("u_Projection", ProjectionMatrix);
+		//
+		//			GL_CALL(glDrawArrays(mDrawElementsMode, 0, 36));
+		//		}
 	}
 }
 
@@ -445,6 +446,7 @@ glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const {
 
 void renderer::Init() {
 	InitGlobalUBO();
+	InitLightsSSBO();
 	InitCubeVAO();
 	InitNormalCubeVAO();
 	InitDefaultShaders();
@@ -536,4 +538,32 @@ void renderer::UpdateGlobalUBO() {
 	glBindBuffer(GL_UNIFORM_BUFFER, GlobalUBOId);
 	glBufferSubData(GL_UNIFORM_BUFFER, 0, 80, &GlobalUBO);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+}
+
+void renderer::InitLightsSSBO() {
+	glGenBuffers(1, &LightsSSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, LightsSSBO);
+	GL_CALL(glBufferData(
+		GL_SHADER_STORAGE_BUFFER,
+		sizeof(light) * mSceneLights.Size(),
+		mSceneLights.Data(),
+		GL_DYNAMIC_DRAW));
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsSSBOBindingPoint, LightsSSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void renderer::UpdateLightsSSBO() {
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, LightsSSBO);
+	if (mSceneLights.Size() > LastUpdateSize) {
+		LastUpdateSize = mSceneLights.Size();
+		glBufferData(
+			GL_SHADER_STORAGE_BUFFER,
+			mSceneLights.Size() * sizeof(light),
+			mSceneLights.Data(),
+			GL_DYNAMIC_DRAW);
+	} else {
+		glBufferSubData(
+			GL_SHADER_STORAGE_BUFFER, 0, mSceneLights.Size() * sizeof(light), mSceneLights.Data());
+	}
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

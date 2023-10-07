@@ -2,6 +2,7 @@
 
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
+#include "Rendering/bind_constants.h"
 
 REGISTER_TEST_SCENE(test_shadowmaps, "09 Shadowmaps")
 
@@ -139,18 +140,12 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 		glClearColor(0.8f, 0.8f, 1.0f, 0.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		constexpr int32 ShadowmapSlot = 5;
-		glActiveTexture(GL_TEXTURE0 + ShadowmapSlot);
+		glActiveTexture(GL_TEXTURE0 + DIR_SHADOWMAP_TEXTURE_SLOT);
 		glBindTexture(GL_TEXTURE_2D, mDirectionalShadowmap.mDepthStencilTextureId);
-
-		constexpr int32 PointShadowmapSlot = 6;
-		glActiveTexture(GL_TEXTURE0 + PointShadowmapSlot);
+		glActiveTexture(GL_TEXTURE0 + OMNI_SHADOWMAP_TEXTURE_SLOT);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, mPointShadowmap.mDepthStencilTextureId);
 
 		Renderer.mActiveShader->Bind();
-		Renderer.mActiveShader->SetUniform("u_Shadowmaps", true);
-		Renderer.mActiveShader->SetUniform("u_Shadowmap", ShadowmapSlot);
-		Renderer.mActiveShader->SetUniform("u_PointShadowmap", PointShadowmapSlot);
 
 		Renderer.DrawCubes(mCubeMaterial, mStaticCubes);
 		Renderer.DrawCubes(mCubeMaterial, mDynamicCubes);
