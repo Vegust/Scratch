@@ -32,12 +32,7 @@ public:
 		const element_buffer& IndexBuffer,
 		const shader& Shader);
 
-	static renderer& Get() {
-		static renderer Renderer;
-		return Renderer;
-	}
-
-	void Init();
+	void Init(u32 WindowHeight, u32 WindowWidth);
 	void InitGlobalUBO();
 	void InitLightsSSBO();
 	void InitCubeVAO();
@@ -104,21 +99,22 @@ public:
 
 	u32 GlobalUBOBindingPoint = 0;
 	u32 GlobalUBOId = 0;
+
 	struct global_ubo {
 		glm::mat4 mProjection;
 		bool mUnlit;
-		u16: 16;
+		u16 : 16;
 		bool mDepth;
 		u64 : 48;
 	} GlobalUBO;
+
 	void UpdateGlobalUBO();
-	
+
 	u32 LightsSSBOBindingPoint = 0;
 	u32 LightsSSBO{0};
 	u32 LastUpdateSize = 0;
 	dyn_array<light> mSceneLights{};
 	void UpdateLightsSSBO();
-	
 
 	void SetActiveShader(shader* NewActiveShader) {
 		mActiveShader = NewActiveShader;

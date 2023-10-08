@@ -1,15 +1,20 @@
 #pragma once
 
-#include "test_scene.h"
+#include "SceneObjects/phong_material.h"
+#include "SceneObjects/camera.h"
+#include "Rendering/OldRender/framebuffer.h"
+#include "Rendering/OldRender/shader.h"
+#include "Rendering/OldRender/cubemap.h"
 
-class test_shadowmaps : public test_scene {
+class renderer;
+
+class test_shadowmaps {
 public:
-	test_shadowmaps();
-
-	virtual void OnRender(renderer& Renderer) override;
-	virtual void OnIMGuiRender() override;
-	virtual void OnScreenSizeChanged(int NewWidth, int NewHeight) override;
-	virtual void OnUpdate(float DeltaTime) override;
+	void Init(renderer& Renderer);
+	void OnRender(renderer& Renderer);
+	void OnIMGuiRender(renderer& Renderer);
+	void OnScreenSizeChanged(int NewWidth, int NewHeight);
+	void OnUpdate(float DeltaTime);
 
 	phong_material mCubeMaterial;
 	std::shared_ptr<camera> mCamera{nullptr};

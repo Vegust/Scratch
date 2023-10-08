@@ -3,11 +3,10 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 #include "Rendering/bind_constants.h"
+#include "Rendering/OldRender/renderer.h"
 
-REGISTER_TEST_SCENE(test_shadowmaps, "09 Shadowmaps")
-
-test_shadowmaps::test_shadowmaps() {
-	auto& SceneLights = renderer::Get().mSceneLights;
+void test_shadowmaps::Init(renderer& Renderer) {
+	auto& SceneLights = Renderer.mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];
 	Light.mType = light_type::directional;
 	Light.mAmbientStrength = 0.2f;
@@ -39,7 +38,7 @@ test_shadowmaps::test_shadowmaps() {
 
 	mCamera = std::make_shared<camera>();
 	mCamera->Position = glm::vec3{0.f, 1.f, 10.f};
-	renderer::Get().mCustomCamera = mCamera;
+	Renderer.mCustomCamera = mCamera;
 
 	SetupCubeTransforms();
 }
@@ -58,7 +57,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	constexpr float NearPlane = 1.f;
 	constexpr float FarPlane = 70.f;
 	constexpr float SideDistance = 15.f;
-	auto& Light = renderer::Get().mSceneLights[0];
+	auto& Light = Renderer.mSceneLights[0];
 	mat4 LightProjection =
 		ortho(-SideDistance, SideDistance, -SideDistance, SideDistance, NearPlane, FarPlane);
 	// Directional light position is relative to player
@@ -76,7 +75,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 						 static_cast<float>(mDirectionalShadowmap.mParams.mHeight);
 	constexpr float Near = 0.1f;
 	constexpr float Far = 25.0f;
-	const auto& PointLight = renderer::Get().mSceneLights[1];
+	const auto& PointLight = Renderer.mSceneLights[1];
 	mat4 PointLightProjection =
 		perspective(glm::radians(90.0f), Aspect, Near, PointLight.mAttenuationRadius);
 	static const array<mat4, 6> PointLightViews{
@@ -157,7 +156,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	}
 }
 
-void test_shadowmaps::OnIMGuiRender() {
+void test_shadowmaps::OnIMGuiRender(renderer& Renderer) {
 	ImGui::SliderFloat("Slomo", &mUpdateSpeed, 0.f, 2.f);
 	ImGui::Checkbox("Draw Shadowmap", &mDrawShadowmap);
 	if (ImGui::InputInt("Shadowmap Resolution", &mShadowmapResolution)) {
@@ -187,8 +186,8 @@ void test_shadowmaps::OnIMGuiRender() {
 	}
 	if (ImGui::CollapsingHeader("Lights")) {
 		ImGui::InputInt("Light", &mLightEditIndex);
-		mLightEditIndex = mLightEditIndex % renderer::Get().mSceneLights.Size();
-		renderer::Get().mSceneLights[mLightEditIndex].UIControlPanel("");
+		mLightEditIndex = mLightEditIndex % Renderer.mSceneLights.Size();
+		Renderer.mSceneLights[mLightEditIndex].UIControlPanel("");
 	}
 }
 

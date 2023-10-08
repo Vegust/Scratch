@@ -36,6 +36,7 @@ void renderer::Draw(
 }
 
 void renderer::Clear() {
+	glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -117,7 +118,7 @@ void renderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transfo
 	// lights
 	mActiveShader->SetUniform("u_NumLights", 2);
 	UpdateLightsSSBO();
-	//mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
+	// mActiveShader->SetUniform("u_Lights", "u_NumLights", mSceneLights, View);
 
 	for (const auto& Transform : Transforms) {
 		// model
@@ -444,7 +445,20 @@ glm::mat4 renderer::CalcMVPForTransform(const glm::mat4& Transform) const {
 	return ProjectionMatrix * ViewMatrix * ModelMatrix;
 }
 
-void renderer::Init() {
+void renderer::Init(u32 WindowHeight, u32 WindowWidth) {
+	mCurrentHeight = WindowHeight;
+	mCurrentWidth = WindowWidth;
+	mAspectRatio = static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_STENCIL_TEST);
+	glStencilMask(0xFF);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glEnable(GL_CULL_FACE);
+
 	InitGlobalUBO();
 	InitLightsSSBO();
 	InitCubeVAO();
