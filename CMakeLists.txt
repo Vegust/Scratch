@@ -8,6 +8,7 @@ include_directories(Source/Core)
 file(GLOB_RECURSE SCRATCH_CORE_SOURCES "Source/Core/*.cpp")
 file(GLOB_RECURSE SCRATCH_APPLICATION_SOURCES "Source/Application/*.cpp")
 file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
+file(GLOB_RECURSE SCRATCH_UI_SOURCES "Source/UI/*.cpp")
 file(GLOB_RECURSE SCRATCH_RESOURCE_SOURCES "Source/Resource/*.cpp")
 file(GLOB_RECURSE SCRATCH_SCENE_OBJECT_SOURCES "Source/SceneObjects/*.cpp")
 
@@ -16,13 +17,14 @@ add_compile_definitions(NOMINMAX)
 add_compile_definitions(WIN32_LEAN_AND_MEAN)
 
 add_executable(Scratch
-		Source/main.cpp
-		Source/test_shadowmaps.cpp
-		${SCRATCH_CORE_SOURCES}
-		${SCRATCH_APPLICATION_SOURCES}
-		${SCRATCH_RENDERING_SOURCES}
-		${SCRATCH_RESOURCE_SOURCES}
-		${SCRATCH_SCENE_OBJECT_SOURCES}
+        Source/main.cpp
+        Source/test_shadowmaps.cpp
+        ${SCRATCH_CORE_SOURCES}
+        ${SCRATCH_APPLICATION_SOURCES}
+        ${SCRATCH_RENDERING_SOURCES}
+        ${SCRATCH_UI_SOURCES}
+        ${SCRATCH_RESOURCE_SOURCES}
+        ${SCRATCH_SCENE_OBJECT_SOURCES}
 )
 
 # ----------- Testing ------------
@@ -58,14 +60,14 @@ include_directories(Source/ThirdParty/glm)
 # --------- dear imgui -----------
 include_directories(Source/ThirdParty/imgui)
 add_library(imgui STATIC
-		Source/ThirdParty/imgui/imgui.cpp
-		Source/ThirdParty/imgui/imgui_demo.cpp
-		Source/ThirdParty/imgui/imgui_draw.cpp
-		Source/ThirdParty/imgui/imgui_widgets.cpp
-		Source/ThirdParty/imgui/imgui_tables.cpp
-		# opengl and glfw backends
-		Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
-		Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
+        Source/ThirdParty/imgui/imgui.cpp
+        Source/ThirdParty/imgui/imgui_demo.cpp
+        Source/ThirdParty/imgui/imgui_draw.cpp
+        Source/ThirdParty/imgui/imgui_widgets.cpp
+        Source/ThirdParty/imgui/imgui_tables.cpp
+        # opengl and glfw backends
+        Source/ThirdParty/imgui/backends/imgui_impl_opengl3.cpp
+        Source/ThirdParty/imgui/backends/imgui_impl_glfw.cpp
 )
 target_link_libraries(Scratch imgui)
 # --------------------------------

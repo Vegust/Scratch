@@ -1,4 +1,7 @@
 #include "window_windows.h"
+
+#ifdef WIN32
+
 #include "Application/Input/input_state.h"
 #include "Rendering/rendering_types.h"
 #include "Rendering/OldRender/renderer.h"
@@ -13,7 +16,7 @@ static application* GetApplication(struct GLFWwindow* Window) {
 static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight) {
 	if (application* App = GetApplication(Window)) {
 		App->GetRenderer().OnScreenSizeChanged(NewWidth, NewHeight);
-		App->TestMap.OnScreenSizeChanged(NewWidth, NewHeight);
+		App->GetMap().OnScreenSizeChanged(NewWidth, NewHeight);
 	}
 }
 
@@ -65,7 +68,7 @@ static void OnMouseAction(GLFWwindow* Window, s32 MouseButton, s32 Action, s32 M
 
 void window_windows::Init(application* App, u32 WindowWidth, u32 WindowHeight) {
 	glfwInit();
-	mWindow = glfwCreateWindow(WindowWidth, WindowHeight, "Scratch", nullptr, nullptr);
+	mWindow = glfwCreateWindow((s32) WindowWidth, (s32) WindowHeight, "Scratch", nullptr, nullptr);
 	CHECK(mWindow)
 	glfwSetWindowUserPointer(mWindow, App);
 	SetVSync(true);
@@ -126,3 +129,5 @@ bool window_windows::GetVSync() const {
 void window_windows::CloseWindow() {
 	glfwSetWindowShouldClose(mWindow, true);
 }
+
+#endif

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef WIN32
+
 #include "core_types.h"
 
 class application;
@@ -30,3 +32,5 @@ public:
 
 	void* GetApiLoadingFunction(rendering_api Api);
 };
+
+#endif

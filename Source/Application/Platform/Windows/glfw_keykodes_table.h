@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef WIN32
+
 #include "Application/Input/input_types.h"
 #include <GLFW/glfw3.h>
 
@@ -78,3 +80,5 @@ constexpr inline array<input_key, 3> GlfwMouseToInputKey = {
 	input_key::mouse_left,
 	input_key::mouse_right,
 	input_key::mouse_middle};
+
+#endif

@@ -6,6 +6,7 @@
 #include "Rendering/rendering_types.h"
 #include "Rendering/OldRender/renderer.h"
 #include "test_shadowmaps.h"
+#include "UI/ui.h"
 
 class application {
 protected:
@@ -15,17 +16,22 @@ protected:
 	renderer mOldRenderer{};
 	// ------------------------------------------------
 
-	// ------------------------------------------------
+	// TODO remove ------------------------------------
+	test_shadowmaps TestMap{};
+
+	ui mUI{};
 	window mWindow{};
 	input_state mInputState{};
-	
-	// --------- ???? -------------
 	float mLastFrameTime{0};
 	float mDeltaTime{0};
 
 public:
-	// TODO remove ------------------------------------
-	test_shadowmaps TestMap{};
+	application();
+	void Run();
+
+	test_shadowmaps& GetMap() {
+		return TestMap;
+	}
 
 	window& GetWindow() {
 		return mWindow;
@@ -38,7 +44,4 @@ public:
 	renderer& GetRenderer() {
 		return mOldRenderer;
 	}
-
-	application();
-	void Run();
 };

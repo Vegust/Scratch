@@ -26,7 +26,6 @@ bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber);
 
 class renderer {
 public:
-	static void Clear();
 	static void Draw(
 		const vertex_array& VertexArray,
 		const element_buffer& IndexBuffer,
