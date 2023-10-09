@@ -14,23 +14,28 @@ protected:
 	rendering_context mRenderingContext{};
 	renderer mOldRenderer{};
 	// ------------------------------------------------
-	// TODO remove ------------------------------------
-	test_shadowmaps TestMap{};
+
 	// ------------------------------------------------
 	window mWindow{};
 	input_state mInputState{};
 	
 	// --------- ???? -------------
 	float LastFrameTime{0};
-	
 
 public:
+	// TODO remove ------------------------------------
+	test_shadowmaps TestMap{};
+
 	const window& GetWindow() const {
 		return mWindow;
 	}
 
 	const input_state& GetInputState() const {
 		return mInputState;
+	}
+
+	renderer& GetRenderer() {
+		return mOldRenderer;
 	}
 
 	application();

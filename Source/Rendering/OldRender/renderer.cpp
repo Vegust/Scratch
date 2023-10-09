@@ -40,6 +40,13 @@ void renderer::Clear() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void renderer::OnScreenSizeChanged(u32 NewWidth, u32 NewHeight) {
+	glViewport(0, 0, (s32) NewWidth, (s32) NewHeight);
+	mAspectRatio = static_cast<float>(NewWidth) / static_cast<float>(NewHeight);
+	mCurrentHeight = NewHeight;
+	mCurrentWidth = NewWidth;
+}
+
 void renderer::Draw(
 	const vertex_array& VertexArray,
 	const element_buffer& IndexBuffer,

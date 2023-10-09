@@ -1,5 +1,7 @@
 #pragma once
 
-enum class rendering_api {
+#include "core_types.h"
+
+enum class rendering_api : u8 {
 	opengl
 };

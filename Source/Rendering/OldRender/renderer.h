@@ -41,6 +41,8 @@ public:
 	void InitSkyboxVAO();
 	void InitDefaultShaders();
 
+	void OnScreenSizeChanged(u32 NewWidth, u32 NewHeight);
+
 	void Draw(
 		const vertex_array& VertexArray,
 		const element_buffer& IndexBuffer,

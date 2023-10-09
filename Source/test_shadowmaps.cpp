@@ -20,6 +20,8 @@ void test_shadowmaps::Init(renderer& Renderer) {
 	PointLight.mPosition = {0.f, 8.f, -5.f};
 
 	framebuffer_params Params;
+	Params.mHeight = mShadowmapResolution;
+	Params.mWidth = mShadowmapResolution;
 	Params.mType = framebuffer_type::shadowmap;
 	mDirectionalShadowmap.Reload(Params);
 	Params.mType = framebuffer_type::shadowmap_omni;
@@ -34,7 +36,11 @@ void test_shadowmaps::Init(renderer& Renderer) {
 		"",
 		"Resources/Textures/Bricks/brickwall_normal.jpg");
 
-	mSceneFramebuffer.Reload();
+	Params.mType = framebuffer_type::scene;
+	Params.mWidth = (s32)Renderer.mCurrentWidth;
+	Params.mHeight = (s32)Renderer.mCurrentHeight;
+	mSceneFramebuffer.Reload(Params);
+
 
 	mCamera = std::make_shared<camera>();
 	mCamera->Position = glm::vec3{0.f, 1.f, 10.f};
@@ -192,7 +198,9 @@ void test_shadowmaps::OnIMGuiRender(renderer& Renderer) {
 }
 
 void test_shadowmaps::OnScreenSizeChanged(int NewWidth, int NewHeight) {
-	mSceneFramebuffer.Reload();
+	mSceneFramebuffer.mParams.mHeight = NewHeight;
+	mSceneFramebuffer.mParams.mWidth = NewWidth;
+	mSceneFramebuffer.Reload(mSceneFramebuffer.mParams);
 }
 
 void test_shadowmaps::SetupCubeTransforms() {

@@ -24,7 +24,7 @@ struct framebuffer {
 	framebuffer(framebuffer&& InFramebuffer) noexcept;
 	framebuffer& operator=(framebuffer&& InFramebuffer) noexcept;
 
-	void Reload(const framebuffer_params& InParams = {});
+	void Reload(const framebuffer_params& InParams);
 	void Bind();
 	void Reset();
 

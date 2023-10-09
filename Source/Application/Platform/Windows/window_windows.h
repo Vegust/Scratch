@@ -1,28 +1,38 @@
 #pragma once
 
 #include "core_types.h"
-#include "Rendering/rendering_types.h"
 
-// used as user data pointer in platform callbacks
 class application;
+class renderer;
 struct GLFWwindow;
+struct input_state;
+enum class rendering_api : u8;
 
 class window_windows {
 public:
 	GLFWwindow* mWindow{nullptr};
-	
+	bool mVSync{true};
+	bool mCursorEnabled{true};
+
 	~window_windows();
-	
+
 	void Init(application* App, u32 WindowWidth, u32 WindowHeight);
-	
-	application* GetApplication();
-	application* GetApplication(GLFWwindow* Window);
-	
+
 	bool ShouldClose();
-	
-	void ProcessEvents();
+	void ProcessEvents(input_state& InputState, renderer& Renderer, float DeltaTime);
 	void SetContextCurrent();
-	void SetVSync(bool Enabled);
 	void SwapBuffers();
+	void SetCursorEnabled(bool Enabled);
+
+	[[nodiscard]] bool GetCursorEnabled() const {
+		return mCursorEnabled;
+	}
+
+	void SetVSync(bool Enabled);
+
+	[[nodiscard]] bool GetVSync() const {
+		return mVSync;
+	}
+
 	void* GetApiLoadingFunction(rendering_api Api);
 };
