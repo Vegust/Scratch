@@ -24,10 +24,16 @@ struct array {
 		: array(InitList.begin(), InitList.size()) {
 	}
 
-	FORCEINLINE constexpr array(const array& Other) : mData{Other.mData} {
+	FORCEINLINE constexpr array(const array& Other) {
+		for (s32 i = 0; i < mSize; ++i) {
+			mData[i] = Other.mData[i];
+		}
 	}
 
-	FORCEINLINE constexpr array(const array&& Other) noexcept : mData{std::move(Other.mData)} {
+	FORCEINLINE constexpr array(const array&& Other) noexcept {
+		for (s32 i = 0; i < mSize; ++i) {
+			mData[i] = std::move(Other.mData[i]);
+		}
 	}
 
 	template <index_type OtherSize>

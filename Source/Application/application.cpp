@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 #include "application.h"
-#include "Application/Platform/utils.h"
+#include "Application/Platform/platform.h"
 
 // TODO remove -------------------------
 #include "backends/imgui_impl_opengl3.h"
@@ -12,13 +12,35 @@
 
 void application::Run() {
 	while (!mWindow.ShouldClose()) {
-		const float NewTime = platform_utils::GetTime();
-		const float DeltaTime = NewTime - LastFrameTime;
-		LastFrameTime = NewTime;
-		mWindow.ProcessEvents(mInputState, mOldRenderer, DeltaTime);
-		TestMap.OnUpdate(DeltaTime);
+		const float NewTime = platform::GetTime();
+		mDeltaTime = NewTime - mLastFrameTime;
+		mLastFrameTime = NewTime;
+
+		mInputState.OnNewFrame();
+		mWindow.ProcessEvents(mOldRenderer, mDeltaTime);
+
+		// ---- temporary place to handle input ----
+		ImGuiIO& io = ImGui::GetIO();
+		if (!io.WantCaptureKeyboard && !io.WantCaptureMouse) {
+			if (GetInputState().PressedThisFrame(input_key::keyboard_escape)) {
+				mWindow.CloseWindow();
+			}
+			// for now camera = controller
+			if (!mOldRenderer.mCustomCamera.expired()) {
+				const bool CursorHeld = GetInputState().Pressed(input_key::mouse_left);
+				mWindow.SetCursorEnabled(!CursorHeld);
+				if (CursorHeld) {
+					auto CameraHandle = mOldRenderer.mCustomCamera.lock();
+					CameraHandle->ProcessInput(GetInputState(), mDeltaTime);
+				}
+			}
+		}
+		// -----------------------------------------
+
+		TestMap.OnUpdate(mDeltaTime);
 		renderer::Clear();
 		TestMap.OnRender(mOldRenderer);
+
 		// TODO remove -------
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -26,7 +48,7 @@ void application::Run() {
 		ImGui::Begin(
 			"Debug", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
 		ImGui::SetWindowFontScale(1.5f);
-		ImGui::Text("Frame time %.4f ms", 1000.0 * DeltaTime);
+		ImGui::Text("Frame time %.4f ms", 1000.0 * mDeltaTime);
 		ImGui::Text("%.1f FPS", static_cast<double>(ImGui::GetIO().Framerate));
 		{
 			if (ImGui::Checkbox("VSync", &mWindow.mVSync)) {
@@ -62,6 +84,6 @@ application::application() {
 	ImGui_ImplOpenGL3_Init("#version 460");
 	// --------------------------------------------------
 
-	LastFrameTime = platform_utils::GetTime();
+	mLastFrameTime = platform::GetTime();
 	TestMap.Init(mOldRenderer);
 }

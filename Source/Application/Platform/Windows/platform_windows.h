@@ -1,5 +1,5 @@
 #pragma once
 
-struct utils_windows {
+struct platform_windows {
 	static float GetTime();
 };

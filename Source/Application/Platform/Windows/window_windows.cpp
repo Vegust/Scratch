@@ -1,10 +1,9 @@
 #include "window_windows.h"
 #include "Application/Input/input_state.h"
 #include "Rendering/rendering_types.h"
-#include "imgui.h"
 #include "Rendering/OldRender/renderer.h"
 #include "Application/application.h"
-
+#include "glfw_keykodes_table.h"
 #include <GLFW/glfw3.h>
 
 static application* GetApplication(struct GLFWwindow* Window) {
@@ -19,36 +18,48 @@ static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight) {
 }
 
 static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos) {
-	static double LastXPos{XPos};
-	static double LastYPos{YPos};
-
-	ImGuiIO& io = ImGui::GetIO();
-	if (!io.WantCaptureMouse) {
-		if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-			if (application* App = GetApplication(Window)) {
-				if (!App->GetRenderer().mCustomCamera.expired()) {
-					auto CameraHandle = App->GetRenderer().mCustomCamera.lock();
-					CameraHandle->OnMouseMoved(Window, XPos - LastXPos, YPos - LastYPos);
-				}
-			}
-		}
+	if (application* App = GetApplication(Window)) {
+		auto& MouseData = App->GetInputState().GetMouseData();
+		float DeltaX = static_cast<float>(XPos) - MouseData.mPosX;
+		float DeltaY = static_cast<float>(YPos) - MouseData.mPosY;
+		MouseData.mPosFrameDeltaX = static_cast<float>(DeltaX);
+		MouseData.mPosFrameDeltaY = static_cast<float>(DeltaY);
+		MouseData.mPosX = static_cast<float>(XPos);
+		MouseData.mPosY = static_cast<float>(YPos);
 	}
-
-	LastXPos = XPos;
-	LastYPos = YPos;
 }
 
-static void OnMouseScroll(struct GLFWwindow* Window, double XDelta, double YDelta) {
-	ImGuiIO& io = ImGui::GetIO();
-	if (!io.WantCaptureMouse) {
-		if (glfwGetMouseButton(Window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-			if (application* App = GetApplication(Window)) {
-				if (!App->GetRenderer().mCustomCamera.expired()) {
-					auto CameraHandle = App->GetRenderer().mCustomCamera.lock();
-					CameraHandle->OnMouseScroll(Window, XDelta, YDelta);
-				}
-			}
+static void OnMouseScroll(GLFWwindow* Window, double XDelta, double YDelta) {
+	if (application* App = GetApplication(Window)) {
+		auto& MouseData = App->GetInputState().GetMouseData();
+		MouseData.mScrollDeltaX = static_cast<float>(XDelta);
+		MouseData.mScrollDeltaY = static_cast<float>(YDelta);
+	}
+}
+
+static void OnKeyAction(GLFWwindow* Window, s32 GlfwKey, s32 Scancode, s32 Action, s32 ModsMask) {
+	if (application* App = GetApplication(Window)) {
+		input_key Key = GlfwButtonToInputKey[GlfwKey];
+		key_state KeyState;
+		if (Action == GLFW_PRESS || Action == GLFW_REPEAT) {
+			KeyState = key_state::pressed;
+		} else if (Action == GLFW_RELEASE) {
+			KeyState = key_state::released;
 		}
+		App->GetInputState().SetKeyState(Key, KeyState);
+	}
+}
+
+static void OnMouseAction(GLFWwindow* Window, s32 MouseButton, s32 Action, s32 ModsMask) {
+	if (application* App = GetApplication(Window)) {
+		input_key Key = GlfwMouseToInputKey[MouseButton];
+		key_state KeyState;
+		if (Action == GLFW_PRESS || Action == GLFW_REPEAT) {
+			KeyState = key_state::pressed;
+		} else if (Action == GLFW_RELEASE) {
+			KeyState = key_state::released;
+		}
+		App->GetInputState().SetKeyState(Key, KeyState);
 	}
 }
 
@@ -58,10 +69,11 @@ void window_windows::Init(application* App, u32 WindowWidth, u32 WindowHeight) {
 	CHECK(mWindow)
 	glfwSetWindowUserPointer(mWindow, App);
 	SetVSync(true);
-
 	glfwSetFramebufferSizeCallback(mWindow, OnWindowResize);
 	glfwSetCursorPosCallback(mWindow, OnMouseMoved);
 	glfwSetScrollCallback(mWindow, OnMouseScroll);
+	glfwSetKeyCallback(mWindow, OnKeyAction);
+	glfwSetMouseButtonCallback(mWindow, OnMouseAction);
 }
 
 void window_windows::SwapBuffers() {
@@ -94,24 +106,23 @@ bool window_windows::ShouldClose() {
 	return glfwWindowShouldClose(mWindow);
 }
 
-void window_windows::ProcessEvents(input_state& InputState, renderer& Renderer, float DeltaTime) {
+void window_windows::ProcessEvents(renderer& Renderer, float DeltaTime) {
 	glfwPollEvents();
-	ImGuiIO& io = ImGui::GetIO();
-	if (!io.WantCaptureKeyboard && !io.WantCaptureMouse) {
-		if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-			glfwSetWindowShouldClose(mWindow, true);
-		}
-		if (!Renderer.mCustomCamera.expired()) {
-			const bool CursorHeld =
-				glfwGetMouseButton(mWindow, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-			SetCursorEnabled(!CursorHeld);
-			auto CameraHandle = Renderer.mCustomCamera.lock();
-			CameraHandle->ProcessInput(mWindow, DeltaTime);
-		}
-	}
 }
 
 void window_windows::SetCursorEnabled(bool Enabled) {
 	mCursorEnabled = Enabled;
 	glfwSetInputMode(mWindow, GLFW_CURSOR, Enabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+}
+
+bool window_windows::GetCursorEnabled() const {
+	return mCursorEnabled;
+}
+
+bool window_windows::GetVSync() const {
+	return mVSync;
+}
+
+void window_windows::CloseWindow() {
+	glfwSetWindowShouldClose(mWindow, true);
 }

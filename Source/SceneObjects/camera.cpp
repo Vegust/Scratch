@@ -1,60 +1,44 @@
-//
-// Created by Vegust on 25.06.2023.
-//
-
 #include "camera.h"
+#include "Application/Input/input_state.h"
 
-#include "core_types.h"
-
-#include "GLFW/glfw3.h"
-
-void camera::ProcessInput(struct GLFWwindow* Window, float DeltaTime)
-{
+void camera::ProcessInput(input_state& Input, float DeltaTime) {
 	const float Speed = DeltaTime * MovementSpeed;
-	if (glfwGetKey(Window, GLFW_KEY_W) == GLFW_PRESS)
-	{
+	if (Input.Pressed(input_key::keyboard_w)) {
 		Position += Speed * Direction;
 	}
-	if (glfwGetKey(Window, GLFW_KEY_S) == GLFW_PRESS)
-	{
+	if (Input.Pressed(input_key::keyboard_s)) {
 		Position -= Speed * Direction;
 	}
-	if (glfwGetKey(Window, GLFW_KEY_A) == GLFW_PRESS)
-	{
+	if (Input.Pressed(input_key::keyboard_a)) {
 		Position -= glm::normalize(glm::cross(Direction, UpVector)) * Speed;
 	}
-	if (glfwGetKey(Window, GLFW_KEY_D) == GLFW_PRESS)
-	{
+	if (Input.Pressed(input_key::keyboard_d)) {
 		Position += glm::normalize(glm::cross(Direction, UpVector)) * Speed;
 	}
-}
+	if (Input.MouseMovedThisFrame()) {
+		Yaw += static_cast<float>(Input.GetMouseData().mPosFrameDeltaX) * Sensitivity;
+		Pitch += static_cast<float>(-Input.GetMouseData().mPosFrameDeltaY) * Sensitivity;
 
-void camera::OnMouseMoved(struct GLFWwindow* Window, double XPosDelta, double YPosDelta)
-{
-	Yaw += static_cast<float>(XPosDelta) * Sensitivity;
-	Pitch += static_cast<float>(-YPosDelta) * Sensitivity;
+		if (Pitch > 89.0f) {
+			Pitch = 89.0f;
+		}
+		if (Pitch < -89.0f) {
+			Pitch = -89.0f;
+		}
 
-	if (Pitch > 89.0f)
-	{
-		Pitch = 89.0f;
+		glm::vec3 NewDirection{};
+		NewDirection.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+		NewDirection.y = sin(glm::radians(Pitch));
+		NewDirection.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+		Direction = glm::normalize(NewDirection);
 	}
-	if (Pitch < -89.0f)
-	{
-		Pitch = -89.0f;
+	if (Input.MouseScrolledThisFrame()) {
+		FoV -= static_cast<float>(Input.GetMouseData().mScrollDeltaY) * 5.f;
+		if (FoV < 1.0f) {
+			FoV = 1.0f;
+		}
+		if (FoV > 179.0f) {
+			FoV = 179.0f;
+		}
 	}
-
-	glm::vec3 NewDirection{};
-	NewDirection.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	NewDirection.y = sin(glm::radians(Pitch));
-	NewDirection.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-	Direction = glm::normalize(NewDirection);
-}
-
-void camera::OnMouseScroll(struct GLFWwindow* Window, double XDelta, double YDelta)
-{
-	FoV -= static_cast<float>(YDelta) * 5.f;
-	if (FoV < 1.0f)
-		FoV = 1.0f;
-    if (FoV > 179.0f)
-		FoV = 179.0f; 
 }

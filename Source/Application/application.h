@@ -20,17 +20,18 @@ protected:
 	input_state mInputState{};
 	
 	// --------- ???? -------------
-	float LastFrameTime{0};
+	float mLastFrameTime{0};
+	float mDeltaTime{0};
 
 public:
 	// TODO remove ------------------------------------
 	test_shadowmaps TestMap{};
 
-	const window& GetWindow() const {
+	window& GetWindow() {
 		return mWindow;
 	}
 
-	const input_state& GetInputState() const {
+	input_state& GetInputState() {
 		return mInputState;
 	}
 

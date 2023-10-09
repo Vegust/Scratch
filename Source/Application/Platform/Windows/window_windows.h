@@ -17,22 +17,16 @@ public:
 	~window_windows();
 
 	void Init(application* App, u32 WindowWidth, u32 WindowHeight);
-
 	bool ShouldClose();
-	void ProcessEvents(input_state& InputState, renderer& Renderer, float DeltaTime);
+	void ProcessEvents(renderer& Renderer, float DeltaTime);
 	void SetContextCurrent();
 	void SwapBuffers();
+	void CloseWindow();
+
 	void SetCursorEnabled(bool Enabled);
-
-	[[nodiscard]] bool GetCursorEnabled() const {
-		return mCursorEnabled;
-	}
-
+	[[nodiscard]] bool GetCursorEnabled() const;
 	void SetVSync(bool Enabled);
-
-	[[nodiscard]] bool GetVSync() const {
-		return mVSync;
-	}
+	[[nodiscard]] bool GetVSync() const;
 
 	void* GetApiLoadingFunction(rendering_api Api);
 };
