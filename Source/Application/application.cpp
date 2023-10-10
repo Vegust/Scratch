@@ -21,7 +21,7 @@ application::application() {
 void application::Run() {
 	while (!mWindow.ShouldClose()) {
 		float DeltaTime = UpdateTime(mCurrentTime);
-		mInputState.SaveFrameInput();
+		mInputState.SavePreviousFrameInput();
 		mWindow.ProcessEvents();
 		mUI.StartNewFrame();
 		mGame.Update(DeltaTime, mRenderer, this);

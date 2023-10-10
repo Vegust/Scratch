@@ -5,11 +5,12 @@
 #include "Containers/array.h"
 
 struct input_state {
-	array<key_state, static_cast<u32>(input_key::max)> mLastFrameKeyStates{};
-	array<key_state, static_cast<u32>(input_key::max)> mKeyStates{};
+	using key_states = array<key_state, static_cast<u32>(input_key::max)>;
+	key_states mLastFrameKeyStates{};
+	key_states mKeyStates{};
 	mouse_data mMouseData{};
 
-	void SaveFrameInput() {
+	void SavePreviousFrameInput() {
 		memcpy(&mLastFrameKeyStates, &mKeyStates, mKeyStates.Size() * sizeof(key_state));
 		mMouseData.mScrollDeltaX = 0.f;
 		mMouseData.mScrollDeltaY = 0.f;

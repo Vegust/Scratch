@@ -1,6 +1,8 @@
 #pragma once
 
 #include "test_shadowmaps.h"
+#include "world.h"
+
 class renderer;
 class application;
 
@@ -9,6 +11,8 @@ public:
 
 	// TODO refactor
 	test_shadowmaps mTestMap{};
+
+	world mWorld{};
 
 	void Init(renderer& Renderer);
 	void Update(float DeltaTime, renderer& Renderer, application* App);
