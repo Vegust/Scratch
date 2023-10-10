@@ -3,7 +3,7 @@
 #include "Rendering/rendering_types.h"
 #include "Application/Platform/platform.h"
 #include "Application/application.h"
-#include "Rendering/RHI/dynamic_rhi.h"
+#include "Rendering/Backend/dynamic_rhi.h"
 
 void ui::Init(application* App, rendering_api Api) {
 	mParentApp = App;
@@ -16,10 +16,10 @@ void ui::Init(application* App, rendering_api Api) {
 	ImGui::StyleColorsDark();
 	platform::InitUi(*this, mParentApp->mWindow, Api);
 	const char* OpenGLVersion = "#version 460";
-	mParentApp->mRHI->InitUIData(OpenGLVersion);
+	mParentApp->mRenderer.mRHI->InitUIData(OpenGLVersion);
 }
 
-void ui::OnNewFrame() {
+void ui::StartNewFrame() {
 	platform::UpdateUi(*this, mParentApp->mWindow);
 	ImGui::NewFrame();
 }
@@ -37,5 +37,15 @@ void ui::EndDebugWindow() {
 
 void ui::Render() {
 	ImGui::Render();
-	mParentApp->mRHI->RenderUI();
+	mParentApp->mRenderer.mRHI->RenderUI();
+}
+
+bool ui::ConsumesKeyboardInput() const {
+	ImGuiIO& io = ImGui::GetIO();
+	return io.WantCaptureKeyboard;
+}
+
+bool ui::ConsumesMouseInput() const {
+	ImGuiIO& io = ImGui::GetIO();
+	return io.WantCaptureMouse;
 }

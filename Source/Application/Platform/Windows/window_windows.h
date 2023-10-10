@@ -5,7 +5,7 @@
 #include "core_types.h"
 
 class application;
-class renderer;
+class old_rebderer;
 struct GLFWwindow;
 struct input_state;
 enum class rendering_api : u8;

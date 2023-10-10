@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-#include "Rendering/OldRender/renderer.h"
+#include "Rendering/OldRender/old_rebderer.h"
 
 void mesh::Init() {
 	mVertexBuffer.SetData(
@@ -9,6 +9,6 @@ void mesh::Init() {
 	mVertexArray.AddBuffer(mVertexBuffer, mElementBuffer, vertex::GetLayout());
 }
 
-void mesh::Draw(const renderer& Renderer, const glm::mat4& Transform) {
-	Renderer.Draw2(mVertexArray, mElementBuffer, mMaterial, Transform);
+void mesh::Draw(const old_rebderer& Renderer, const glm::mat4& Transform) {
+	//Renderer.Draw2(mVertexArray, mElementBuffer, mMaterial, Transform);
 }

@@ -9,7 +9,7 @@ struct input_state {
 	array<key_state, static_cast<u32>(input_key::max)> mKeyStates{};
 	mouse_data mMouseData{};
 
-	void OnNewFrame() {
+	void SaveFrameInput() {
 		memcpy(&mLastFrameKeyStates, &mKeyStates, mKeyStates.Size() * sizeof(key_state));
 		mMouseData.mScrollDeltaX = 0.f;
 		mMouseData.mScrollDeltaY = 0.f;

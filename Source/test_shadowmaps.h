@@ -6,18 +6,17 @@
 #include "Rendering/OldRender/shader.h"
 #include "Rendering/OldRender/cubemap.h"
 
-class renderer;
+class old_rebderer;
 
 class test_shadowmaps {
 public:
-	void Init(renderer& Renderer);
-	void OnRender(renderer& Renderer);
-	void OnIMGuiRender(renderer& Renderer);
+	void Init(old_rebderer& Renderer);
+	void OnRender(old_rebderer& Renderer);
+	void OnIMGuiRender(old_rebderer& Renderer);
 	void OnScreenSizeChanged(int NewWidth, int NewHeight);
 	void OnUpdate(float DeltaTime);
 
 	phong_material mCubeMaterial;
-	std::shared_ptr<camera> mCamera{nullptr};
 
 	dyn_array<glm::mat4> mStaticCubes;
 	dyn_array<glm::mat4> mDynamicCubes;

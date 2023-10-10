@@ -24,14 +24,9 @@ enum class view_mode : u8 { lit = 0, unlit = 1, wireframe = 2, depth = 3 };
 void GlClearError();
 bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber);
 
-class renderer {
+class old_rebderer {
 public:
-	static void Draw(
-		const vertex_array& VertexArray,
-		const element_buffer& IndexBuffer,
-		const shader& Shader);
-
-	void Init(u32 WindowHeight, u32 WindowWidth);
+	void Init(u32 WindowWidth, u32 WindowHeight);
 	void InitGlobalUBO();
 	void InitLightsSSBO();
 	void InitCubeVAO();
@@ -42,41 +37,17 @@ public:
 
 	void OnScreenSizeChanged(u32 NewWidth, u32 NewHeight);
 
-	void Draw(
-		const vertex_array& VertexArray,
-		const element_buffer& IndexBuffer,
-		const shader& Shader,
-		glm::mat4 Transform) const;
-	void DrawCubes(const shader& Shader, span<glm::mat4> Transforms) const;
 	void DrawCubes(const phong_material& Material, span<glm::mat4> Transforms);
-	void DrawNormalCubes(const shader& Shader, span<glm::mat4> Transforms) const;
-	void Draw2(
-		const vertex_array& VertexArray,
-		const element_buffer& ElementBuffer,
-		const phong_material& Material,
-		const glm::mat4& Transform) const;
 	void DrawFrameBuffer(const framebuffer& Framebuffer, bool bDepth = false);
 	void DrawSkybox(const cubemap& Skybox);
-
-	void ResetCamera() {
-		mCameraPosition = glm::vec3{0.f, 0.f, 0.f};
-		mCameraDirection = glm::vec3{0.f, 0.f, -1.f};
-		mCameraUpVector = glm::vec3{0.f, 1.f, 0.f};
-	}
-
-	glm::mat4 CalcMVPForTransform(const glm::mat4& Transform) const;
 
 	float mAspectRatio = 1.f;
 	u32 mCurrentHeight;
 	u32 mCurrentWidth;
 
-	std::weak_ptr<camera> mCustomCamera{};
+	camera mCamera{};
 
 	float mFoV = 60.f;
-	glm::vec3 mCameraPosition = glm::vec3{0.f, 0.f, 0.f};
-	glm::vec3 mCameraDirection = glm::vec3{0.f, 0.f, -1.f};
-	glm::vec3 mCameraUpVector = glm::vec3{0.f, 1.f, 0.f};
-
 	vertex_array mScreenQuadVAO{};
 	vertex_buffer mScreenQuadBVO{};
 

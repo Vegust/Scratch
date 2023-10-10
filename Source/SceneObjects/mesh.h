@@ -9,6 +9,8 @@
 #include "phong_material.h"
 #include "glm/glm.hpp"
 
+class old_rebderer;
+
 struct mesh {
 	dyn_array<vertex> mVertices{};
 	dyn_array<u32> mIndices{};
@@ -19,5 +21,5 @@ struct mesh {
 	element_buffer mElementBuffer{};
 
 	void Init();
-	void Draw(const class renderer& Renderer, const glm::mat4& Transform);
+	void Draw(const old_rebderer& Renderer, const glm::mat4& Transform);
 };

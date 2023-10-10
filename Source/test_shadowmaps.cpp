@@ -3,9 +3,9 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 #include "Rendering/bind_constants.h"
-#include "Rendering/OldRender/renderer.h"
+#include "Rendering/OldRender/old_rebderer.h"
 
-void test_shadowmaps::Init(renderer& Renderer) {
+void test_shadowmaps::Init(old_rebderer& Renderer) {
 	auto& SceneLights = Renderer.mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];
 	Light.mType = light_type::directional;
@@ -41,10 +41,7 @@ void test_shadowmaps::Init(renderer& Renderer) {
 	Params.mHeight = (s32)Renderer.mCurrentHeight;
 	mSceneFramebuffer.Reload(Params);
 
-
-	mCamera = std::make_shared<camera>();
-	mCamera->Position = glm::vec3{0.f, 1.f, 10.f};
-	Renderer.mCustomCamera = mCamera;
+	Renderer.mCamera.Position = glm::vec3{0.f, 1.f, 10.f};
 
 	SetupCubeTransforms();
 }
@@ -53,7 +50,7 @@ void test_shadowmaps::OnUpdate(float DeltaTime) {
 	UpdateDynamicCubeTransforms(DeltaTime);
 }
 
-void test_shadowmaps::OnRender(renderer& Renderer) {
+void test_shadowmaps::OnRender(old_rebderer& Renderer) {
 	glClearColor(0.f, 1.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -69,8 +66,8 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	// Directional light position is relative to player
 	vec3 LightDirection = Light.mDirection;
 	vec3 LightPosition =
-		mCamera->Position +
-		normalize(vec3(mCamera->Direction.x, 0.f, mCamera->Direction.z)) * SideDistance +
+		Renderer.mCamera.Position +
+		normalize(vec3(Renderer.mCamera.Direction.x, 0.f, Renderer.mCamera.Direction.z)) * SideDistance +
 		(-Light.mDirection * 35.f);
 	mat4 LightView = lookAt(LightPosition, LightPosition + LightDirection, vec3(0.f, 1.f, 0.f));
 	mat4 LightProjectionView = LightProjection * LightView;
@@ -162,7 +159,7 @@ void test_shadowmaps::OnRender(renderer& Renderer) {
 	}
 }
 
-void test_shadowmaps::OnIMGuiRender(renderer& Renderer) {
+void test_shadowmaps::OnIMGuiRender(old_rebderer& Renderer) {
 	ImGui::SliderFloat("Slomo", &mUpdateSpeed, 0.f, 2.f);
 	ImGui::Checkbox("Draw Shadowmap", &mDrawShadowmap);
 	if (ImGui::InputInt("Shadowmap Resolution", &mShadowmapResolution)) {

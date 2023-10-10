@@ -20,6 +20,3 @@ void opengl_rhi::InitUIData(const void* Data) {
 void opengl_rhi::RenderUI() {
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
-opengl_rhi::~opengl_rhi() {
-}

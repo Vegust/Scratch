@@ -4,7 +4,7 @@
 
 #include "Application/application.h"
 #include "Rendering/rendering_types.h"
-#include "Rendering/OldRender/renderer.h"
+#include "Rendering/OldRender/old_rebderer.h"
 #include "glfw_keykodes_table.h"
 #include <GLFW/glfw3.h>
 
@@ -17,8 +17,8 @@ static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight) {
 		// TODO refactor this
 		App->mWindow.SetWindowHeight(NewHeight);
 		App->mWindow.SetWindowWidth(NewWidth);
-		App->mOldRenderer.OnScreenSizeChanged(NewWidth, NewHeight);
-		App->mTestMap.OnScreenSizeChanged(NewWidth, NewHeight);
+		App->mRenderer.mOldRenderer.OnScreenSizeChanged(NewWidth, NewHeight);
+		App->mGame.mTestMap.OnScreenSizeChanged(NewWidth, NewHeight);
 	}
 }
 
