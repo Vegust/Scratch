@@ -4,6 +4,17 @@
 #include "Application/Platform/platform.h"
 
 #include "imgui.h"
+#include "Rendering/Backend/OpenGL/opengl_rhi.h"
+
+application::application() {
+	mWindow.Init(this, 1000, 800);
+	mRHI = std::make_unique<opengl_rhi>();
+	mRHI->Init();
+	mOldRenderer.Init(800, 1000);
+	mUI.Init(this, mRenderingApi);
+	mTestMap.Init(mOldRenderer);
+	mLastFrameTime = platform::GetTime();
+}
 
 void application::Run() {
 	while (!mWindow.ShouldClose()) {
@@ -12,47 +23,39 @@ void application::Run() {
 		mLastFrameTime = NewTime;
 
 		mInputState.OnNewFrame();
-		mWindow.ProcessEvents(mOldRenderer, mDeltaTime);
+		mWindow.ProcessEvents();
 
 		mUI.OnNewFrame();
 		mUI.StartDebugWindow(mDeltaTime);
-		if (ImGui::Checkbox("VSync", &mWindow.mVSync)) {
-			mWindow.SetVSync(mWindow.mVSync);
+		bool VSync = mWindow.GetVSync();
+		if (ImGui::Checkbox("VSync", &VSync)) {
+			mWindow.SetVSync(VSync);
 		}
 		mOldRenderer.UIRendererControls();
-		TestMap.OnIMGuiRender(mOldRenderer);
+		mTestMap.OnIMGuiRender(mOldRenderer);
 		mUI.EndDebugWindow();
 
 		// ---- temporary place to handle game input ----
 		ImGuiIO& io = ImGui::GetIO();
 		if (!io.WantCaptureKeyboard && !io.WantCaptureMouse) {
-			if (GetInputState().PressedThisFrame(input_key::keyboard_escape)) {
+			if (mInputState.PressedThisFrame(input_key::keyboard_escape)) {
 				mWindow.CloseWindow();
 			}
 			// for now camera = controller
 			if (!mOldRenderer.mCustomCamera.expired()) {
-				const bool CursorHeld = GetInputState().Pressed(input_key::mouse_left);
+				const bool CursorHeld = mInputState.Pressed(input_key::mouse_left);
 				mWindow.SetCursorEnabled(!CursorHeld);
 				if (CursorHeld) {
 					auto CameraHandle = mOldRenderer.mCustomCamera.lock();
-					CameraHandle->ProcessInput(GetInputState(), mDeltaTime);
+					CameraHandle->ProcessInput(mInputState, mDeltaTime);
 				}
 			}
 		}
 		// -----------------------------------------------
 
-		TestMap.OnUpdate(mDeltaTime);
-		TestMap.OnRender(mOldRenderer);
+		mTestMap.OnUpdate(mDeltaTime);
+		mTestMap.OnRender(mOldRenderer);
 		mUI.Render();
 		mWindow.SwapBuffers();
 	}
-}
-
-application::application() {
-	mWindow.Init(this, 1000, 800);
-	mRenderingContext.Init(mRenderingApi, mWindow);
-	mOldRenderer.Init(800, 1000);
-	mUI.Init(this);
-	mLastFrameTime = platform::GetTime();
-	TestMap.Init(mOldRenderer);
 }

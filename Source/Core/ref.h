@@ -10,6 +10,7 @@ concept ref_counted_c = requires(ref_counted_type instance) {
 	instance.Dereference();
 };
 
+// TODO add moves without modifying object counter
 template <ref_counted_c ref_counted_type>
 struct ref {
 	ref_counted_type* mPointer = nullptr;

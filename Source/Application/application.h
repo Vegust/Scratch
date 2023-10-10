@@ -2,22 +2,24 @@
 
 #include "Platform/window.h"
 #include "Input/input_state.h"
-#include "Rendering/rendering_context.h"
-#include "Rendering/rendering_types.h"
-#include "Rendering/OldRender/renderer.h"
-#include "test_shadowmaps.h"
 #include "UI/ui.h"
 
+#include "Rendering/rendering_types.h"
+#include "Rendering/OldRender/renderer.h"
+#include "Rendering/RHI/dynamic_rhi.h"
+
+#include "test_shadowmaps.h"
+
 class application {
-protected:
+public:
 	// TODO refactor -----------------------------------
 	rendering_api mRenderingApi{rendering_api::opengl};
-	rendering_context mRenderingContext{};
 	renderer mOldRenderer{};
+	std::unique_ptr<dynamic_rhi> mRHI{nullptr};
 	// ------------------------------------------------
 
 	// TODO remove ------------------------------------
-	test_shadowmaps TestMap{};
+	test_shadowmaps mTestMap{};
 
 	ui mUI{};
 	window mWindow{};
@@ -25,23 +27,6 @@ protected:
 	float mLastFrameTime{0};
 	float mDeltaTime{0};
 
-public:
 	application();
 	void Run();
-
-	test_shadowmaps& GetMap() {
-		return TestMap;
-	}
-
-	window& GetWindow() {
-		return mWindow;
-	}
-
-	input_state& GetInputState() {
-		return mInputState;
-	}
-
-	renderer& GetRenderer() {
-		return mOldRenderer;
-	}
 };

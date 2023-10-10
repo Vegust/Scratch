@@ -37,8 +37,8 @@ void camera::ProcessInput(input_state& Input, float DeltaTime) {
 		if (FoV < 1.0f) {
 			FoV = 1.0f;
 		}
-		if (FoV > 179.0f) {
-			FoV = 179.0f;
+		if (FoV > 359.0f) {
+			FoV = 359.0f;
 		}
 	}
 }

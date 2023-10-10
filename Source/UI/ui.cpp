@@ -1,10 +1,12 @@
 #include "ui.h"
-#include "Application/application.h"
 #include "imgui.h"
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_glfw.h"
+#include "Rendering/rendering_types.h"
+#include "Application/Platform/platform.h"
+#include "Application/application.h"
+#include "Rendering/RHI/dynamic_rhi.h"
 
-void ui::Init(application* App) {
+void ui::Init(application* App, rendering_api Api) {
+	mParentApp = App;
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -12,14 +14,13 @@ void ui::Init(application* App) {
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;	 // Enable Gamepad Controls
 	io.IniFilename = nullptr;
 	ImGui::StyleColorsDark();
-	// OpenGL hardcode
-	ImGui_ImplGlfw_InitForOpenGL(App->GetWindow().mWindow, true);
-	ImGui_ImplOpenGL3_Init("#version 460");
+	platform::InitUi(*this, mParentApp->mWindow, Api);
+	const char* OpenGLVersion = "#version 460";
+	mParentApp->mRHI->InitUIData(OpenGLVersion);
 }
 
 void ui::OnNewFrame() {
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
+	platform::UpdateUi(*this, mParentApp->mWindow);
 	ImGui::NewFrame();
 }
 
@@ -36,5 +37,5 @@ void ui::EndDebugWindow() {
 
 void ui::Render() {
 	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	mParentApp->mRHI->RenderUI();
 }
