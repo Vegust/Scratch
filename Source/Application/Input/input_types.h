@@ -77,11 +77,7 @@ enum class input_key : u32 {
 	max
 };
 
-struct mouse_data {
-	float mPosX{0.f};
-	float mPosY{0.f};
-	float mPosFrameDeltaX{0.f};
-	float mPosFrameDeltaY{0.f};
-	float mScrollDeltaX{0.f};
-	float mScrollDeltaY{0.f};
+struct mouse_state {
+	vec2 mPos{};
+	vec2 mScroll{};
 };

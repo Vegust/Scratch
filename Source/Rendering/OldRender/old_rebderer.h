@@ -19,8 +19,6 @@
 
 class shader;
 
-enum class view_mode : u8 { lit = 0, unlit = 1, wireframe = 2, depth = 3 };
-
 void GlClearError();
 bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber);
 

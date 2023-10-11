@@ -3,44 +3,33 @@
 #ifdef WIN32
 
 #include "core_types.h"
+#include "Application/Platform/window_types.h"
+#include "Application/Input/input.h"
+#include "Application/app_message.h"
 
-class application;
-class old_rebderer;
 struct GLFWwindow;
-struct input_state;
-enum class rendering_api : u8;
+
+struct window_process_result {
+	input mInput;
+	dyn_array<app_message> mMessages;
+	window_state mState;
+};
 
 class window_windows {
-private:
-	GLFWwindow* mWindow{nullptr};
-	bool mVSync{true};
-	bool mCursorEnabled{true};
-	u32 mWindowHeight{0};
-	u32 mWindowWidth{0};
 public:
+	GLFWwindow* mWindow{nullptr};
+
+	frame_input_state mFrameInput;
+	window_state mState{};
+
+	window_windows(u32 WindowWidth, u32 WindowHeight);
 	~window_windows();
 
-	void Init(application* App, u32 WindowWidth, u32 WindowHeight);
+	window_process_result ProcessExternalEvents();
+	dyn_array<app_message> HandleMessages(const dyn_array<app_message>& Messages);
 
-	bool ShouldClose();
-	void CloseWindow();
-
-	void ProcessEvents();
-
-	void SetContextCurrent();
+	[[nodiscard]] bool ShouldClose() const;
 	void SwapBuffers();
-
-	void SetCursorEnabled(bool Enabled);
-	void SetVSync(bool Enabled);
-	void SetWindowHeight(u32 Height);
-	void SetWindowWidth(u32 Width);
-	[[nodiscard]] bool GetCursorEnabled() const;
-	[[nodiscard]] bool GetVSync() const;
-	[[nodiscard]] u32 GetWindowHeight() const;
-	[[nodiscard]] u32 GetWindowWidth() const;
-
-	// Windows Specific
-	GLFWwindow* GetGLFWWindow();
 };
 
 #endif

@@ -2,6 +2,7 @@
 
 int main() {
 	application App{};
-	App.Run();
+	while (App.RunOneFrame()) {
+	}
 	return 0;
 }

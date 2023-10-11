@@ -19,7 +19,6 @@ add_compile_definitions(WIN32_LEAN_AND_MEAN)
 
 add_executable(Scratch
         Source/main.cpp
-        Source/test_shadowmaps.cpp
         ${SCRATCH_CORE_SOURCES}
         ${SCRATCH_APPLICATION_SOURCES}
         ${SCRATCH_GAME_SOURCES}
