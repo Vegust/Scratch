@@ -3,6 +3,7 @@
 #include "Application/app_message.h"
 #include "Rendering/view.h"
 #include "UI/ui_data.h"
+#include "world.h"
 
 struct input;
 struct window_state;
@@ -16,6 +17,8 @@ struct game_update_result {
 
 class game {
 public:
+	dyn_array<world> Worlds{};
+
 	game_update_result Step(
 		float Time,
 		float DeltaTime,
