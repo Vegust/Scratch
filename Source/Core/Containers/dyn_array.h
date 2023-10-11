@@ -325,9 +325,35 @@ public:
 	}
 
 	FORCEINLINE index_type FindLast(const element_type& Value) {
-		for (index_type i = mSize - 1; i >= 0; --i) {
+		for (index_type i = mSize - 1;; --i) {
 			if (Value == mData[i]) {
 				return i;
+			}
+			if (i == 0) {
+				break;
+			}
+		}
+		return InvalidIndex;
+	}
+
+	template <typename predicate_type>
+	FORCEINLINE index_type FindFirstByPredicate(const predicate_type& Predicate) {
+		for (index_type i = 0; i < mSize; ++i) {
+			if (Predicate(mData[i])) {
+				return i;
+			}
+		}
+		return InvalidIndex;
+	}
+
+	template <typename predicate_type>
+	FORCEINLINE index_type FindLastByPredicate(const predicate_type& Predicate) {
+		for (index_type i = mSize - 1;; --i) {
+			if (Predicate(mData[i])) {
+				return i;
+			}
+			if (i == 0) {
+				break;
 			}
 		}
 		return InvalidIndex;

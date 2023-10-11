@@ -260,7 +260,7 @@ public:
 	// equality, so you can search hash set without key using arbitrary logic. See tag.h for example
 	// use
 	template <typename predicate_type>
-	FORCEINLINE element_type* FindByPredicate(const hash::hash_type Hash, predicate_type Predicate)
+	FORCEINLINE element_type* FindByPredicate(const hash::hash_type Hash, const predicate_type& Predicate)
 		const {
 		if (!mData) {
 			return nullptr;

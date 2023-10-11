@@ -1,6 +1,5 @@
 #pragma once
 
-#include "test_shadowmaps.h"
 #include "Application/app_message.h"
 #include "Rendering/view.h"
 #include "UI/ui_data.h"
@@ -17,12 +16,7 @@ struct game_update_result {
 
 class game {
 public:
-	// TODO refactor
-	test_shadowmaps mTestMap{};
-
-	game();
-
-	game_update_result Update(
+	game_update_result Step(
 		float Time,
 		float DeltaTime,
 		const input& Input,

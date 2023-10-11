@@ -22,7 +22,7 @@ bool application::RunOneFrame() {
 	const auto [DeltaTime, Time] = UpdateTime(mTime);
 	const auto [Input, WindowMessages, WindowState] = mWindow.ProcessExternalEvents();
 	const auto RenderState = mRenderer.HandleMessages(WindowMessages);
-	const auto [Views, UIData, GameMessages] = mGame.Update(Time, DeltaTime, Input, WindowState, RenderState);
+	const auto [Views, UIData, GameMessages] = mGame.Step(Time, DeltaTime, Input, WindowState, RenderState);
 	const auto MessagesLeft = mWindow.HandleMessages(GameMessages);
 	mRenderer.HandleMessages(MessagesLeft);
 	mRenderer.RenderViews(Views);

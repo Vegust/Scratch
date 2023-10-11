@@ -24,10 +24,10 @@ void platform_windows::UpdateUi(ui& UI, window& Window) {
 }
 
 void* platform_windows::GetApiLoadingFunction(rendering_api Api) {
-//	switch (Api) {
-//		case rendering_api::opengl:
-//			return (void*) (glfwGetProcAddress);
-//	}
+	switch (Api) {
+		case rendering_api::opengl:
+			return (void*) (glfwGetProcAddress);
+	}
 	return nullptr;
 }
 

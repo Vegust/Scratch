@@ -110,7 +110,7 @@ renderer::renderer(u32 WindowWidth, u32 WindowHeight) {
 	Params.mHeight = (s32) mOldRenderer.mCurrentHeight;
 	mSceneFramebuffer.Reload(Params);
 
-	mOldRenderer.mCamera.Position = glm::vec3{0.f, 1.f, 10.f};
+	mOldRenderer.mCamera.mPosition = glm::vec3{0.f, 1.f, 10.f};
 
 	SetupCubeTransforms(mStaticCubes, mDynamicCubes);
 }
@@ -139,6 +139,49 @@ render_state renderer::HandleMessages(const dyn_array<app_message>& Messages) {
 
 void renderer::RenderViews(const dyn_array<view>& Views) {
 	// TODO this is game update
+	input Input{};
+	const float Speed = /*DeltaTime * */ mOldRenderer.mCamera.mMovementSpeed / 60.f;
+	if (Input.Pressed(input_key::keyboard_w)) {
+		mOldRenderer.mCamera.mPosition += Speed * mOldRenderer.mCamera.mDirection;
+	}
+	if (Input.Pressed(input_key::keyboard_s)) {
+		mOldRenderer.mCamera.mPosition -= Speed * mOldRenderer.mCamera.mDirection;
+	}
+	if (Input.Pressed(input_key::keyboard_a)) {
+		mOldRenderer.mCamera.mPosition -=
+			glm::normalize(glm::cross(mOldRenderer.mCamera.mDirection, mOldRenderer.mCamera.mUpVector)) * Speed;
+	}
+	if (Input.Pressed(input_key::keyboard_d)) {
+		mOldRenderer.mCamera.mPosition +=
+			glm::normalize(glm::cross(mOldRenderer.mCamera.mDirection, mOldRenderer.mCamera.mUpVector)) * Speed;
+	}
+	if (Input.MouseMovedThisFrame()) {
+		mOldRenderer.mCamera.mYaw += static_cast<float>(Input.GetMousePosDelta().x * mOldRenderer.mCamera.mSensitivity);
+		mOldRenderer.mCamera.mPitch +=
+			static_cast<float>(-Input.GetMousePosDelta().y * mOldRenderer.mCamera.mSensitivity);
+
+		if (mOldRenderer.mCamera.mPitch > 89.0f) {
+			mOldRenderer.mCamera.mPitch = 89.0f;
+		}
+		if (mOldRenderer.mCamera.mPitch < -89.0f) {
+			mOldRenderer.mCamera.mPitch = -89.0f;
+		}
+
+		glm::vec3 NewDirection{};
+		NewDirection.x = cos(glm::radians(mOldRenderer.mCamera.mYaw)) * cos(glm::radians(mOldRenderer.mCamera.mPitch));
+		NewDirection.y = sin(glm::radians(mOldRenderer.mCamera.mPitch));
+		NewDirection.z = sin(glm::radians(mOldRenderer.mCamera.mYaw)) * cos(glm::radians(mOldRenderer.mCamera.mPitch));
+		mOldRenderer.mCamera.mDirection = glm::normalize(NewDirection);
+	}
+	if (Input.MouseScrolledThisFrame()) {
+		mOldRenderer.mCamera.mFoV -= static_cast<float>(Input.GetScroll().y) * 5.f;
+		if (mOldRenderer.mCamera.mFoV < 1.0f) {
+			mOldRenderer.mCamera.mFoV = 1.0f;
+		}
+		if (mOldRenderer.mCamera.mFoV > 359.0f) {
+			mOldRenderer.mCamera.mFoV = 359.0f;
+		}
+	}
 	using namespace glm;
 	mAccTime += /*DeltaTime * */ mUpdateSpeed / 60.f;
 	float Rotation = 0.5 * glm::pi<float>() * mAccTime;
@@ -149,6 +192,7 @@ void renderer::RenderViews(const dyn_array<view>& Views) {
 	mDynamicCubes[1] = scale(
 		rotate(translate(mat4(1.f), vec3(-2, 5 + Translation, -4)), Rotation, vec3(0.5f, 1.f, 0.f)),
 		vec3(2.f, 2.f, 2.f));
+	// ---------- end of game update -----------------
 
 	glClearColor(0.f, 1.f, 0.f, 0.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -164,8 +208,8 @@ void renderer::RenderViews(const dyn_array<view>& Views) {
 	// Directional light position is relative to player
 	vec3 LightDirection = Light.mDirection;
 	vec3 LightPosition =
-		mOldRenderer.mCamera.Position +
-		normalize(vec3(mOldRenderer.mCamera.Direction.x, 0.f, mOldRenderer.mCamera.Direction.z)) * SideDistance +
+		mOldRenderer.mCamera.mPosition +
+		normalize(vec3(mOldRenderer.mCamera.mDirection.x, 0.f, mOldRenderer.mCamera.mDirection.z)) * SideDistance +
 		(-Light.mDirection * 35.f);
 	mat4 LightView = lookAt(LightPosition, LightPosition + LightDirection, vec3(0.f, 1.f, 0.f));
 	mat4 LightProjectionView = LightProjection * LightView;

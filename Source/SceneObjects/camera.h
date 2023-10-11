@@ -5,22 +5,20 @@
 #include "glm/glm.hpp"
 
 struct camera {
-	glm::vec3 Position{0.f, 0.f, 0.f};
-	glm::vec3 Direction{0.f, 0.f, -1.f};
-	glm::vec3 UpVector{0.f, 1.f, 0.f};
-	float FoV{60.f};
-	float MovementSpeed{5.f};
-	float Sensitivity{0.1f};
-	float Yaw{-90.f};
-	float Pitch{0.f};
+	glm::vec3 mPosition{0.f, 0.f, 0.f};
+	glm::vec3 mDirection{0.f, 0.f, -1.f};
+	glm::vec3 mUpVector{0.f, 1.f, 0.f};
+	float mFoV{60.f};
+	float mMovementSpeed{5.f};
+	float mSensitivity{0.1f};
+	float mYaw{-90.f};
+	float mPitch{0.f};
 
-	void ProcessInput(struct input_state& Input, float DeltaTime);
-
-	float GetFoV() {
-		return FoV;
+	[[nodiscard]] FORCEINLINE float GetFoV() const {
+		return mFoV;
 	}
 
-	const glm::mat4 GetViewTransform() {
-		return glm::lookAt(Position, Position + Direction, UpVector);
+	[[nodiscard]] FORCEINLINE glm::mat4 GetViewTransform() const {
+		return glm::lookAt(mPosition, mPosition + mDirection, mUpVector);
 	}
 };

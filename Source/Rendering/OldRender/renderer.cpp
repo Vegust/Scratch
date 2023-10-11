@@ -33,7 +33,7 @@ void old_rebderer::OnScreenSizeChanged(u32 NewWidth, u32 NewHeight) {
 void old_rebderer::DrawCubes(const phong_material& Material, span<glm::mat4> Transforms) {
 	mNormalCubeVAO.Bind();
 	glm::mat4 View = mCamera.GetViewTransform();
-	glm::mat4 Projection = glm::perspective(glm::radians(mCamera.FoV), mAspectRatio, 0.001f, 100.f);
+	glm::mat4 Projection = glm::perspective(glm::radians(mCamera.mFoV), mAspectRatio, 0.001f, 100.f);
 	Material.Bind();
 	mActiveShader->Bind();
 	// global
@@ -314,49 +314,49 @@ void old_rebderer::InitDefaultShaders() {
 	mNormalsShader.Compile("Resources/Shaders/Normals.shader");
 }
 
-void old_rebderer::ChangeViewMode(view_mode NewViewMode) {
-	if (NewViewMode != mViewMode) {
-		mViewMode = NewViewMode;
-		mPhongShader.Bind();
-		switch (mViewMode) {
-			case view_mode::lit:
-				GlobalUBO.mUnlit = false;
-				GlobalUBO.mDepth = false;
-				mDrawElementsMode = GL_TRIANGLES;
-				break;
-			case view_mode::unlit:
-				GlobalUBO.mUnlit = true;
-				GlobalUBO.mDepth = false;
-				mDrawElementsMode = GL_TRIANGLES;
-				break;
-			case view_mode::wireframe:
-				GlobalUBO.mUnlit = true;
-				GlobalUBO.mDepth = false;
-				mDrawElementsMode = GL_LINES;
-				break;
-			case view_mode::depth:
-				GlobalUBO.mUnlit = true;
-				GlobalUBO.mDepth = true;
-				mDrawElementsMode = GL_TRIANGLES;
-				break;
-		}
-		UpdateGlobalUBO();
-	}
-}
+//void old_rebderer::ChangeViewMode(view_mode NewViewMode) {
+//	if (NewViewMode != mViewMode) {
+//		mViewMode = NewViewMode;
+//		mPhongShader.Bind();
+//		switch (mViewMode) {
+//			case view_mode::lit:
+//				GlobalUBO.mUnlit = false;
+//				GlobalUBO.mDepth = false;
+//				mDrawElementsMode = GL_TRIANGLES;
+//				break;
+//			case view_mode::unlit:
+//				GlobalUBO.mUnlit = true;
+//				GlobalUBO.mDepth = false;
+//				mDrawElementsMode = GL_TRIANGLES;
+//				break;
+//			case view_mode::wireframe:
+//				GlobalUBO.mUnlit = true;
+//				GlobalUBO.mDepth = false;
+//				mDrawElementsMode = GL_LINES;
+//				break;
+//			case view_mode::depth:
+//				GlobalUBO.mUnlit = true;
+//				GlobalUBO.mDepth = true;
+//				mDrawElementsMode = GL_TRIANGLES;
+//				break;
+//		}
+//		UpdateGlobalUBO();
+//	}
+//}
 
 void old_rebderer::UIViewModeControl() {
-	constexpr array<view_mode, 4> Types = {
-		view_mode::lit, view_mode::unlit, view_mode::wireframe, view_mode::depth};
-	constexpr array<const char*, 4> Names = {"Lit", "Unlit", "Wireframe", "Depth"};
-	if (ImGui::BeginCombo("View mode", Names[static_cast<u32>(mViewMode)])) {
-		for (u32 i = 0; i < Types.Size(); ++i) {
-			bool bIsSelected = mViewMode == Types[i];
-			if (ImGui::Selectable(Names[i], bIsSelected)) {
-				ChangeViewMode(Types[i]);
-			}
-		}
-		ImGui::EndCombo();
-	}
+//	constexpr array<view_mode, 4> Types = {
+//		view_mode::lit, view_mode::unlit, view_mode::wireframe, view_mode::depth};
+//	constexpr array<const char*, 4> Names = {"Lit", "Unlit", "Wireframe", "Depth"};
+//	if (ImGui::BeginCombo("View mode", Names[static_cast<u32>(mViewMode)])) {
+//		for (u32 i = 0; i < Types.Size(); ++i) {
+//			bool bIsSelected = mViewMode == Types[i];
+//			if (ImGui::Selectable(Names[i], bIsSelected)) {
+//				ChangeViewMode(Types[i]);
+//			}
+//		}
+//		ImGui::EndCombo();
+//	}
 }
 
 void old_rebderer::UIPostProcessControl() {

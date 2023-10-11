@@ -20,11 +20,18 @@ static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight) {
 	proc_data* Data = GetData(Window);
 	Data->mWindow.mState.mHeight = NewHeight;
 	Data->mWindow.mState.mWidth = NewWidth;
-	app_message ResizeMessage;
-	ResizeMessage.mType = app_message_type::render_resize;
-	ResizeMessage.mRenderResize.NewWidth = NewWidth;
-	ResizeMessage.mRenderResize.NewHeight = NewHeight;
-	Data->mResult.mMessages.Add(ResizeMessage);
+	const auto Index = Data->mResult.mMessages.FindFirstByPredicate(
+		[](const auto& Message) { return Message.mType == app_message_type::render_resize; });
+	if (Index != InvalidIndex) {
+		Data->mResult.mMessages[Index].mRenderResize.NewWidth = NewWidth;
+		Data->mResult.mMessages[Index].mRenderResize.NewHeight = NewHeight;
+	} else {
+		app_message ResizeMessage;
+		ResizeMessage.mType = app_message_type::render_resize;
+		ResizeMessage.mRenderResize.NewWidth = NewWidth;
+		ResizeMessage.mRenderResize.NewHeight = NewHeight;
+		Data->mResult.mMessages.Add(ResizeMessage);
+	}
 }
 
 static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos) {

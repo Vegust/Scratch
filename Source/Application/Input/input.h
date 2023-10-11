@@ -11,6 +11,7 @@ struct frame_input_state {
 	frame_input_state& operator=(const frame_input_state& Other) {
 		mMouseState = Other.mMouseState;
 		memcpy(&mKeyStates, &Other.mKeyStates, sizeof(mKeyStates));
+		return *this;
 	}
 };
 

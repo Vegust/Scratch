@@ -96,8 +96,8 @@ public:
 	}
 
 	void UIViewModeControl();
-	void ChangeViewMode(view_mode NewViewMode);
-	view_mode mViewMode = view_mode::lit;
+	//void ChangeViewMode(view_mode NewViewMode);
+	//view_mode mViewMode = view_mode::lit;
 	s32 mDrawElementsMode = GL_TRIANGLES;
 	void UIPostProcessControl();
 	bool mGrayscale = false;
