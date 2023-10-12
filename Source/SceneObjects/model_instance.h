@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core_types.h"
+#include "ref.h"
 
 struct model_instance {
-	index mModelId{InvalidIndex};
-	mat4 transform{};
+	ref<model> mModel;
+	mat4 mTransform{};
 };

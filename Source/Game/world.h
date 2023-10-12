@@ -8,5 +8,4 @@
 struct world {
 	dyn_array<light> mLights{};
 	dyn_array<model_instance> mInstances{};
-	dyn_array<model> mModels{};
 };

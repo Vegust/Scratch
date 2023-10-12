@@ -5,15 +5,15 @@
 #include "Rendering/OldRender/old_rebderer.h"
 #include "Application/app_message.h"
 #include "view.h"
+#include "Rendering/Backend/dynamic_rhi.h"
 
-class dynamic_rhi;
 struct ui_data;
 
 class renderer {
 public:
 	old_rebderer mOldRenderer{};
 	render_state mState;
-	owned<dynamic_rhi> mRHI{nullptr};
+	owned<rhi> mRHI{nullptr};
 
 	// from test_shadowmaps, toto refactor
 	phong_material mCubeMaterial;
@@ -23,8 +23,6 @@ public:
 	shader mPointShadowmapShader;
 	framebuffer mDirectionalShadowmap;
 	shader mDirectionalShadowmapShader;
-	s32 mCubeEditIndex = 0;
-	s32 mLightEditIndex = 0;
 	framebuffer mSceneFramebuffer;
 	cubemap mSkybox;
 	bool mDrawShadowmap = false;

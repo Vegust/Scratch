@@ -4,7 +4,7 @@
 
 #include "Rendering/Backend/OpenGL/opengl_rhi.h"
 
-dynamic_rhi* CreateRHI(rendering_api Api) {
+rhi* CreateRHI(rendering_api Api) {
 	switch (Api) {
 		case rendering_api::opengl:
 			return StaticNew<opengl_rhi>();

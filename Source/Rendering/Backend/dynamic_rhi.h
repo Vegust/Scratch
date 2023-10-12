@@ -10,5 +10,10 @@ public:
 	virtual void RenderUI() = 0;
 };
 
+// TODO: maybe later allow non-virtual (compile time) render backend resolution because
+// why would you have 2+ different rendering backends for 1 platform in shipping build?
+using rhi = dynamic_rhi;
+
 enum class rendering_api : u8;
-dynamic_rhi* CreateRHI(rendering_api Api);
+rhi* CreateRHI(rendering_api Api);
+
