@@ -4,6 +4,6 @@
 #include "ref.h"
 
 struct model_instance {
-	ref<model> mModel;
+	//ref<model> mModel;
 	mat4 mTransform{};
 };

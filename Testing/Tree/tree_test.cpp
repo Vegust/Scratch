@@ -145,6 +145,7 @@ static bool SanityCheck(s64 Count) {
 
 s32 tree_test::Test(const std::span<char*>& Args) {
 	TEST_PRINT_LINE();
+	
 	bool Passed = true;
 	Passed = Passed && SanityCheck<s32>(10000);
 	Passed = Passed && SanityCheck<s32>(10000);

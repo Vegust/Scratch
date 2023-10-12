@@ -8,9 +8,8 @@
 	ENDFOREACH ()
 	set(${result} ${dirlist})
 ENDMACRO()
-
+include_directories(../Source/ThirdParty/glm)
 SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
-
 FOREACH (subdir ${SUBDIRS})
 	add_subdirectory(${subdir})
 ENDFOREACH ()
