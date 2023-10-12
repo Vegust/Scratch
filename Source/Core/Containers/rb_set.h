@@ -99,7 +99,7 @@ struct rb_set : allocator_instance<allocator_type>, trait_memcopy_relocatable {
 	using const_iter = tree_iter<rb_set, true>;
 	using alloc_base = allocator_instance<allocator_type>;
 
-	index_type mSize = 0;
+	index mSize = 0;
 	struct tree_node;
 	tree_node* mRoot = nullptr;
 

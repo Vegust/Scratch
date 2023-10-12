@@ -13,7 +13,7 @@ using str_view = span<char>;
 struct str final : trait_memcopy_relocatable {
 	using char_type = char;
 	using value_type = char;
-	constexpr static index_type StackSize = 14;
+	constexpr static index StackSize = 14;
 	using array_type = dyn_array<char_type, default_allocator, StackSize>;
 	using iter = array_type::iter;
 	using const_iter = array_type::const_iter;
@@ -23,13 +23,13 @@ struct str final : trait_memcopy_relocatable {
 	str() = default;
 
 	str(const char* Characters) {	 // NOLINT(*-explicit-constructor)
-		const index_type Length = strlen(Characters);
+		const index Length = strlen(Characters);
 		mChars.EnsureCapacity(Length + 1);
 		std::memcpy(mChars.Data(), Characters, Length + 1);
 		mChars.mSize = Length + 1;
 	}
 
-	str(const char* Characters, index_type Length) {
+	str(const char* Characters, index Length) {
 		mChars.EnsureCapacity(Length + 1);
 		std::memcpy(mChars.Data(), Characters, Length + 1);
 		mChars.mSize = Length + 1;
@@ -46,12 +46,12 @@ struct str final : trait_memcopy_relocatable {
 		// clang-format off
 		constexpr array<char, 19> LookupTable = 
 		{'9','8','7','6','5','4','3','2','1','0','1','2','3','4','5','6','7','8','9'};
-		constexpr index_type ZeroIndex = 9;
+		constexpr index ZeroIndex = 9;
 		array<char, 20> Buffer{}; // Should be enough for negative 64 bit int
 		// clang-format on
 		char* NumberStart = Buffer.end();
 		bool Signed = IntegralNumber < 0;
-		index_type NumChars = Signed ? 1 : 0;
+		index NumChars = Signed ? 1 : 0;
 		do {
 			*--NumberStart = LookupTable[ZeroIndex + (IntegralNumber % 10)];
 			IntegralNumber /= 10;
@@ -86,7 +86,7 @@ struct str final : trait_memcopy_relocatable {
 		if (!Characters) {
 			return *this;
 		}
-		const index_type Length = strlen(Characters);
+		const index Length = strlen(Characters);
 		mChars.EnsureCapacity(Length + 1);
 		std::memcpy(mChars.Data(), Characters, Length + 1);
 		mChars.mSize = Length + 1;
@@ -109,23 +109,23 @@ struct str final : trait_memcopy_relocatable {
 		return mChars.Data();
 	}
 
-	[[nodiscard]] FORCEINLINE index_type Length() const {
+	[[nodiscard]] FORCEINLINE index Length() const {
 		return mChars.Size() ? mChars.Size() - 1 : 0;
 	}
 
-	[[nodiscard]] FORCEINLINE index_type Empty() const {
+	[[nodiscard]] FORCEINLINE index Empty() const {
 		return Length() == 0;
 	}
 
-	FORCEINLINE const char_type& operator[](const index_type Index) const {
+	FORCEINLINE const char_type& operator[](const index Index) const {
 		return mChars[Index];
 	}
 
-	FORCEINLINE char_type& At(index_type Position) {
+	FORCEINLINE char_type& At(index Position) {
 		return mChars[Position];
 	}
 
-	[[nodiscard]] FORCEINLINE const char_type& At(index_type Position) const {
+	[[nodiscard]] FORCEINLINE const char_type& At(index Position) const {
 		return mChars[Position];
 	}
 
@@ -149,7 +149,7 @@ struct str final : trait_memcopy_relocatable {
 		if (Length() != Other.Length()) {
 			return false;
 		}
-		for (index_type i = 0; i < Length(); ++i) {
+		for (index i = 0; i < Length(); ++i) {
 			if (mChars[i] != Other.mChars[i]) {
 				return false;
 			}
@@ -183,7 +183,7 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(char Char) && {
 		str Result;
-		const index_type RequiredSize = Length() + 2;
+		const index RequiredSize = Length() + 2;
 		if (mChars.mCapacity >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
@@ -204,7 +204,7 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(const str& Other) && {
 		str Result;
-		const index_type RequiredSize = Length() + Other.Length() + 1;
+		const index RequiredSize = Length() + Other.Length() + 1;
 		if (mChars.mCapacity >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
@@ -225,7 +225,7 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(const char* Characters) && {
 		str Result;
-		const index_type RequiredSize = Length() + strlen(Characters) + 1;
+		const index RequiredSize = Length() + strlen(Characters) + 1;
 		if (mChars.mCapacity >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
@@ -237,7 +237,7 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	FORCEINLINE str& operator+=(char Char) {
-		const index_type LhsLen = Length();
+		const index LhsLen = Length();
 		if (LhsLen == 0) {
 			mChars.EnsureCapacity(2);
 			mChars[0] = Char;
@@ -253,12 +253,12 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	FORCEINLINE str& operator+=(const str& Other) {
-		const index_type LhsLen = Length();
+		const index LhsLen = Length();
 		if (LhsLen == 0) {
 			*this = Other;
 			return *this;
 		}
-		const index_type RhsLen = Other.Length();
+		const index RhsLen = Other.Length();
 		if (RhsLen == 0) {
 			return *this;
 		}
@@ -273,12 +273,12 @@ struct str final : trait_memcopy_relocatable {
 		if (!Chars || Chars[0] == 0) {
 			return *this;
 		}
-		const index_type LhsLen = Length();
+		const index LhsLen = Length();
 		if (LhsLen == 0) {
 			*this = Chars;
 			return *this;
 		}
-		const index_type RhsLen = strlen(Chars);
+		const index RhsLen = strlen(Chars);
 		mChars.EnsureCapacity(LhsLen + RhsLen + 1);
 		memcpy(Raw() + LhsLen, Chars, RhsLen);
 		mChars[LhsLen + RhsLen] = 0;
@@ -286,12 +286,12 @@ struct str final : trait_memcopy_relocatable {
 		return *this;
 	}
 
-	FORCEINLINE str Substr(index_type Begin, index_type End) const {
+	FORCEINLINE str Substr(index Begin, index End) const {
 		return str{Raw() + Begin, End - Begin};
 	}
 
-	FORCEINLINE index_type FindLastOf(char Char) const {
-		index_type LastIndex = InvalidIndex;
+	FORCEINLINE index FindLastOf(char Char) const {
+		index LastIndex = InvalidIndex;
 		for (int i = 0; i < Length(); ++i) {
 			if (mChars[i] == Char) {
 				LastIndex = i;
@@ -300,7 +300,7 @@ struct str final : trait_memcopy_relocatable {
 		return LastIndex;
 	}
 
-	FORCEINLINE index_type Find(const char* Substring, index_type StartIndex = 0) const {
+	FORCEINLINE index Find(const char* Substring, index StartIndex = 0) const {
 		if (!Substring || Empty() || mChars.mSize <= StartIndex) {
 			return InvalidIndex;
 		}
@@ -351,7 +351,7 @@ struct str final : trait_memcopy_relocatable {
 
 FORCEINLINE str operator+(char Char, const str& String) {
 	str Result;
-	const index_type RequiredSize = String.Length() + 2;
+	const index RequiredSize = String.Length() + 2;
 	Result.mChars.EnsureCapacity(RequiredSize);
 	Result.mChars.mSize = String.mChars.mSize + 1;
 	std::memcpy(Result.Raw() + 1, String.Raw(), String.Length());

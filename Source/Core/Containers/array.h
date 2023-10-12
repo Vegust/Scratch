@@ -4,9 +4,9 @@
 #include "array_iter.h"
 #include <cstring>
 
-template <typename element_type, index_type SizeParameter>
+template <typename element_type, index SizeParameter>
 struct array {
-	constexpr static index_type mSize = SizeParameter;
+	constexpr static index mSize = SizeParameter;
 	element_type mData[mSize]{};
 
 	using value_type = element_type;
@@ -16,7 +16,7 @@ struct array {
 	constexpr array() = default;
 	constexpr ~array() = default;
 
-	FORCEINLINE constexpr explicit array(const element_type* Source, index_type Size) {
+	FORCEINLINE constexpr explicit array(const element_type* Source, index Size) {
 		CopyConstructElements(Source, Size);
 	}
 
@@ -36,18 +36,18 @@ struct array {
 		}
 	}
 
-	template <index_type OtherSize>
+	template <index OtherSize>
 	FORCEINLINE constexpr explicit array(const array<element_type, OtherSize>& Other) {
 		CopyConstructElements(Other.mData, Other.mSize);
 	}
 
-	template <index_type OtherSize>
+	template <index OtherSize>
 	FORCEINLINE constexpr explicit array(const array<element_type, OtherSize>&& Other) noexcept {
 		MoveConstructElements(Other.mData, Other.mSize);
 	}
 
 	FORCEINLINE constexpr bool operator==(const array& Other) const {
-		for (index_type i = 0; i < mSize; ++i) {
+		for (index i = 0; i < mSize; ++i) {
 			if (Other[i] != operator[](i)) {
 				return false;
 			}
@@ -84,26 +84,26 @@ struct array {
 		return mData;
 	}
 
-	[[nodiscard]] FORCEINLINE constexpr index_type Size() const {
+	[[nodiscard]] FORCEINLINE constexpr index Size() const {
 		return mSize;
 	}
 
-	FORCEINLINE constexpr element_type& operator[](const index_type Index) {
+	FORCEINLINE constexpr element_type& operator[](const index Index) {
 		return mData[Index];
 	}
 
-	FORCEINLINE constexpr const element_type& operator[](const index_type Index) const {
+	FORCEINLINE constexpr const element_type& operator[](const index Index) const {
 		return mData[Index];
 	}
 
-	FORCEINLINE constexpr void CopyConstructElements(const element_type* Source, index_type Size) {
-		for (index_type i = 0; i < Size; ++i) {
+	FORCEINLINE constexpr void CopyConstructElements(const element_type* Source, index Size) {
+		for (index i = 0; i < Size; ++i) {
 			mData[i] = element_type(Source[i]);
 		}
 	}
 
-	FORCEINLINE constexpr void MoveConstructElements(const element_type* Source, index_type Size) {
-		for (index_type i = 0; i < Size; ++i) {
+	FORCEINLINE constexpr void MoveConstructElements(const element_type* Source, index Size) {
+		for (index i = 0; i < Size; ++i) {
 			mData[i] = element_type(std::move(Source[i]));
 		}
 	}

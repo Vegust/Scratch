@@ -141,7 +141,7 @@ shader::parsed_shaders shader::ParseShader(const str& Path) {
 	std::ifstream InputFile(Path.Raw(), std::ios::in);
 	str Line;
 	parsed_shaders Result;
-	index_type ShaderIndex = InvalidIndex;
+	index ShaderIndex = InvalidIndex;
 	bool bHasGeometryShader = false;
 	bool ReachedEOF = InputFile.eof() || !InputFile.is_open();
 	while (!ReachedEOF) {

@@ -72,17 +72,17 @@ public:
 	};
 
 	set_elem_container* mData = nullptr;
-	index_type mCapacity = 0;
-	index_type mSize = 0;
-	index_type mDeleted = 0;
-	index_type mMaxSize = 0;
+	index mCapacity = 0;
+	index mSize = 0;
+	index mDeleted = 0;
+	index mMaxSize = 0;
 
 	using alloc_base = allocator_instance<allocator_type>;
 	using iter = hash_set_iter<hash_set, false>;
 	using const_iter = hash_set_iter<hash_set, true>;
 	using set_element_container_type = set_elem_container;
 	using value_type = element_type;
-	constexpr static index_type MinCapacity = 4;
+	constexpr static index MinCapacity = 4;
 	constexpr static float MaxLoadFactor = 0.7f;
 	constexpr static float MaxLoadFactorInverse = 1.f / MaxLoadFactor;
 	constexpr static bool FastCopy = trivially_copyable<element_type>;
@@ -108,10 +108,10 @@ public:
 
 	struct prober {
 		set_elem_container* mData = nullptr;
-		index_type mHashMask = 0;
+		index mHashMask = 0;
 		const hash::hash_type mHash = EmptyHash;
 		set_elem_container* mSetElem = nullptr;
-		index_type mIteration = 0;
+		index mIteration = 0;
 
 		FORCEINLINE prober(const hash_set& Set, hash::hash_type Hash)
 			: mData(Set.mData), mHashMask(Set.mCapacity), mHash(Hash) {
@@ -127,7 +127,7 @@ public:
 			mSetElem = mData + (mHash & mHashMask);
 		}
 
-		FORCEINLINE prober(set_elem_container* Data, index_type Capacity, hash::hash_type Hash)
+		FORCEINLINE prober(set_elem_container* Data, index Capacity, hash::hash_type Hash)
 			: mData(Data), mHash(Hash) {
 			if constexpr (DebugMode) {
 				++NumQueries;
@@ -158,14 +158,14 @@ public:
 			return *this;
 		}
 
-		FORCEINLINE index_type TriangleNumber(const index_type Iteration) {
+		FORCEINLINE index TriangleNumber(const index Iteration) {
 			return (Iteration * (Iteration + 1)) >> 1;
 		}
 	};
 
 	FORCEINLINE hash_set() = default;
 
-	FORCEINLINE explicit hash_set(index_type InitialSize) {
+	FORCEINLINE explicit hash_set(index InitialSize) {
 		EnsureCapacity(InitialSize);
 	}
 
@@ -226,8 +226,8 @@ public:
 		return RemoveOne(Elem);
 	}
 
-	FORCEINLINE index_type RemoveAll(const element_type& Elem) {
-		index_type NumRemoved = 0;
+	FORCEINLINE index RemoveAll(const element_type& Elem) {
+		index NumRemoved = 0;
 		for (prober P{*this, GetHash(Elem)}; P.NotEmpty(); ++P) {
 			if (P.mSetElem->mHash == P.mHash && Equals(Elem, P.mSetElem->mValue)) {
 				if constexpr (!FastDestruct) {
@@ -301,14 +301,14 @@ public:
 	// Unlike array, hash_set does not have maximum allocation size that it cannot exceed when
 	// doubling size, because hash_set relies on capacity being a power of two (masking, triangle
 	// numbers for probing)
-	FORCEINLINE bool EnsureCapacity(const index_type NewExpectedSize) {
+	FORCEINLINE bool EnsureCapacity(const index NewExpectedSize) {
 		if (NewExpectedSize + mDeleted > mMaxSize) {
-			const index_type DesiredSize = NewExpectedSize > mMaxSize
+			const index DesiredSize = NewExpectedSize > mMaxSize
 											   ? NewExpectedSize
 											   : (mSize << 1 > mMaxSize ? mSize << 1 : mMaxSize);
-			const index_type DesiredCapacity =
-				1 << LogOfTwoCeil((index_type) ((DesiredSize + 1) * MaxLoadFactorInverse));
-			const index_type NewCapacity = Max(DesiredCapacity, MinCapacity);
+			const index DesiredCapacity =
+				1 << LogOfTwoCeil((index) ((DesiredSize + 1) * MaxLoadFactorInverse));
+			const index NewCapacity = Max(DesiredCapacity, MinCapacity);
 			auto* const NewData =
 				(set_elem_container*) alloc_base::mAllocator.Allocate(NewCapacity * sizeof(set_elem_container));
 			if (NewData) {
@@ -334,7 +334,7 @@ public:
 				mData = NewData;
 				mDeleted = 0;
 				mCapacity = NewCapacity;
-				mMaxSize = (index_type) (MaxLoadFactor * mCapacity);
+				mMaxSize = (index) (MaxLoadFactor * mCapacity);
 				return true;
 			}
 			return false;
@@ -421,7 +421,7 @@ public:
 
 	FORCEINLINE explicit hash_table() = default;
 
-	FORCEINLINE explicit hash_table(index_type InitialSize) {
+	FORCEINLINE explicit hash_table(index InitialSize) {
 		super::EnsureCapacity(InitialSize);
 	}
 
@@ -461,7 +461,7 @@ public:
 		return false;
 	}
 
-	FORCEINLINE index_type RemoveAll(const table_key_type& Key) {
+	FORCEINLINE index RemoveAll(const table_key_type& Key) {
 		typename super::index_type NumRemoved = 0;
 		for (typename super::prober P{*this, super::GetHash(Key)}; P.NotEmpty(); ++P) {
 			if (P.mSetElem->mHash == P.mHash && super::Equals(Key, P.mSetElem->mValue)) {

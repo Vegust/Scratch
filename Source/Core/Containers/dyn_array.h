@@ -23,14 +23,14 @@ protected:
 template <typename element_type>
 class array_stack_storage<element_type, 0> {};
 
-template <typename element_type, typename allocator_type = default_allocator, index_type StackSize = 0>
+template <typename element_type, typename allocator_type = default_allocator, index StackSize = 0>
 struct dyn_array : array_stack_storage<element_type, StackSize>,
 			   trait_memcopy_relocatable,
 			   allocator_instance<allocator_type> {
 public:
 	element_type* mData = nullptr;
-	index_type mSize = 0;
-	index_type mCapacity = StackSize;
+	index mSize = 0;
+	index mCapacity = StackSize;
 
 	using iter = array_iter<dyn_array, false>;
 	using value_type = element_type;
@@ -39,10 +39,10 @@ public:
 	constexpr static bool FastCopy = trivially_copyable<element_type>;
 	constexpr static bool FastDestruct = trivially_destructible<element_type>;
 	constexpr static bool MemcopyRealloc = memcopy_relocatable<element_type>;
-	constexpr static index_type MaxSingleByteSizeIncrease = 1024 * 1024 * 10;	 // 10 MB,
+	constexpr static index MaxSingleByteSizeIncrease = 1024 * 1024 * 10;	 // 10 MB,
 																				 // completely
 																				 // arbitrary
-	constexpr static index_type MaxSingleCapacityIncrease =
+	constexpr static index MaxSingleCapacityIncrease =
 		Max(1, MaxSingleByteSizeIncrease / sizeof(element_type));
 
 	dyn_array() = default;
@@ -51,17 +51,17 @@ public:
 		Clear();
 	}
 
-	FORCEINLINE explicit dyn_array(index_type InitialCapacity) {
+	FORCEINLINE explicit dyn_array(index InitialCapacity) {
 		EnsureCapacity(InitialCapacity);
 	}
 
-	FORCEINLINE explicit dyn_array(element_type* Source, index_type Count) {
+	FORCEINLINE explicit dyn_array(element_type* Source, index Count) {
 		mData = Source;
 		mCapacity = Count;
 		mSize = Count;
 	}
 
-	FORCEINLINE explicit dyn_array(const element_type* Source, index_type Count) {
+	FORCEINLINE explicit dyn_array(const element_type* Source, index Count) {
 		EnsureCapacity(Count);
 		CopyConstructElements(Data(), Source, Count);
 		mSize = Count;
@@ -85,7 +85,7 @@ public:
 		if (mSize != Other.mSize) {
 			return false;
 		}
-		for (index_type i = 0; i < mSize; ++i) {
+		for (index i = 0; i < mSize; ++i) {
 			if (Other[i] != operator[](i)) {
 				return false;
 			}
@@ -156,32 +156,32 @@ public:
 		return mData;
 	}
 
-	FORCEINLINE index_type Capacity() const {
+	FORCEINLINE index Capacity() const {
 		return mCapacity;
 	}
 
-	FORCEINLINE index_type Size() const {
+	FORCEINLINE index Size() const {
 		return mSize;
 	}
 
-	FORCEINLINE element_type& operator[](const index_type Index) {
+	FORCEINLINE element_type& operator[](const index Index) {
 		return Data()[Index];
 	}
 
-	FORCEINLINE const element_type& operator[](const index_type Index) const {
+	FORCEINLINE const element_type& operator[](const index Index) const {
 		return Data()[Index];
 	}
 
 	template <typename... TArgs>
-	FORCEINLINE index_type Emplace(TArgs&&... Args) {
+	FORCEINLINE index Emplace(TArgs&&... Args) {
 		return EmplaceAt(mSize, std::forward<TArgs>(Args)...);
 	}
 
-	FORCEINLINE index_type Add(const element_type& Element) {
+	FORCEINLINE index Add(const element_type& Element) {
 		return AddAt(mSize, Element);
 	}
 
-	FORCEINLINE index_type AddAt(const index_type Index, const element_type& Element) {
+	FORCEINLINE index AddAt(const index Index, const element_type& Element) {
 		if (EnsureCapacity(mSize + 1)) {
 			ShiftForwardOne(Index);	   // TODO: potentially 1 redundant memmove
 			new (&(Data()[Index])) element_type(Element);
@@ -192,7 +192,7 @@ public:
 	}
 
 	template <typename... TArgs>
-	FORCEINLINE index_type EmplaceAt(const index_type Index, TArgs&&... Args) {
+	FORCEINLINE index EmplaceAt(const index Index, TArgs&&... Args) {
 		if (EnsureCapacity(mSize + 1)) {
 			ShiftForwardOne(Index);	   // TODO: potentially 1 redundant move
 			new (&(Data()[Index])) element_type(std::forward<TArgs>(Args)...);
@@ -202,13 +202,13 @@ public:
 		return InvalidIndex;
 	}
 
-	FORCEINLINE void RemoveAt(const index_type Index) {
+	FORCEINLINE void RemoveAt(const index Index) {
 		DestroyElement(Index);
 		ShiftBackOne(Index + 1);
 		--mSize;
 	}
 
-	FORCEINLINE void RemoveAtSwap(const index_type Index) {
+	FORCEINLINE void RemoveAtSwap(const index Index) {
 		if constexpr (StackSize > 0) {
 			element_type* ActualData = Data();
 			if constexpr (MemcopyRealloc) {
@@ -231,18 +231,18 @@ public:
 		return;
 	}
 
-	FORCEINLINE void DestroyElement(index_type Index)
+	FORCEINLINE void DestroyElement(index Index)
 		requires(!FastDestruct)
 	{
 		Data()[Index].~element_type();
 	}
 
-	FORCEINLINE void DestroyElement(index_type Index)
+	FORCEINLINE void DestroyElement(index Index)
 		requires(FastDestruct)
 	{
 	}
 
-	FORCEINLINE bool Reserve(index_type TargetCapacity) {
+	FORCEINLINE bool Reserve(index TargetCapacity) {
 		if (mCapacity >= TargetCapacity) {
 			return true;
 		}
@@ -266,7 +266,7 @@ public:
 
 	FORCEINLINE void Clear(bool Deallocate = true) {
 		if (!FastDestruct) {
-			for (index_type i = 0; i < mSize; ++i) {
+			for (index i = 0; i < mSize; ++i) {
 				DestroyElement(i);
 			}
 		}
@@ -315,8 +315,8 @@ public:
 		return const_iter(mData + mSize);
 	}
 
-	FORCEINLINE index_type FindFirst(const element_type& Value) {
-		for (index_type i = 0; i < mSize; ++i) {
+	FORCEINLINE index FindFirst(const element_type& Value) {
+		for (index i = 0; i < mSize; ++i) {
 			if (Value == mData[i]) {
 				return i;
 			}
@@ -324,8 +324,8 @@ public:
 		return InvalidIndex;
 	}
 
-	FORCEINLINE index_type FindLast(const element_type& Value) {
-		for (index_type i = mSize - 1;; --i) {
+	FORCEINLINE index FindLast(const element_type& Value) {
+		for (index i = mSize - 1;; --i) {
 			if (Value == mData[i]) {
 				return i;
 			}
@@ -337,8 +337,8 @@ public:
 	}
 
 	template <typename predicate_type>
-	FORCEINLINE index_type FindFirstByPredicate(const predicate_type& Predicate) {
-		for (index_type i = 0; i < mSize; ++i) {
+	FORCEINLINE index FindFirstByPredicate(const predicate_type& Predicate) {
+		for (index i = 0; i < mSize; ++i) {
 			if (Predicate(mData[i])) {
 				return i;
 			}
@@ -347,8 +347,8 @@ public:
 	}
 
 	template <typename predicate_type>
-	FORCEINLINE index_type FindLastByPredicate(const predicate_type& Predicate) {
-		for (index_type i = mSize - 1;; --i) {
+	FORCEINLINE index FindLastByPredicate(const predicate_type& Predicate) {
+		for (index i = mSize - 1;; --i) {
 			if (Predicate(mData[i])) {
 				return i;
 			}
@@ -388,7 +388,7 @@ public:
 			bool Loop;
 			do {
 				Loop = false;
-				index_type Count = Current.mLast - Current.mFirst + 1;
+				index Count = Current.mLast - Current.mFirst + 1;
 				if (Count <= 32) {
 					InsertionSort(Current.mFirst, Current.mLast + 1, LessOp);
 					continue;
@@ -470,10 +470,10 @@ public:
 		// TODO
 	}
 
-	FORCEINLINE bool EnsureCapacity(const index_type NewCapacity) {
+	FORCEINLINE bool EnsureCapacity(const index NewCapacity) {
 		if (mCapacity == 0 && NewCapacity != 0) {
-			constexpr index_type InitialCapacity = 4;
-			const index_type TargetCapacity = Max(InitialCapacity, NewCapacity);
+			constexpr index InitialCapacity = 4;
+			const index TargetCapacity = Max(InitialCapacity, NewCapacity);
 			mData = (element_type*) alloc_base::mAllocator.Allocate(
 				TargetCapacity * sizeof(element_type));
 			if (mData) {
@@ -482,14 +482,14 @@ public:
 			return mData;
 
 		} else if (mCapacity < NewCapacity) {
-			const index_type DoubledCapacity = 1 << (LogOfTwoCeil(mCapacity) + 1);
+			const index DoubledCapacity = 1 << (LogOfTwoCeil(mCapacity) + 1);
 			return Reserve(
 				Min(MaxSingleCapacityIncrease + mCapacity, Max(DoubledCapacity, NewCapacity)));
 		}
 		return true;
 	}
 
-	FORCEINLINE void ShiftBackOne(index_type From) {
+	FORCEINLINE void ShiftBackOne(index From) {
 		element_type* ActualData = Data();
 		if constexpr (MemcopyRealloc) {
 			std::memmove(
@@ -505,14 +505,14 @@ public:
 		}
 	}
 
-	FORCEINLINE void ShiftForwardOne(index_type From) {
+	FORCEINLINE void ShiftForwardOne(index From) {
 		element_type* ActualData = Data();
 		if constexpr (MemcopyRealloc) {
 			std::memmove(
 				&ActualData[From + 1], &ActualData[From], (mSize - From) * sizeof(element_type));
 		} else {
 			if (From < mSize) {
-				index_type Source = mSize;
+				index Source = mSize;
 				new (&ActualData[Source]) element_type(std::move(ActualData[Source - 1]));
 				for (--Source; Source != From; --Source) {
 					ActualData[Source] = std::move(ActualData[Source - 1]);
@@ -525,11 +525,11 @@ public:
 	FORCEINLINE void CopyConstructElements(
 		element_type* Dest,
 		const element_type* Source,
-		const index_type Count) {
+		const index Count) {
 		if constexpr (FastCopy) {
 			std::memcpy(Dest, Source, Count * sizeof(element_type));
 		} else {
-			for (index_type i = 0; i < Count; ++i) {
+			for (index i = 0; i < Count; ++i) {
 				new (&Dest[i]) element_type(Source[i]);
 			}
 		}

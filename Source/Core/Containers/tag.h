@@ -9,7 +9,7 @@
 struct tag : trait_memcopy_relocatable {
 	struct id_pool {
 		struct index_hasher {
-			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(index_type Index) {
+			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(index Index) {
 				return hash::Hash(Pool.mStrings[Index]);
 			}
 		};
@@ -17,10 +17,10 @@ struct tag : trait_memcopy_relocatable {
 		// NOTE: this should not allocate memory at construction
 		// because static allocator might not be initialized
 		dyn_array<str> mStrings{};
-		hash_set<index_type, index_hasher> mIndexLookupSet{};
+		hash_set<index, index_hasher> mIndexLookupSet{};
 	};
 
-	index_type mIndex{InvalidIndex};
+	index mIndex{InvalidIndex};
 	static id_pool Pool;
 
 	FORCEINLINE tag() = default;
@@ -54,7 +54,7 @@ struct tag : trait_memcopy_relocatable {
 	}
 
 	template <typename string_type>
-	FORCEINLINE index_type* FindExistingIndex(hash::hash_type Hash, string_type&& String) {
+	FORCEINLINE index* FindExistingIndex(hash::hash_type Hash, string_type&& String) {
 		return Pool.mIndexLookupSet.FindByPredicate(
 			Hash, [&String](auto& Index) { return Pool.mStrings[Index] == String; });
 	}

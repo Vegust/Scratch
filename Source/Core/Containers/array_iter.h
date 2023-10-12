@@ -59,7 +59,7 @@ public:
 		return array_iter(mElement + Val);
 	}
 
-	FORCEINLINE constexpr reference operator[](index_type Index) {
+	FORCEINLINE constexpr reference operator[](index Index) {
 		return *(mElement + Index);
 	}
 

@@ -19,8 +19,8 @@ using vec4 = glm::vec4;
 using mat3 = glm::mat3;
 using mat4 = glm::mat4;
 
-using index_type = u32;
-constexpr index_type InvalidIndex = 0xffffffff;
+using index = u32;
+constexpr index InvalidIndex = 0xffffffff;
 
 #define PLATFORM_BREAK() (__debugbreak())
 #ifdef NDEBUG

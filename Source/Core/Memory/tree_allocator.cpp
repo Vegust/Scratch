@@ -121,7 +121,7 @@ struct tree_allocator_impl {
 	};
 
 	static tree_allocator_impl Impl;
-	static constexpr index_type Granularity = 16;
+	static constexpr index Granularity = 16;
 	constexpr static u32 NumPools = 4;
 	// all sizes in this file are in multiples of 16 (Granularity)
 	constexpr static u32 HeaderSize = 1;

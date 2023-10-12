@@ -8,7 +8,7 @@
 template <typename element_type>
 struct span {
 	const element_type* mData{nullptr};
-	index_type mSize{0};
+	index mSize{0};
 
 	// both iterators are const because you can't change span data (for now?) // TODO
 	using iter = array_iter<span, true>;
@@ -22,18 +22,18 @@ struct span {
 	span& operator=(const span&) = default;
 	span& operator=(span&&) = default;
 
-	FORCEINLINE constexpr explicit span(const element_type* Source, const index_type Count)
+	FORCEINLINE constexpr explicit span(const element_type* Source, const index Count)
 		: mData{Source}, mSize{Count} {
 	}
 
 	FORCEINLINE constexpr explicit span(const element_type* Begin, const element_type* End)
-		: mData{Begin}, mSize{static_cast<index_type>(End - Begin)} {
+		: mData{Begin}, mSize{static_cast<index>(End - Begin)} {
 	}
 
 	// conversion to span can be implicit
 	FORCEINLINE constexpr span(const char* Source)	  // NOLINT(*-explicit-constructor)
 		: mData{Source} {
-		mSize = static_cast<index_type>(strlen(Source));
+		mSize = static_cast<index>(strlen(Source));
 	}
 
 	// conversion to span can be implicit
@@ -70,7 +70,7 @@ struct span {
 				typename std::remove_const<value_type>::type>::value)
 	FORCEINLINE constexpr bool operator==(const container_type& Other) const {
 		const value_type* OtherBegin = Other.begin();
-		const index_type OtherSize = Other.end() - OtherBegin;
+		const index OtherSize = Other.end() - OtherBegin;
 		if (mSize != OtherSize) {
 			return false;
 		}
@@ -86,7 +86,7 @@ struct span {
 		if (mSize != Other.mSize) {
 			return false;
 		}
-		for (index_type i = 0; i < mSize; ++i) {
+		for (index i = 0; i < mSize; ++i) {
 			if (Other[i] != operator[](i)) {
 				return false;
 			}
@@ -94,7 +94,7 @@ struct span {
 		return true;
 	}
 
-	FORCEINLINE constexpr const element_type& operator[](const index_type Index) const {
+	FORCEINLINE constexpr const element_type& operator[](const index Index) const {
 		return mData[Index];
 	}
 
@@ -102,7 +102,7 @@ struct span {
 		return mData;
 	}
 
-	[[nodiscard]] FORCEINLINE constexpr index_type Size() const {
+	[[nodiscard]] FORCEINLINE constexpr index Size() const {
 		return mSize;
 	}
 

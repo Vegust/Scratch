@@ -25,7 +25,7 @@ void model::Load(const str& Path) {
 		return;
 	}
 
-	index_type LastBackspace = Path.FindLastOf('/');
+	index LastBackspace = Path.FindLastOf('/');
 	mDirectory = LastBackspace != InvalidIndex ? Path.Substr(0, LastBackspace) : Path;
 
 	ProcessNode(*this, Scene->mRootNode, Scene);
