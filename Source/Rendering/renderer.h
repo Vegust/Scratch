@@ -1,5 +1,6 @@
 #pragma once
 
+#include "owned.h"
 #include "Rendering/rendering_types.h"
 #include "Rendering/OldRender/old_rebderer.h"
 #include "Application/app_message.h"
@@ -12,7 +13,7 @@ class renderer {
 public:
 	old_rebderer mOldRenderer{};
 	render_state mState;
-	dynamic_rhi* mRHI{nullptr};
+	owned<dynamic_rhi> mRHI{nullptr};
 
 	// from test_shadowmaps, toto refactor
 	phong_material mCubeMaterial;

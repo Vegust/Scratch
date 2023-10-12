@@ -10,7 +10,6 @@ concept ref_counted_c = requires(ref_counted_type instance) {
 	instance.Dereference();
 };
 
-// TODO add moves without modifying object counter
 template <ref_counted_c ref_counted_type>
 struct ref {
 	ref_counted_type* mPointer = nullptr;
@@ -24,6 +23,7 @@ struct ref {
 	void Unref() {
 		if (mPointer) {
 			if (!mPointer->Dereference()) {
+				// pointed instance should be allocated with default_allocator
 				StaticDelete(mPointer);
 			}
 			mPointer = nullptr;
@@ -35,8 +35,7 @@ struct ref {
 		ref(StaticNew<ref_counted_type>(std::forward<arg_types>(Args)...));
 	}
 
-	// pointed instance should be allocated with default_allocator
-	FORCEINLINE ref(ref_counted_type* Pointer) {
+	FORCEINLINE explicit ref(ref_counted_type* Pointer) {
 		if (Pointer == mPointer) {
 			return;
 		}
@@ -48,6 +47,10 @@ struct ref {
 	}
 
 	FORCEINLINE ref(const ref& Other) : ref(Other.mPointer) {
+	}
+
+	FORCEINLINE ref(ref&& Other) : mPointer{Other.mPointer} {
+		Other.mPointer = nullptr;
 	}
 
 	FORCEINLINE bool operator==(const ref_counted_type* Pointer) const {
@@ -66,12 +69,29 @@ struct ref {
 		return mPointer != Other.mPointer;
 	}
 
-	FORCEINLINE ref_counted_type& operator->() const {
+	const ref_counted_type* operator->() const {
+		return mPointer;
+	}
+
+	ref_counted_type* operator->() {
+		return mPointer;
+	}
+
+	ref_counted_type& operator*() noexcept {
 		return *mPointer;
 	}
 
-	FORCEINLINE void operator=(const ref& Other) {
+	const ref_counted_type& operator*() const {
+		return *mPointer;
+	}
+
+	FORCEINLINE ref& operator=(const ref& Other) {
 		ref(Other.mPointer);
+	}
+
+	FORCEINLINE ref& operator=(ref&& Other) {
+		mPointer = Other.mPointer;
+		Other.mPointer = nullptr;
 	}
 
 	FORCEINLINE bool Valid() const {

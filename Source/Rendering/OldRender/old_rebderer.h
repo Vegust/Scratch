@@ -53,7 +53,6 @@ public:
 	s32 mSkyboxTextureSlot = cubemap::CubemapSlot;
 
 	shader mPostProcessShader{};
-
 	shader mSkyboxShader{};
 	shader mPhongShader{};
 	shader mOutlineShader{};
