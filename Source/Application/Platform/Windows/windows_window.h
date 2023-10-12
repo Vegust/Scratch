@@ -15,15 +15,15 @@ struct window_process_result {
 	window_state mState;
 };
 
-class window_windows {
+class windows_window {
 public:
 	GLFWwindow* mWindow{nullptr};
 
 	frame_input_state mFrameInput;
 	window_state mState{};
 
-	window_windows(u32 WindowWidth, u32 WindowHeight);
-	~window_windows();
+	windows_window(u32 WindowWidth, u32 WindowHeight);
+	~windows_window();
 
 	window_process_result ProcessExternalEvents();
 	dyn_array<app_message> HandleMessages(const dyn_array<app_message>& Messages);

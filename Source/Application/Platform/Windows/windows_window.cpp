@@ -1,4 +1,4 @@
-#include "window_windows.h"
+#include "windows_window.h"
 
 #ifdef WIN32
 
@@ -9,7 +9,7 @@
 struct proc_data {
 	window_process_result& mResult;
 	frame_input_state& mFrameInput;
-	window_windows& mWindow;
+	windows_window& mWindow;
 };
 
 static proc_data* GetData(struct GLFWwindow* Window) {
@@ -67,7 +67,7 @@ static void OnMouseAction(GLFWwindow* Window, s32 MouseButton, s32 Action, s32 M
 	OnKeyChange(Window, Key, Action);
 }
 
-window_windows::window_windows(u32 WindowWidth, u32 WindowHeight) {
+windows_window::windows_window(u32 WindowWidth, u32 WindowHeight) {
 	mState.mHeight = WindowHeight;
 	mState.mWidth = WindowWidth;
 	glfwInit();
@@ -82,11 +82,11 @@ window_windows::window_windows(u32 WindowWidth, u32 WindowHeight) {
 	glfwMakeContextCurrent(mWindow);
 }
 
-window_windows::~window_windows() {
+windows_window::~windows_window() {
 	glfwTerminate();
 }
 
-window_process_result window_windows::ProcessExternalEvents() {
+window_process_result windows_window::ProcessExternalEvents() {
 	window_process_result Result;
 	Result.mInput.mLastFrame = mFrameInput;
 	proc_data Data{Result, mFrameInput, *this};
@@ -98,7 +98,7 @@ window_process_result window_windows::ProcessExternalEvents() {
 	return Result;
 }
 
-dyn_array<app_message> window_windows::HandleMessages(const dyn_array<app_message>& Messages) {
+dyn_array<app_message> windows_window::HandleMessages(const dyn_array<app_message>& Messages) {
 	dyn_array<app_message> OutMessages;
 	for (const auto& Message : Messages) {
 		switch (Message.mType) {
@@ -122,11 +122,11 @@ dyn_array<app_message> window_windows::HandleMessages(const dyn_array<app_messag
 	return OutMessages;
 }
 
-bool window_windows::ShouldClose() const {
+bool windows_window::ShouldClose() const {
 	return glfwWindowShouldClose(mWindow);
 }
 
-void window_windows::SwapBuffers() {
+void windows_window::SwapBuffers() {
 	glfwSwapBuffers(mWindow);
 }
 

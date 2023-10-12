@@ -27,7 +27,6 @@ public:
 	void Init(u32 WindowWidth, u32 WindowHeight);
 	void InitGlobalUBO();
 	void InitLightsSSBO();
-	void InitCubeVAO();
 	void InitNormalCubeVAO();
 	void InitScreenQuadVAO();
 	void InitSkyboxVAO();
@@ -46,17 +45,11 @@ public:
 	camera mCamera{};
 
 	float mFoV = 60.f;
+
 	vertex_array mScreenQuadVAO{};
-	vertex_buffer mScreenQuadBVO{};
-
-	vertex_array mCubeVAO{};
-	vertex_buffer mCubeVBO{};
-
 	vertex_array mNormalCubeVAO{};
-	vertex_buffer mNormalCubeVBO{};
-
 	vertex_array mSkyboxVAO{};
-	vertex_buffer mSkyboxVBO{};
+
 	s32 mSkyboxTextureSlot = cubemap::CubemapSlot;
 
 	shader mPostProcessShader{};

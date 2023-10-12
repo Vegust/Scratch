@@ -1,4 +1,4 @@
-#include "platform_windows.h"
+#include "windows_platform.h"
 
 #ifdef WIN32
 
@@ -7,11 +7,11 @@
 #include "GLFW/glfw3.h"
 #include "backends/imgui_impl_glfw.h"
 
-float platform_windows::GetTime() {
+float windows_platform::GetTime() {
 	return static_cast<float>(glfwGetTime());
 }
 
-void platform_windows::InitUi(ui& UI, window& Window, rendering_api Api) {
+void windows_platform::InitUi(ui& UI, window& Window, rendering_api Api) {
 //	switch (Api) {
 //		case rendering_api::opengl:
 //			ImGui_ImplGlfw_InitForOpenGL(Window.GetGLFWWindow(), true);
@@ -19,11 +19,11 @@ void platform_windows::InitUi(ui& UI, window& Window, rendering_api Api) {
 //	}
 }
 
-void platform_windows::UpdateUi(ui& UI, window& Window) {
+void windows_platform::UpdateUi(ui& UI, window& Window) {
 //	ImGui_ImplGlfw_NewFrame();
 }
 
-void* platform_windows::GetApiLoadingFunction(rendering_api Api) {
+void* windows_platform::GetApiLoadingFunction(rendering_api Api) {
 	switch (Api) {
 		case rendering_api::opengl:
 			return (void*) (glfwGetProcAddress);

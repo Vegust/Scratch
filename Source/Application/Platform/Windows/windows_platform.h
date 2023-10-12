@@ -4,13 +4,13 @@
 
 #include "core_types.h"
 
-class window_windows;
-using window = window_windows;
+class windows_window;
+using window = windows_window;
 struct ui;
 
 enum class rendering_api : u8;
 
-struct platform_windows {
+struct windows_platform {
 	static float GetTime();
 
 	static void* GetApiLoadingFunction(rendering_api Api);

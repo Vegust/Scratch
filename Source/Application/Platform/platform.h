@@ -1,6 +1,6 @@
 #pragma once
 
 #ifdef _WIN32
-#include "Windows/platform_windows.h"
-using platform = platform_windows;
+#include "Windows/windows_platform.h"
+using platform = windows_platform;
 #endif

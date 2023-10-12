@@ -2,10 +2,10 @@
 // Created by Vegust on 21.06.2023.
 //
 
-#include "element_buffer.h"
+#include "index_buffer.h"
 #include "old_rebderer.h"
 
-element_buffer::element_buffer(element_buffer&& InIndexBuffer)
+index_buffer::index_buffer(index_buffer&& InIndexBuffer)
 {
 	RendererId = InIndexBuffer.RendererId;
 	Count = InIndexBuffer.Count;
@@ -13,7 +13,7 @@ element_buffer::element_buffer(element_buffer&& InIndexBuffer)
 	InIndexBuffer.Count = 0;
 }
 
-element_buffer& element_buffer::operator=(element_buffer&& InIndexBuffer)
+index_buffer& index_buffer::operator=(index_buffer&& InIndexBuffer)
 {
 	if (RendererId != 0)
 	{
@@ -26,7 +26,7 @@ element_buffer& element_buffer::operator=(element_buffer&& InIndexBuffer)
 	return *this;
 }
 
-element_buffer::~element_buffer()
+index_buffer::~index_buffer()
 {
 	if (RendererId != 0)
 	{
@@ -34,12 +34,12 @@ element_buffer::~element_buffer()
 	}
 }
 
-void element_buffer::Bind() const
+void index_buffer::Bind() const
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, RendererId);
 }
 
-void element_buffer::SetData(const u32* InData, u32 InCount)
+void index_buffer::SetData(const u32* InData, u32 InCount)
 {
 	if (RendererId == 0)
 	{

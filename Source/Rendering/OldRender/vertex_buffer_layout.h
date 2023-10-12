@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Containers/dyn_array.h"
 #include "core_types.h"
+#include "Containers/array.h"
 #include "glad/glad.h"
 
 struct vertex_buffer_attribute {
@@ -27,10 +27,11 @@ template <typename T>
 concept buffer_attribute_type = floating_point<T> || integral<T>;
 
 struct vertex_buffer_layout {
-	dyn_array<vertex_buffer_attribute> mAttributes{};
+	array<vertex_buffer_attribute, 4> mAttributes{};
+	u32 mSize{0};
 	u32 mStride{0};
 
-	[[nodiscard]] const dyn_array<vertex_buffer_attribute>& GetAttributes() const {
+	[[nodiscard]] const array<vertex_buffer_attribute, 4>& GetAttributes() const {
 		return mAttributes;
 	}
 
@@ -40,16 +41,21 @@ struct vertex_buffer_layout {
 
 	template <buffer_attribute_type T>
 	void Push(u32 Count) {
+		CHECK(mSize < mAttributes.Size())
 		mStride += sizeof(T) * Count;
 		if constexpr (std::is_same<T, float>::value) {
-			mAttributes.Emplace(GL_FLOAT, Count, GL_FALSE);
+			mAttributes[mSize] = {GL_FLOAT, Count, GL_FALSE};
+			++mSize;
 			return;
 		} else if constexpr (std::is_same<T, u32>::value) {
-			mAttributes.Emplace(GL_UNSIGNED_INT, Count, GL_FALSE);
+			mAttributes[mSize] = {GL_UNSIGNED_INT, Count, GL_FALSE};
+			++mSize;
 			return;
 		} else if constexpr (std::is_same<T, u8>::value) {
-			mAttributes.Emplace(GL_UNSIGNED_BYTE, Count, GL_TRUE);
+			mAttributes[mSize] = {GL_UNSIGNED_BYTE, Count, GL_TRUE};
+			++mSize;
 			return;
 		}
+
 	}
 };

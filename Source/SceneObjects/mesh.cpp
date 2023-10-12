@@ -3,12 +3,9 @@
 #include "Rendering/OldRender/old_rebderer.h"
 
 void mesh::Init() {
-	mVertexBuffer.SetData(
-		mVertices.Data(), static_cast<u32>(mVertices.Size()) * static_cast<u32>(sizeof(vertex)));
-	mElementBuffer.SetData(mIndices.Data(), static_cast<u32>(mIndices.Size()));
-	mVertexArray.AddBuffer(mVertexBuffer, mElementBuffer, vertex::GetLayout());
-}
-
-void mesh::Draw(const old_rebderer& Renderer, const glm::mat4& Transform) {
-	//Renderer.Draw2(mVertexArray, mElementBuffer, mMaterial, Transform);
+	vertex_buffer VertexBuffer{};
+	index_buffer ElementBuffer{};
+	VertexBuffer.SetData(mVertices.Data(), static_cast<u32>(mVertices.Size()) * static_cast<u32>(sizeof(vertex)), mVertices.Size());
+	ElementBuffer.SetData(mIndices.Data(), static_cast<u32>(mIndices.Size()));
+	mVertexArray.SetData(std::move(VertexBuffer), std::move(ElementBuffer), vertex::GetLayout());
 }

@@ -11,12 +11,6 @@ static void ProcessNode(model& Model, aiNode* Node, const aiScene* Scene);
 static mesh ProcessMesh(model& Model, aiMesh* MeshData, const aiScene* Scene);
 static dyn_array<texture> LoadTextures(model& Model, aiMaterial* Material, aiTextureType Type);
 
-void model::Draw(const old_rebderer& Renderer, const glm::mat4& Transform) {
-	for (auto& Mesh : mMeshes) {
-		Mesh.Draw(Renderer, Transform);
-	}
-}
-
 void model::Load(const str& Path) {
 	mMeshes.Clear();
 

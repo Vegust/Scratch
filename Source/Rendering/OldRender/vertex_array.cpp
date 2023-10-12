@@ -1,10 +1,10 @@
 #include "vertex_array.h"
 
-#include "element_buffer.h"
+#include "index_buffer.h"
 #include "vertex_buffer.h"
 #include "vertex_buffer_layout.h"
 
-vertex_array::vertex_array(vertex_array&& VertexArray) {
+vertex_array::vertex_array(vertex_array&& VertexArray) noexcept {
 	mRendererId = VertexArray.mRendererId;
 	mElementBufferSize = VertexArray.mElementBufferSize;
 	mInstanceCount = VertexArray.mInstanceCount;
@@ -13,7 +13,7 @@ vertex_array::vertex_array(vertex_array&& VertexArray) {
 	VertexArray.mElementBufferSize = 0;
 }
 
-vertex_array& vertex_array::operator=(vertex_array&& VertexArray) {
+vertex_array& vertex_array::operator=(vertex_array&& VertexArray) noexcept{
 	if (mRendererId != 0) {
 		glDeleteVertexArrays(1, &mRendererId);
 	}
@@ -32,7 +32,10 @@ vertex_array::~vertex_array() {
 	}
 }
 
-void vertex_array::AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buffer_layout& Layout) {
+void vertex_array::SetData(
+	vertex_buffer&& VertexBuffer,
+	index_buffer&& IndexBuffer,
+	const vertex_buffer_layout& Layout) {
 	if (mRendererId == 0) {
 		glGenVertexArrays(1, &mRendererId);
 	}
@@ -40,7 +43,7 @@ void vertex_array::AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buf
 	VertexBuffer.Bind();
 	const auto& Attributes = Layout.GetAttributes();
 	u64 Offset = 0;
-	for (u32 AttrIndex = 0; AttrIndex < Attributes.Size(); ++AttrIndex) {
+	for (u32 AttrIndex = 0; AttrIndex < Layout.mSize; ++AttrIndex) {
 		const auto& Attribute = Attributes[AttrIndex];
 		glEnableVertexAttribArray(AttrIndex);
 		glVertexAttribPointer(
@@ -52,17 +55,36 @@ void vertex_array::AddBuffer(const vertex_buffer& VertexBuffer, const vertex_buf
 			reinterpret_cast<const void*>(Offset));
 		Offset += Attribute.mCount * vertex_buffer_attribute::GetSizeOfType(Attribute.mType);
 	}
-}
-
-void vertex_array::AddBuffer(
-	const vertex_buffer& VertexBuffer,
-	const element_buffer& IndexBuffer,
-	const vertex_buffer_layout& Layout) {
-	AddBuffer(VertexBuffer, Layout);
 	IndexBuffer.Bind();
 	mElementBufferSize = IndexBuffer.GetCount();
+	mVertexBuffer = std::move(VertexBuffer);
+	mElementBuffer = std::move(IndexBuffer);
 }
 
 void vertex_array::Bind() const {
 	glBindVertexArray(mRendererId);
+}
+
+void vertex_array::SetData(vertex_buffer&& VertexBuffer, const vertex_buffer_layout& Layout) {
+	if (mRendererId == 0) {
+		glGenVertexArrays(1, &mRendererId);
+	}
+	Bind();
+	VertexBuffer.Bind();
+	const auto& Attributes = Layout.GetAttributes();
+	u64 Offset = 0;
+	for (u32 AttrIndex = 0; AttrIndex < Layout.mSize; ++AttrIndex) {
+		const auto& Attribute = Attributes[AttrIndex];
+		glEnableVertexAttribArray(AttrIndex);
+		glVertexAttribPointer(
+			AttrIndex,
+			static_cast<GLint>(Attribute.mCount),
+			Attribute.mType,
+			Attribute.mNormalized,
+			static_cast<GLsizei>(Layout.GetStride()),
+			reinterpret_cast<const void*>(Offset));
+		Offset += Attribute.mCount * vertex_buffer_attribute::GetSizeOfType(Attribute.mType);
+	}
+	mElementBufferSize = VertexBuffer.GetCount();
+	mVertexBuffer = std::move(VertexBuffer);
 }
