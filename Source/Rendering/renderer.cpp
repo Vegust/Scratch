@@ -80,7 +80,7 @@ renderer::renderer(u32 WindowWidth, u32 WindowHeight) {
 	Light.mType = light_type::directional;
 	Light.mAmbientStrength = 0.2f;
 
-	mSkybox.Load({"Resources/Textures/Skybox_Mountains"});
+	mSkybox.Load({"Assets/Textures/Skybox_Mountains"});
 
 	Light.mDirection = {0.29, -0.58, -0.53};
 
@@ -96,21 +96,21 @@ renderer::renderer(u32 WindowWidth, u32 WindowHeight) {
 	Params.mType = framebuffer_type::shadowmap_omni;
 	mPointShadowmap.Reload(Params);
 
-	mDirectionalShadowmapShader.Compile("Resources/Shaders/DirectionalShadowMap.shader");
-	mPointShadowmapShader.Compile("Resources/Shaders/PointShadowMap.shader");
+	mDirectionalShadowmapShader.Compile("Assets/Shaders/DirectionalShadowMap.shader");
+	mPointShadowmapShader.Compile("Assets/Shaders/PointShadowMap.shader");
 
 	mCubeMaterial.InitTextures(
-		"Resources/Textures/Bricks/brickwall.jpg",
-		"Resources/Textures/DefaultSpecular.jpg",
+		"Assets/Textures/Bricks/brickwall.jpg",
+		"Assets/Textures/DefaultSpecular.jpg",
 		"",
-		"Resources/Textures/Bricks/brickwall_normal.jpg");
+		"Assets/Textures/Bricks/brickwall_normal.jpg");
 
 	Params.mType = framebuffer_type::scene;
 	Params.mWidth = (s32) mOldRenderer.mCurrentWidth;
 	Params.mHeight = (s32) mOldRenderer.mCurrentHeight;
 	mSceneFramebuffer.Reload(Params);
 
-	mOldRenderer.mCamera.mPosition = glm::vec3{0.f, 1.f, 10.f};
+	mOldRenderer.mCamera.mPosition = vec3{0.f, 1.f, 20.f};
 
 	SetupCubeTransforms(mStaticCubes, mDynamicCubes);
 }
@@ -294,6 +294,4 @@ void renderer::RenderViews(const dyn_array<view>& Views) {
 }
 
 void renderer::RenderUI(const ui_data& UIData) {
-	//	ImGui::Render();
-	//	mParentApp->mRenderer.mRHI->RenderUI();
 }

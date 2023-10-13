@@ -28,22 +28,22 @@ constexpr index InvalidIndex = 0xffffffff;
 #define CHECK(condition)
 #else
 #define FORCEINLINE inline
-#define CHECK(condition) \
-        if (!(condition)) { \
-            PLATFORM_BREAK(); \
-        }
+#define CHECK(condition)  \
+	if (!(condition)) {   \
+		PLATFORM_BREAK(); \
+	}
 #endif
 
 #if defined(_MSC_VER) && !defined(__llvm__)
 #define NO_UNIQUE_ADDRESS [[msvc::no_unique_address]]
-#elif defined(__llvm__) // stupid clang warnings
+#elif defined(__llvm__)	   // stupid clang warnings
 #define NO_UNIQUE_ADDRESS
 #else
 #define NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif
 
 // stupid templates
-template<typename printed_type>
+template <typename printed_type>
 struct compile_print : printed_type::this_field_does_not_exist {};
 
 // works as flags for types

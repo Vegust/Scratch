@@ -8,10 +8,9 @@ include_directories(Source/Core)
 file(GLOB_RECURSE SCRATCH_CORE_SOURCES "Source/Core/*.cpp")
 file(GLOB_RECURSE SCRATCH_APPLICATION_SOURCES "Source/Application/*.cpp")
 file(GLOB_RECURSE SCRATCH_GAME_SOURCES "Source/Game/*.cpp")
-file(GLOB_RECURSE SCRATCH_RENDERING_SOURCES "Source/Rendering/*.cpp")
+file(GLOB_RECURSE SCRATCH_ASSET_SOURCES "Source/Rendering/*.cpp")
 file(GLOB_RECURSE SCRATCH_UI_SOURCES "Source/UI/*.cpp")
-file(GLOB_RECURSE SCRATCH_RESOURCE_SOURCES "Source/Resource/*.cpp")
-file(GLOB_RECURSE SCRATCH_SCENE_OBJECT_SOURCES "Source/SceneObjects/*.cpp")
+file(GLOB_RECURSE SCRATCH_RESOURCE_SOURCES "Source/Asset/*.cpp")
 
 set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
 add_compile_definitions(NOMINMAX)
@@ -22,10 +21,9 @@ add_executable(Scratch
 		${SCRATCH_CORE_SOURCES}
 		${SCRATCH_APPLICATION_SOURCES}
 		${SCRATCH_GAME_SOURCES}
-		${SCRATCH_RENDERING_SOURCES}
+		${SCRATCH_ASSET_SOURCES}
 		${SCRATCH_UI_SOURCES}
 		${SCRATCH_RESOURCE_SOURCES}
-		${SCRATCH_SCENE_OBJECT_SOURCES}
 )
 
 # ----------- Testing ------------

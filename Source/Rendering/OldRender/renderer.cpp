@@ -1,10 +1,9 @@
 #include "old_rebderer.h"
 #include "index_buffer.h"
 #include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_transform.hpp"
 #include "glm/matrix.hpp"
 #include "imgui.h"
-#include "shader.h"
+#include "Asset/Shader/shader.h"
 #include "vertex_array.h"
 #include "vertex_buffer_layout.h"
 #include "Logger/logger.h"
@@ -77,7 +76,6 @@ void old_rebderer::DrawSkybox(const cubemap& Skybox) {
 	mSkyboxVAO.Bind();
 	mSkyboxShader.Bind();
 	Skybox.Bind();
-	mSkyboxShader.SetUniform("u_Cubemap", cubemap::CubemapSlot);
 	glm::mat4 View = mCamera.GetViewTransform();
 	glm::mat4 ProjectionMatrix = glm::perspective(glm::radians(mFoV), mAspectRatio, 0.001f, 100.f);
 	View = glm::mat4(glm::mat3(View));
@@ -243,18 +241,18 @@ void old_rebderer::Init(u32 WindowWidth, u32 WindowHeight) {
 }
 
 void old_rebderer::InitDefaultShaders() {
-	mPhongShader.Compile("Resources/Shaders/BasicShaded.shader");
+	mPhongShader.Compile("Assets/Shaders/BasicShaded.shader");
 	mPhongShader.Bind();
 	GlobalUBO.mUnlit = false;
 	GlobalUBO.mDepth = false;
 	UpdateGlobalUBO();
-	mOutlineShader.Compile("Resources/Shaders/Outline.shader");
-	mPostProcessShader.Compile("Resources/Shaders/PostProcess.shader");
+	mOutlineShader.Compile("Assets/Shaders/Outline.shader");
+	mPostProcessShader.Compile("Assets/Shaders/PostProcess.shader");
 	mPostProcessShader.Bind();
 	mPostProcessShader.SetUniform("u_Grayscale", false);
 	mPostProcessShader.SetUniform("u_GammaCorrection", mGammaCorrection);
-	mSkyboxShader.Compile("Resources/Shaders/Skybox.shader");
-	mNormalsShader.Compile("Resources/Shaders/Normals.shader");
+	mSkyboxShader.Compile("Assets/Shaders/Skybox.shader");
+	mNormalsShader.Compile("Assets/Shaders/Normals.shader");
 }
 
 // void old_rebderer::ChangeViewMode(view_mode NewViewMode) {

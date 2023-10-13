@@ -51,8 +51,8 @@
             </TreeItems>
         </Expand>
     </Type>
-    <Type Name="tag">
+    <Type Name="atom">
         <DisplayString Condition="mIndex == EmptyIndex">empty</DisplayString>
-        <DisplayString>{tag::Pool.mStrings[mIndex]}</DisplayString>
+        <DisplayString>{atom::Pool.mStrings[mIndex]}</DisplayString>
     </Type>
 </AutoVisualizer>

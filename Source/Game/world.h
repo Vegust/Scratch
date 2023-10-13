@@ -1,9 +1,9 @@
 #pragma once
 
 #include "core_types.h"
-#include "SceneObjects/model.h"
-#include "SceneObjects/light.h"
-#include "SceneObjects/model_instance.h"
+#include "Asset/Model/model.h"
+#include "Game/Entities/light.h"
+#include "Game/Entities/model_instance.h"
 
 struct world {
 	dyn_array<light> mLights{};

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core_types.h"
-#include "phong_material.h"
+#include "Game/Entities/phong_material.h"
 #include "Rendering/OldRender/vertex_array.h"
 #include "Rendering/OldRender/vertex.h"
 

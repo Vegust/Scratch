@@ -3,9 +3,9 @@
 #include <iostream>
 
 // TODO: remove assimp
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <assimp/Importer.hpp>
+#include "ThirdParty/assimp/include/assimp/postprocess.h"
+#include "ThirdParty/assimp/include/assimp/scene.h"
+#include "ThirdParty/assimp/include/assimp/Importer.hpp"
 
 static void ProcessNode(model& Model, aiNode* Node, const aiScene* Scene);
 static mesh ProcessMesh(model& Model, aiMesh* MeshData, const aiScene* Scene);
@@ -75,14 +75,14 @@ mesh ProcessMesh(model& Model, aiMesh* MeshData, const aiScene* Scene) {
 		Material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
 		OutMesh.mMaterial.mDiffuseMap.Load(Model.mDirectory + '/' + str.C_Str(), true);
 	} else {
-		OutMesh.mMaterial.mDiffuseMap.Load("Resources/Textures/DefaultDiffuse.jpg", true);
+		OutMesh.mMaterial.mDiffuseMap.Load("Assets/Textures/DefaultDiffuse.jpg", true);
 	}
 	if (Material->GetTextureCount(aiTextureType_SPECULAR) > 0) {
 		aiString str;
 		Material->GetTexture(aiTextureType_SPECULAR, 0, &str);
 		OutMesh.mMaterial.mSpecularMap.Load(Model.mDirectory + '/' + str.C_Str());
 	} else {
-		OutMesh.mMaterial.mSpecularMap.Load("Resources/Textures/DefaultSpecular.jpg");
+		OutMesh.mMaterial.mSpecularMap.Load("Assets/Textures/DefaultSpecular.jpg");
 	}
 
 	OutMesh.Init();

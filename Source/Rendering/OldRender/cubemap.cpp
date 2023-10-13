@@ -1,12 +1,8 @@
-//
-// Created by Vegust on 29.06.2023.
-//
-
 #include "cubemap.h"
 
+#include "Rendering/bind_constants.h"
 #include "glad/glad.h"
 #include "stb_image.h"
-#include <string>
 
 cubemap::~cubemap() {
 	if (mRendererId != 0) {
@@ -68,6 +64,6 @@ void cubemap::Load(const str& Directory, const array<str, 6>& TextureFacePaths) 
 }
 
 void cubemap::Bind() const {
-	glActiveTexture(GL_TEXTURE0 + CubemapSlot);
+	glActiveTexture(GL_TEXTURE0 + SKY_CUBEMAP_SLOT);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, mRendererId);
 }

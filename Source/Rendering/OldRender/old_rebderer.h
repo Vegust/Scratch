@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SceneObjects/camera.h"
+#include "Game/Entities/camera.h"
 #include "core_types.h"
 #include "vertex_array.h"
 #include "cubemap.h"
@@ -9,7 +9,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/geometric.hpp"
 #include "glm/glm.hpp"
-#include "shader.h"
+#include "Asset/Shader/shader.h"
 #include "vertex_buffer.h"
 
 #define GL_CALL(x)  \
@@ -49,8 +49,6 @@ public:
 	vertex_array mScreenQuadVAO{};
 	vertex_array mNormalCubeVAO{};
 	vertex_array mSkyboxVAO{};
-
-	s32 mSkyboxTextureSlot = cubemap::CubemapSlot;
 
 	shader mPostProcessShader{};
 	shader mSkyboxShader{};

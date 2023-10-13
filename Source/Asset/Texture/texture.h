@@ -3,8 +3,10 @@
 #include "core_types.h"
 #include "Containers/str.h"
 #include "Containers/hash_table.h"
+#include "atom.h"
 
 struct texture {
+	atom mName{};
 	u32 mRendererId{0};
 	str mPath{};
 
@@ -26,13 +28,6 @@ struct texture {
 		return TextureCache;
 	}
 
-	void ClearTextureHandle();
-
-	bool Loaded() const {
-		return mRendererId != 0;
-	}
-
 	void Load(const str& Path, bool SRGB = false);
-
 	void Bind(u32 Slot = 0) const;
 };

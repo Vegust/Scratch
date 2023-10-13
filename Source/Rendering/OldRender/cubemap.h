@@ -1,7 +1,3 @@
-//
-// Created by Vegust on 29.06.2023.
-//
-
 #pragma once
 
 #include "core_types.h"
@@ -10,7 +6,6 @@
 
 struct cubemap {
 	u32 mRendererId{0};
-	constexpr static s32 CubemapSlot{15};
 
 	cubemap() = default;
 	~cubemap();

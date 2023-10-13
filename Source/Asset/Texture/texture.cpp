@@ -3,6 +3,20 @@
 #include "glad/glad.h"
 #include "stb_image.h"
 
+static void ClearTextureHandle(texture& Texture) {
+	if (Texture.mRendererId != 0) {
+		auto& Cache = texture::GetTextureCache();
+		if (auto Found = Cache.Find(Texture.mPath)) {
+			Found->mRefCount -= 1;
+			if (Found->mRefCount == 0) {
+				Cache.Remove(Texture.mPath);
+				glDeleteTextures(1, &Texture.mRendererId);
+			}
+			Texture.mRendererId = 0;
+		}
+	}
+}
+
 texture::texture(texture&& Texture) noexcept {
 	mRendererId = Texture.mRendererId;
 	mPath = std::move(Texture.mPath);
@@ -11,7 +25,7 @@ texture::texture(texture&& Texture) noexcept {
 }
 
 texture& texture::operator=(texture&& Texture) noexcept {
-	ClearTextureHandle();
+	ClearTextureHandle(*this);
 	mRendererId = Texture.mRendererId;
 	mPath = std::move(Texture.mPath);
 	Texture.mRendererId = 0;
@@ -19,22 +33,8 @@ texture& texture::operator=(texture&& Texture) noexcept {
 	return *this;
 }
 
-void texture::ClearTextureHandle() {
-	if (mRendererId != 0) {
-		auto& Cache = GetTextureCache();
-		if (auto Found = Cache.Find(mPath)) {
-			Found->mRefCount -= 1;
-			if (Found->mRefCount == 0) {
-				Cache.Remove(mPath);
-				glDeleteTextures(1, &mRendererId);
-			}
-			mRendererId = 0;
-		}
-	}
-}
-
 void texture::Load(const str& Path, bool SRGB) {
-	ClearTextureHandle();
+	ClearTextureHandle(*this);
 	mPath = Path;
 	auto& Cache = GetTextureCache();
 	if (auto Found = Cache.Find(Path)) {
@@ -76,7 +76,7 @@ void texture::Load(const str& Path, bool SRGB) {
 }
 
 texture::~texture() {
-	ClearTextureHandle();
+	ClearTextureHandle(*this);
 }
 
 void texture::Bind(u32 Slot) const {

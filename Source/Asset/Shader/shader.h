@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core_types.h"
-#include "SceneObjects/light.h"
-#include "SceneObjects/phong_material.h"
+#include "Game/Entities/light.h"
+#include "Game/Entities/phong_material.h"
 #include "Containers/span.h"
 #include "glm/fwd.hpp"
 

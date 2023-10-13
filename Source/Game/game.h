@@ -17,8 +17,9 @@ struct game_update_result {
 
 class game {
 public:
-	dyn_array<world> Worlds{};
+	dyn_array<world> mWorlds{};
 
+	game();
 	game_update_result Step(
 		float Time,
 		float DeltaTime,

@@ -12,9 +12,12 @@ void main() {
 //!shader fragment
 #version 460 core
 
+#define SKY_CUBEMAP_SLOT 11
+
 out vec4 Color;
 in vec3 v_TexDirection;
-uniform samplerCube u_Cubemap;
+
+layout (binding = SKY_CUBEMAP_SLOT) uniform samplerCube u_Cubemap;
 
 void main() {
 	Color = texture(u_Cubemap, v_TexDirection);

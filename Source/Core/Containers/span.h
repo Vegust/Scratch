@@ -15,6 +15,9 @@ struct span {
 	using const_iter = array_iter<span, true>;
 	using value_type = element_type;
 
+	// defines constexpr analogs to strlen etc
+	using traits = std::char_traits<char>;
+
 	span() = default;
 	~span() = default;
 	span(const span&) = default;
@@ -33,7 +36,7 @@ struct span {
 	// conversion to span can be implicit
 	FORCEINLINE constexpr span(const char* Source)	  // NOLINT(*-explicit-constructor)
 		: mData{Source} {
-		mSize = static_cast<index>(strlen(Source));
+		mSize = static_cast<index>(traits::length(Source));
 	}
 
 	// conversion to span can be implicit

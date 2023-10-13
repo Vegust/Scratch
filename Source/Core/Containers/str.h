@@ -31,7 +31,8 @@ struct str final : trait_memcopy_relocatable {
 
 	str(const char* Characters, index Length) {
 		mChars.EnsureCapacity(Length + 1);
-		std::memcpy(mChars.Data(), Characters, Length + 1);
+		std::memcpy(mChars.Data(), Characters, Length);
+		mChars[Length] = 0;
 		mChars.mSize = Length + 1;
 	}
 
