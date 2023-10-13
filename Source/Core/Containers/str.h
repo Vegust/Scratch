@@ -67,10 +67,72 @@ struct str final : trait_memcopy_relocatable {
 		mChars.mSize = NumChars + 1;
 	}
 
-	//	template<floating_point float_type>
-	//	explicit str(float_type FloatingNumber) {
-	//		TODO:
-	//	}
+	template <floating_point float_type>
+	explicit str(float_type FloatingNumber, index FractionalPrecision = 4) {
+		// TODO
+	}
+
+	template <integral integral_type>
+	integral_type GetNumber() {
+
+		return 0;
+	}
+
+	template <floating_point float_type>
+	float_type GetNumber() {
+		// TODO
+		return 0.f;
+	}
+
+	FORCEINLINE str_view GetIntegerString(str_view String) {
+		str_view Start = EatSpaces(String);
+		index NumberLength = 0;
+		while (NumberLength < Start.Size() && )
+	}
+
+	str_view EatSpaces(str_view String) {
+		if (String.Empty()) {
+			return {};
+		}
+		const char* NewStart = String.Data();
+		const char* StringEnd = String.Data() + String.Size();
+		while (IsSpace(*NewStart) && NewStart < StringEnd) {
+			++NewStart;
+		}
+		if (NewStart == StringEnd) {
+			return {};
+		}
+		return str_view{NewStart, StringEnd};
+	}
+
+	FORCEINLINE bool IsSpace(char Character) {
+		return Character == ' ' || Character == '\t' || Character == '\n' || Character == '\r';
+	}
+
+	FORCEINLINE bool IsNumber(char Character) {
+		return '0' <= Character && Character <= '9';
+	}
+
+	str_view GetLine(str_view Previous = {}) {
+		if (Empty()) {
+			return {};
+		}
+		const char* LineStart = Raw();
+		if (Previous.Data() != nullptr) {
+			LineStart = Previous.Data() + Previous.Size();
+			if (*LineStart == '\n') {
+				++LineStart;
+			} else {
+				return {};
+			}
+		}
+		const char* LineEnd = LineStart;
+		const char* StringEnd = Data() + Length();
+		while (*LineEnd != '\n' && LineEnd < StringEnd) {
+			++LineEnd;
+		}
+		return str_view{LineStart, LineEnd};
+	}
 
 	FORCEINLINE str& operator=(str&& Other) noexcept {
 		mChars = std::move(Other.mChars);

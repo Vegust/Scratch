@@ -242,6 +242,7 @@ public:
 	{
 	}
 
+	// Reserve() allocates exactly provided amount (contrary to EnsureCapacity())
 	FORCEINLINE bool Reserve(index TargetCapacity) {
 		if (mCapacity >= TargetCapacity) {
 			return true;
@@ -470,6 +471,7 @@ public:
 		// TODO
 	}
 
+	// EnsureCapacity() allocates to next power of 2 (contrary to Reserve())
 	FORCEINLINE bool EnsureCapacity(const index NewCapacity) {
 		if (mCapacity == 0 && NewCapacity != 0) {
 			constexpr index InitialCapacity = 4;
