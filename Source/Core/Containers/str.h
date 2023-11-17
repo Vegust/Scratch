@@ -85,9 +85,9 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	FORCEINLINE str_view GetIntegerString(str_view String) {
-		str_view Start = EatSpaces(String);
-		index NumberLength = 0;
-		while (NumberLength < Start.Size() && )
+//		str_view Start = EatSpaces(String);
+//		index NumberLength = 0;
+//		while (NumberLength < Start.Size() && )
 	}
 
 	str_view EatSpaces(str_view String) {

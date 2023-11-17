@@ -5,6 +5,7 @@
 #include <cstring>
 
 // const non-owning view into str/array/dyn_array/C string
+// basically const pointer + size
 template <typename element_type>
 struct span {
 	const element_type* mData{nullptr};
