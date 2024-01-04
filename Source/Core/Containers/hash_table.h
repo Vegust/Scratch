@@ -1,25 +1,25 @@
 ﻿#pragma once
 
 #include "Containers/dyn_array.h"
+#include "Core/Math/math.h"
 #include "Templates/equals.h"
 #include "Templates/key_value_pair.h"
-#include "core_utility.h"
-#include "hash.h"
+#include "Core/Utility/hash.h"
 #include "Memory/memory.h"
 
-template <typename set_type, bool Const>
+template <typename set_type, iterator_constness Constness>
 class hash_set_iter {
 public:
 	using value_type = set_type::value_type;
 	using set_element_type = set_type::set_element_container_type;
-	using pointer = std::conditional<Const, const value_type*, value_type*>::type;
+	using pointer = std::conditional<Constness == iterator_constness::constant, const value_type*, value_type*>::type;
 	using set_element_pointer =
-		std::conditional<Const, const set_element_type*, set_element_type*>::type;
-	using reference = std::conditional<Const, const value_type&, value_type&>::type;
+		std::conditional<Constness == iterator_constness::constant, const set_element_type*, set_element_type*>::type;
+	using reference = std::conditional<Constness == iterator_constness::constant, const value_type&, value_type&>::type;
 
 private:
-	set_element_pointer mElement = nullptr;
-	set_element_pointer mEnd = nullptr;
+	set_element_pointer Element = nullptr;
+	set_element_pointer End = nullptr;
 
 public:
 	FORCEINLINE hash_set_iter() = default;
@@ -28,13 +28,13 @@ public:
 	FORCEINLINE ~hash_set_iter() = default;
 
 	FORCEINLINE explicit hash_set_iter(set_element_pointer Element, set_element_pointer End)
-		: mElement(Element), mEnd(End) {
+		: Element(Element), End(End) {
 	}
 
 	FORCEINLINE hash_set_iter& operator++() {
 		for (;;) {
-			++mElement;
-			if (mElement == mEnd || mElement->mHash <= set_type::LastValidHash) {
+			++Element;
+			if (Element == End || Element->Hash <= set_type::LastValidHash) {
 				break;
 			}
 		}
@@ -42,15 +42,15 @@ public:
 	}
 
 	FORCEINLINE pointer operator->() {
-		return &(mElement->mValue);
+		return &(Element->Value);
 	}
 
 	FORCEINLINE reference operator*() {
-		return (mElement->mValue);
+		return (Element->Value);
 	}
 
 	FORCEINLINE bool operator==(const hash_set_iter& Other) const {
-		return mElement == Other.mElement;
+		return Element == Other.Element;
 	}
 };
 
@@ -63,23 +63,24 @@ class hash_set : allocator_instance<allocator_type>, trait_memcopy_relocatable {
 public:
 	constexpr static hash::hash_type EmptyHash = std::numeric_limits<hash::hash_type>::max();
 	constexpr static hash::hash_type DeletedHash = std::numeric_limits<hash::hash_type>::max() - 1;
-	constexpr static hash::hash_type LastValidHash =
-		std::numeric_limits<hash::hash_type>::max() - 2;
+	constexpr static hash::hash_type LastValidHash = std::numeric_limits<hash::hash_type>::max() - 2;
 
 	struct set_elem_container {
-		element_type mValue;
-		hash::hash_type mHash{EmptyHash};
+		element_type Value;
+		hash::hash_type Hash{EmptyHash};
 	};
 
-	set_elem_container* mData = nullptr;
-	index mCapacity = 0;
-	index mSize = 0;
-	index mDeleted = 0;
-	index mMaxSize = 0;
+protected:
+	set_elem_container* Data = nullptr;
+	index Capacity = 0;
+	index Size = 0;
+	index Deleted = 0;
+	index MaxSize = 0;
 
+public:
 	using alloc_base = allocator_instance<allocator_type>;
-	using iter = hash_set_iter<hash_set, false>;
-	using const_iter = hash_set_iter<hash_set, true>;
+	using iter = hash_set_iter<hash_set, iterator_constness::non_constant>;
+	using const_iter = hash_set_iter<hash_set, iterator_constness::constant>;
 	using set_element_container_type = set_elem_container;
 	using value_type = element_type;
 	constexpr static index MinCapacity = 4;
@@ -107,54 +108,54 @@ public:
 	}
 
 	struct prober {
-		set_elem_container* mData = nullptr;
-		index mHashMask = 0;
-		const hash::hash_type mHash = EmptyHash;
-		set_elem_container* mSetElem = nullptr;
-		index mIteration = 0;
+		set_elem_container* Data = nullptr;
+		index HashMask = 0;
+		const hash::hash_type Hash = EmptyHash;
+		set_elem_container* SetElem = nullptr;
+		index Iteration = 0;
 
-		FORCEINLINE prober(const hash_set& Set, hash::hash_type Hash)
-			: mData(Set.mData), mHashMask(Set.mCapacity), mHash(Hash) {
+		FORCEINLINE prober(const hash_set& InSet, hash::hash_type InHash)
+			: Data(InSet.Data), HashMask(InSet.GetCapacity()), Hash(InHash) {
 			if constexpr (DebugMode) {
 				++NumQueries;
 				if (CurrentProbe < 64) {
 					ProbeHistogram[CurrentProbe] += 1;
 				}
-				LongestProbe = Max(LongestProbe, CurrentProbe);
+				LongestProbe = math::Max(LongestProbe, CurrentProbe);
 				CurrentProbe = 0;
 			}
-			mHashMask = (1 << LogOfTwoCeil(Set.mCapacity)) - 1;
-			mSetElem = mData + (mHash & mHashMask);
+			HashMask = (1 << math::LogOfTwoCeil(InSet.GetCapacity())) - 1;
+			SetElem = Data + (Hash & HashMask);
 		}
 
-		FORCEINLINE prober(set_elem_container* Data, index Capacity, hash::hash_type Hash)
-			: mData(Data), mHash(Hash) {
+		FORCEINLINE prober(set_elem_container* InData, index InCapacity, hash::hash_type InHash)
+			: Data(InData), Hash(InHash) {
 			if constexpr (DebugMode) {
 				++NumQueries;
 				if (CurrentProbe < 64) {
 					ProbeHistogram[CurrentProbe] += 1;
 				}
-				LongestProbe = Max(LongestProbe, CurrentProbe);
+				LongestProbe = math::Max(LongestProbe, CurrentProbe);
 				CurrentProbe = 0;
 			}
-			mHashMask = (1 << LogOfTwoCeil(Capacity)) - 1;
-			mSetElem = mData + (mHash & mHashMask);
+			HashMask = (1 << math::LogOfTwoCeil(InCapacity)) - 1;
+			SetElem = Data + (Hash & HashMask);
 		}
 
 		[[nodiscard]] FORCEINLINE bool NotEmpty() const {
 			if constexpr (DebugMode) {
-				const bool Collision = mSetElem->mHash != EmptyHash;
+				const bool Collision = SetElem->Hash != EmptyHash;
 				if (Collision) {
 					++NumCollisions;
 					++CurrentProbe;
 				}
 				return Collision;
 			}
-			return mSetElem->mHash != EmptyHash;
+			return SetElem->Hash != EmptyHash;
 		}
 
 		FORCEINLINE prober& operator++() {
-			mSetElem = mData + ((mHash + TriangleNumber(++mIteration)) & mHashMask);
+			SetElem = Data + ((Hash + TriangleNumber(++Iteration)) & HashMask);
 			return *this;
 		}
 
@@ -182,17 +183,17 @@ public:
 
 	template <typename key_type>
 	FORCEINLINE void* AddUninitialized(const key_type& Key) {
-		if (EnsureCapacity(mSize + 1)) {
+		if (EnsureCapacity(Size + 1)) {
 			prober P{*this, GetHash(Key)};
 			for (; P.NotEmpty(); ++P) {
-				if (P.mSetElem->mHash == DeletedHash) {
-					--mDeleted;
+				if (P.SetElem->Hash == DeletedHash) {
+					--Deleted;
 					break;
 				}
 			}
-			++mSize;
-			P.mSetElem->mHash = P.mHash;
-			return &(P.mSetElem->mValue);
+			++Size;
+			P.SetElem->Hash = P.Hash;
+			return &(P.SetElem->Value);
 		}
 		return nullptr;
 	}
@@ -209,13 +210,13 @@ public:
 
 	FORCEINLINE bool RemoveOne(const element_type& Elem) {
 		for (prober P{*this, GetHash(Elem)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && Equals(Elem, P.mSetElem->mValue)) {
+			if (P.SetElem->Hash == P.Hash && Equals(Elem, P.SetElem->Value)) {
 				if constexpr (!FastDestruct) {
-					P.mSetElem->mValue.~element_type();
+					P.SetElem->Value.~element_type();
 				}
-				P.mSetElem->mHash = DeletedHash;
-				++mDeleted;
-				--mSize;
+				P.SetElem->Hash = DeletedHash;
+				++Deleted;
+				--Size;
 				return true;
 			}
 		}
@@ -229,13 +230,13 @@ public:
 	FORCEINLINE index RemoveAll(const element_type& Elem) {
 		index NumRemoved = 0;
 		for (prober P{*this, GetHash(Elem)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && Equals(Elem, P.mSetElem->mValue)) {
+			if (P.SetElem->Hash == P.Hash && Equals(Elem, P.SetElem->Value)) {
 				if constexpr (!FastDestruct) {
-					P.mSetElem->mValue.~element_type();
+					P.SetElem->Value.~element_type();
 				}
-				P.mSetElem->mHash = DeletedHash;
-				++mDeleted;
-				--mSize;
+				P.SetElem->Hash = DeletedHash;
+				++Deleted;
+				--Size;
 				++NumRemoved;
 			}
 		}
@@ -243,12 +244,12 @@ public:
 	}
 
 	FORCEINLINE element_type* Find(const element_type& Elem) const {
-		if (!mData) {
+		if (!Data) {
 			return nullptr;
 		}
 		for (prober P{*this, GetHash(Elem)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && Equals(Elem, P.mSetElem->mValue)) {
-				return &(P.mSetElem->mValue);
+			if (P.SetElem->Hash == P.Hash && Equals(Elem, P.SetElem->Value)) {
+				return &(P.SetElem->Value);
 			}
 		}
 		return nullptr;
@@ -257,17 +258,16 @@ public:
 	// When you are calling Find(key) and similar methods, under the hood you probe
 	// all matching slots using hash calculated from key and then compare found key with this key.
 	// FindByPredicate allows you to provide hash for probing and function to use instead of
-	// equality, so you can search hash set without key using arbitrary logic. See tag.h for example
+	// equality, so you can search hash set without key using arbitrary logic. See atom.h for example
 	// use
 	template <typename predicate_type>
-	FORCEINLINE element_type* FindByPredicate(const hash::hash_type Hash, const predicate_type& Predicate)
-		const {
-		if (!mData) {
+	FORCEINLINE element_type* FindByPredicate(const hash::hash_type Hash, const predicate_type& Predicate) const {
+		if (!Data) {
 			return nullptr;
 		}
 		for (prober P{*this, Hash}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && Predicate(P.mSetElem->mValue)) {
-				return &(P.mSetElem->mValue);
+			if (P.SetElem->Hash == P.Hash && Predicate(P.SetElem->Value)) {
+				return &(P.SetElem->Value);
 			}
 		}
 		return nullptr;
@@ -283,12 +283,12 @@ public:
 
 	FORCEINLINE dyn_array<element_type*> FindAll(const element_type& Elem) {
 		dyn_array<element_type*> FoundElements{};
-		if (!mData) {
+		if (!Data) {
 			return FoundElements;
 		}
 		for (prober P{*this, GetHash(Elem)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && Equals(Elem, P.mSetElem->mValue)) {
-				FoundElements.Add(&(P.mSetElem->mValue));
+			if (P.SetElem->Hash == P.Hash && Equals(Elem, P.SetElem->Value)) {
+				FoundElements.Add(&(P.SetElem->Value));
 			}
 		}
 		return FoundElements;
@@ -297,44 +297,49 @@ public:
 	FORCEINLINE bool Contains(const element_type& Elem) const {
 		return Find(Elem);
 	}
+	
+	[[nodiscard]] FORCEINLINE index GetSize() const {
+		return Size;
+	}
+	
+	[[nodiscard]] FORCEINLINE index GetCapacity() const {
+		return Capacity;
+	}
 
 	// Unlike array, hash_set does not have maximum allocation size that it cannot exceed when
 	// doubling size, because hash_set relies on capacity being a power of two (masking, triangle
 	// numbers for probing)
 	FORCEINLINE bool EnsureCapacity(const index NewExpectedSize) {
-		if (NewExpectedSize + mDeleted > mMaxSize) {
-			const index DesiredSize = NewExpectedSize > mMaxSize
-											   ? NewExpectedSize
-											   : (mSize << 1 > mMaxSize ? mSize << 1 : mMaxSize);
-			const index DesiredCapacity =
-				1 << LogOfTwoCeil((index) ((DesiredSize + 1) * MaxLoadFactorInverse));
-			const index NewCapacity = Max(DesiredCapacity, MinCapacity);
+		if (NewExpectedSize + Deleted > MaxSize) {
+			const index DesiredSize =
+				NewExpectedSize > MaxSize ? NewExpectedSize : (Size << 1 > MaxSize ? Size << 1 : MaxSize);
+			const index DesiredCapacity = 1 << math::LogOfTwoCeil((index) ((DesiredSize + 1) * MaxLoadFactorInverse));
+			const index NewCapacity = math::Max(DesiredCapacity, MinCapacity);
 			auto* const NewData =
-				(set_elem_container*) alloc_base::mAllocator.Allocate(NewCapacity * sizeof(set_elem_container));
+				(set_elem_container*) alloc_base::Allocator.Allocate(NewCapacity * sizeof(set_elem_container));
 			if (NewData) {
-				for (set_elem_container* SetElem = NewData; SetElem != NewData + NewCapacity;
-					 ++SetElem) {
-					SetElem->mHash = EmptyHash;
+				for (set_elem_container* SetElem = NewData; SetElem != NewData + NewCapacity; ++SetElem) {
+					SetElem->Hash = EmptyHash;
 				}
-				for (set_elem_container* SetElem = mData; SetElem != mData + mCapacity; ++SetElem) {
-					if (SetElem->mHash <= LastValidHash) {
-						prober P{NewData, NewCapacity, SetElem->mHash};
+				for (set_elem_container* SetElem = Data; SetElem != Data + Capacity; ++SetElem) {
+					if (SetElem->Hash <= LastValidHash) {
+						prober P{NewData, NewCapacity, SetElem->Hash};
 						for (; P.NotEmpty(); ++P) {
 						}
 						if constexpr (MemcopyRealloc) {
-							std::memcpy(P.mSetElem, SetElem, sizeof(set_elem_container));
+							std::memcpy(P.SetElem, SetElem, sizeof(set_elem_container));
 						} else {
-							new (&(P.mSetElem->mValue)) element_type(std::move(SetElem->mValue));
-							P.mSetElem->mHash = SetElem->mHash;
-							SetElem->mValue.~value_type();
+							new (&(P.SetElem->Value)) element_type(std::move(SetElem->Value));
+							P.SetElem->Hash = SetElem->Hash;
+							SetElem->Value.~value_type();
 						}
 					}
 				}
-				alloc_base::mAllocator.Free(mData);
-				mData = NewData;
-				mDeleted = 0;
-				mCapacity = NewCapacity;
-				mMaxSize = (index) (MaxLoadFactor * mCapacity);
+				alloc_base::Allocator.Free(Data);
+				Data = NewData;
+				Deleted = 0;
+				Capacity = NewCapacity;
+				MaxSize = (index) (MaxLoadFactor * Capacity);
 				return true;
 			}
 			return false;
@@ -344,26 +349,26 @@ public:
 
 	FORCEINLINE void Clear(bool Deallocate = true) {
 		if (!FastDestruct) {
-			for (set_elem_container* Elem = mData; Elem != mData + mCapacity; ++Elem) {
-				if (Elem->mHash <= LastValidHash) {
-					Elem->mValue.~value_type();
+			for (set_elem_container* Elem = Data; Elem != Data + Capacity; ++Elem) {
+				if (Elem->Hash <= LastValidHash) {
+					Elem->Value.~value_type();
 				}
 			}
 		}
 		if (Deallocate) {
-			if (mData) {
-				alloc_base::mAllocator.Free(mData);
+			if (Data) {
+				alloc_base::Allocator.Free(Data);
 			}
-			mData = nullptr;
-			mCapacity = 0;
-			mMaxSize = 0;
+			Data = nullptr;
+			Capacity = 0;
+			MaxSize = 0;
 		} else {
-			for (set_elem_container* Elem = mData; Elem != mData + mCapacity; ++Elem) {
-				Elem->mHash = EmptyHash;
+			for (set_elem_container* Elem = Data; Elem != Data + Capacity; ++Elem) {
+				Elem->Hash = EmptyHash;
 			}
 		}
-		mSize = 0;
-		mDeleted = 0;
+		Size = 0;
+		Deleted = 0;
 	}
 
 	template <typename HashedType>
@@ -378,31 +383,29 @@ public:
 	}
 
 	FORCEINLINE iter begin() {
-		for (set_elem_container* FirstSetElem = mData; FirstSetElem != mData + mCapacity;
-			 ++FirstSetElem) {
-			if (FirstSetElem->mHash <= LastValidHash) {
-				return iter(FirstSetElem, mData + mCapacity);
+		for (set_elem_container* FirstSetElem = Data; FirstSetElem != Data + Capacity; ++FirstSetElem) {
+			if (FirstSetElem->Hash <= LastValidHash) {
+				return iter(FirstSetElem, Data + Capacity);
 			}
 		}
-		return iter(mData + mCapacity, mData + mCapacity);
+		return iter(Data + Capacity, Data + Capacity);
 	}
 
 	FORCEINLINE iter end() {
-		return iter(mData + mCapacity, mData + mCapacity);
+		return iter(Data + Capacity, Data + Capacity);
 	}
 
 	FORCEINLINE const_iter begin() const {
-		for (set_elem_container* FirstSetElem = mData; FirstSetElem != mData + mCapacity;
-			 ++FirstSetElem) {
-			if (FirstSetElem->mHash <= LastValidHash) {
-				return const_iter(FirstSetElem, mData + mCapacity);
+		for (set_elem_container* FirstSetElem = Data; FirstSetElem != Data + Capacity; ++FirstSetElem) {
+			if (FirstSetElem->Hash <= LastValidHash) {
+				return const_iter(FirstSetElem, Data + Capacity);
 			}
 		}
-		return const_iter(mData + mCapacity, mData + mCapacity);
+		return const_iter(Data + Capacity, Data + Capacity);
 	}
 
 	FORCEINLINE const_iter end() const {
-		return const_iter(mData + mCapacity, mData + mCapacity);
+		return const_iter(Data + Capacity, Data + Capacity);
 	}
 };
 
@@ -412,8 +415,7 @@ template <
 	typename hasher = default_hasher,
 	typename equals_op = default_equals_op,
 	typename allocator = default_allocator>
-class hash_table
-	: public hash_set<key_value_pair<table_key_type, table_value_type>, hasher, equals_op, allocator> {
+class hash_table : public hash_set<key_value_pair<table_key_type, table_value_type>, hasher, equals_op, allocator> {
 public:
 	using table_pair = key_value_pair<table_key_type, table_value_type>;
 	using super = hash_set<table_pair, hasher, equals_op, allocator>;
@@ -448,13 +450,13 @@ public:
 
 	FORCEINLINE bool RemoveOne(const table_key_type& Key) {
 		for (typename super::prober P{*this, super::GetHash(Key)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && super::Equals(Key, P.mSetElem->mValue)) {
+			if (P.SetElem->Hash == P.Hash && super::Equals(Key, P.SetElem->Value)) {
 				if constexpr (!super::FastDestruct) {
-					P.mSetElem->mValue.~table_pair();
+					P.SetElem->Value.~table_pair();
 				}
-				P.mSetElem->mHash = super::DeletedHash;
-				++super::mDeleted;
-				--super::mSize;
+				P.SetElem->Hash = super::DeletedHash;
+				++super::Deleted;
+				--super::Size;
 				return true;
 			}
 		}
@@ -464,22 +466,20 @@ public:
 	FORCEINLINE index RemoveAll(const table_key_type& Key) {
 		typename super::index_type NumRemoved = 0;
 		for (typename super::prober P{*this, super::GetHash(Key)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && super::Equals(Key, P.mSetElem->mValue)) {
+			if (P.SetElem->Hash == P.Hash && super::Equals(Key, P.SetElem->Value)) {
 				if constexpr (!super::FastDestruct) {
-					P.mSetElem->mValue.~table_pair();
+					P.SetElem->Value.~table_pair();
 				}
-				P.mSetElem->mHash = super::DeletedHash;
-				++super::mDeleted;
-				--super::mSize;
+				P.SetElem->Hash = super::DeletedHash;
+				++super::Deleted;
+				--super::Size;
 				++NumRemoved;
 			}
 		}
 		return NumRemoved;
 	}
 
-	FORCEINLINE table_value_type* FindOrAdd(
-		const table_key_type& Key,
-		const table_value_type& DefaultValue) {
+	FORCEINLINE table_value_type* FindOrAdd(const table_key_type& Key, const table_value_type& DefaultValue) {
 		if (table_value_type* FoundElem = Find(Key)) {
 			return FoundElem;
 		} else {
@@ -489,12 +489,12 @@ public:
 
 	FORCEINLINE dyn_array<table_value_type*> FindAll(const table_key_type& Key) {
 		dyn_array<table_value_type*> FoundElements{};
-		if (!super::mData) {
+		if (!super::Data) {
 			return FoundElements;
 		}
 		for (typename super::prober P{*this, super::GetHash(Key)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && super::Equals(Key, P.mSetElem->mValue)) {
-				FoundElements.Add(&(P.mSetElem->mValue.mValue));
+			if (P.SetElem->Hash == P.Hash && super::Equals(Key, P.SetElem->Value)) {
+				FoundElements.Add(&(P.SetElem->Value.Value));
 			}
 		}
 		return FoundElements;
@@ -506,13 +506,13 @@ public:
 		} else {
 			auto* Uninitialized = (table_pair*) (super::AddUninitialized(Key));
 			new (Uninitialized) table_pair{Key};
-			return Uninitialized->mValue;
+			return Uninitialized->Value;
 		}
 	}
 
 	FORCEINLINE table_value_type* Find(const table_key_type& Key) const {
 		if (table_pair* Pair = FindPair(Key)) {
-			return &(Pair->mValue);
+			return &(Pair->Value);
 		}
 		return nullptr;
 	}
@@ -526,12 +526,12 @@ public:
 	}
 
 	FORCEINLINE table_pair* FindPair(const table_key_type& Key) const {
-		if (!super::mData) {
+		if (!super::Data) {
 			return nullptr;
 		}
 		for (typename super::prober P{*this, super::GetHash(Key)}; P.NotEmpty(); ++P) {
-			if (P.mSetElem->mHash == P.mHash && super::Equals(Key, P.mSetElem->mValue)) {
-				return &(P.mSetElem->mValue);
+			if (P.SetElem->Hash == P.Hash && super::Equals(Key, P.SetElem->Value)) {
+				return &(P.SetElem->Value);
 			}
 		}
 		return nullptr;

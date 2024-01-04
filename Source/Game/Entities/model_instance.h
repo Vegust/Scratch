@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core_types.h"
-#include "ref.h"
+#include "basic.h"
+#include "Core/Utility/ref.h"
 
 struct model_instance {
 	//ref<model> mModel;

@@ -4,13 +4,21 @@
 #include "Rendering/renderer.h"
 #include "Game/game.h"
 
+struct application_settings {
+public:
+	u32 WindowWidth{1000};
+	u32 WindowHeight{800};
+};
+
 class application {
 public:
+	application_settings Settings;
+	
 	window mWindow;
 	renderer mRenderer;
 	game mGame;
 	float mTime;
 
-	application(u32 WindowWidth, u32 WindowHeight);
+	explicit application(const application_settings& InSettings);
 	bool RunOneFrame();
 };

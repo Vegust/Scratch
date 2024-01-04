@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 #include "glm/glm.hpp"
-#include "Containers/str.h"
+#include "Core/String/str.h"
 
 enum class light_type : u32 { point = 0, directional = 1, spot = 2 };
 

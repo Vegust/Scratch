@@ -1,5 +1,5 @@
 #include "texture.h"
-#include "core_types.h"
+#include "basic.h"
 #include "glad/glad.h"
 #include "stb_image.h"
 
@@ -45,7 +45,7 @@ void texture::Load(const str& Path, bool SRGB) {
 		s32 Height{0};
 		s32 NumChannels{0};
 		stbi_set_flip_vertically_on_load(1);
-		stbi_uc* mLocalBuffer = stbi_load(Path.Raw(), &Width, &Height, &NumChannels, 4);
+		stbi_uc* mLocalBuffer = stbi_load(Path.GetRaw(), &Width, &Height, &NumChannels, 4);
 		if (mLocalBuffer) {
 			glGenTextures(1, &mRendererId);
 			Cache[Path] = texture_record{mRendererId, 1};

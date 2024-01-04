@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core_types.h"
-#include "Containers/str.h"
+#include "basic.h"
+#include "Core/String/str.h"
 #include "Containers/hash_table.h"
-#include "atom.h"
+#include "Core/String/atom.h"
 
 struct texture {
 	atom mName{};

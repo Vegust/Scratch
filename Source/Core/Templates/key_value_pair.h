@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include "hash.h"
+#include "Core/Utility/hash.h"
+#include "Core/Templates/concepts.h"
 
 // TODO bad
 template <typename key, typename value>
@@ -17,39 +18,39 @@ struct key_value_pair : conditionally_memcopy_relocatable<key, value> {
 	using key_type = key;
 	using value_type = value;
 
-	key mKey{};
-	value mValue{};
+	key Key{};
+	value Value{};
 
 	FORCEINLINE key_value_pair() = default;
 	
-	FORCEINLINE explicit key_value_pair(const key& Key) : mValue{} {
-		mKey = Key;
+	FORCEINLINE explicit key_value_pair(const key& InKey) : Value{} {
+		Key = InKey;
 	}
 	
-	FORCEINLINE explicit key_value_pair(key&& Key) : mValue{} {
-		mKey = std::move(Key);
+	FORCEINLINE explicit key_value_pair(key&& InKey) : Value{} {
+		Key = std::move(InKey);
 	}
 
 	FORCEINLINE key_value_pair(key_value_pair&& moved_pair) noexcept
-		: mKey(std::move(moved_pair.mKey)), mValue(std::move(moved_pair.mValue)) {
+		: Key(std::move(moved_pair.Key)), Value(std::move(moved_pair.Value)) {
 	}
 
-	FORCEINLINE explicit key_value_pair(const key& Key, const value& Value)
-		: mKey(Key), mValue(Value) {
+	FORCEINLINE explicit key_value_pair(const key& InKey, const value& InValue)
+		: Key(InKey), Value(InValue) {
 	}
 
 	FORCEINLINE ~key_value_pair() = default;
 
 	template <typename other_value>
 	FORCEINLINE bool operator==(const key_value_pair<key_type, other_value>& OtherPair) const {
-		return mKey == OtherPair.mKey;
+		return Key == OtherPair.Key;
 	}
 
 	FORCEINLINE bool operator==(const key_type& OtherKey) const {
-		return mKey == OtherKey;
+		return Key == OtherKey;
 	}
 	
 	[[nodiscard]] FORCEINLINE hash::hash_type GetHash() const {
-		return hash::Hash(mKey);
+		return hash::Hash(Key);
 	}
 };

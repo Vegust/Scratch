@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 enum class framebuffer_type { scene, shadowmap, shadowmap_omni };
 

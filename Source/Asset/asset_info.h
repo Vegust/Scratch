@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Containers/hash_table.h"
-#include "atom.h"
+#include "Core/String/atom.h"
 
 struct asset_info {
 	hash_table<atom,str> mInfo;

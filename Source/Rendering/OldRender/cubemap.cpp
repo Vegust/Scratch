@@ -38,10 +38,10 @@ void cubemap::Load(const str& Directory, const array<str, 6>& TextureFacePaths) 
 	s32 Height{0};
 	s32 NumChannels{0};
 	u8* LocalBuffer{nullptr};
-	for (unsigned int i = 0; i < TextureFacePaths.Size(); i++) {
+	for (unsigned int i = 0; i < TextureFacePaths.GetSize(); i++) {
 		stbi_set_flip_vertically_on_load(0);
 		LocalBuffer = stbi_load(
-			(Directory + "/" + TextureFacePaths[i]).Raw(), &Width, &Height, &NumChannels, 0);
+			(Directory + "/" + TextureFacePaths[i]).GetRaw(), &Width, &Height, &NumChannels, 0);
 		glTexImage2D(
 			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
 			0,

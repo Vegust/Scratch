@@ -2,57 +2,57 @@
 <!--suppress XmlHighlighting -->
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
     <Type Name="dyn_array&lt;*&gt;">
-        <DisplayString Condition="mSize == 0">empty</DisplayString>
-        <DisplayString>size={mSize}</DisplayString>
+        <DisplayString Condition="Size == 0">empty</DisplayString>
+        <DisplayString>size={Size}</DisplayString>
         <Expand>
-            <Item Name="[size]">mSize</Item>
-            <Item Name="[capacity]">mCapacity</Item>
+            <Item Name="[size]">Size</Item>
+            <Item Name="[capacity]">Capacity</Item>
             <ArrayItems>
-                <Size>mSize</Size>
-                <ValuePointer Condition="mData != 0">mData</ValuePointer>
-                <ValuePointer>mStackStorage</ValuePointer>
+                <Size>Size</Size>
+                <ValuePointer Condition="Size > StackSize">Data</ValuePointer>
+                <ValuePointer>StackStorage</ValuePointer>
             </ArrayItems>
         </Expand>
     </Type>
     <Type Name="hash_set&lt;*&gt;">
-        <DisplayString Condition="mSize == 0">empty</DisplayString>
-        <DisplayString>size={mSize}</DisplayString>
+        <DisplayString Condition="Size == 0">empty</DisplayString>
+        <DisplayString>size={Size}</DisplayString>
         <Expand>
-            <Item Name="[size]">mSize</Item>
-            <Item Name="[capacity]">mCapacity</Item>
+            <Item Name="[size]">Size</Item>
+            <Item Name="[capacity]">Capacity</Item>
             <CustomListItems MaxItemsPerView="5000">
                 <Variable Name="i" InitialValue="0"/>
-                <Size>mSize</Size>
+                <Size>Size</Size>
                 <Loop>
-                    <Item Condition="(LastValidHash > mData[i].mHash)">mData[i].mValue</Item>
+                    <Item Condition="(LastValidHash > Data[i].Hash)">Data[i].Value</Item>
                     <Exec>i++</Exec>
                 </Loop>
             </CustomListItems>
         </Expand>
     </Type>
     <Type Name="key_value_pair&lt;*&gt;">
-        <DisplayString>({mKey}, {mValue})</DisplayString>
+        <DisplayString>({Key}, {Value})</DisplayString>
     </Type>
     <Type Name="str">
-        <DisplayString Condition="mChars.mSize == 0">empty</DisplayString>
-        <DisplayString Condition="mChars.mData != 0">{mChars.mData, su}</DisplayString>
-        <DisplayString>{mChars.mStackStorage, su}</DisplayString>
-        <StringView>mChars.mData,su</StringView>
-        <StringView>mChars.mStackStorage,su</StringView>
+        <DisplayString Condition="Bytes.Size == 0">empty</DisplayString>
+        <DisplayString Condition="Bytes.Size > StackSize">{Bytes.Data, su}</DisplayString>
+        <DisplayString>{Bytes.StackStorage, su}</DisplayString>
+        <StringView>Bytes.Data,su</StringView>
+        <StringView>Bytes.StackStorage,su</StringView>
     </Type>
     <Type Name="rb_set&lt;*&gt;">
-        <DisplayString>{{size = {mSize}}}</DisplayString>
+        <DisplayString>{{size = {Size}}}</DisplayString>
         <Expand>
             <TreeItems>
-                <HeadPointer>mRoot</HeadPointer>
-                <LeftPointer>mLeftChild</LeftPointer>
-                <RightPointer>mRightChild</RightPointer>
-                <ValueNode>this->mValue</ValueNode>
+                <HeadPointer>Root</HeadPointer>
+                <LeftPointer>LeftChild</LeftPointer>
+                <RightPointer>RightChild</RightPointer>
+                <ValueNode>this->Value</ValueNode>
             </TreeItems>
         </Expand>
     </Type>
     <Type Name="atom">
-        <DisplayString Condition="mIndex == EmptyIndex">empty</DisplayString>
-        <DisplayString>{atom::Pool.mStrings[mIndex]}</DisplayString>
+        <DisplayString Condition="Index == EmptyIndex">empty</DisplayString>
+        <DisplayString>{atom::Pool.Strings[Index]}</DisplayString>
     </Type>
 </AutoVisualizer>

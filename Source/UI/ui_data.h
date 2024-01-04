@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 struct ui_data {
 	[[nodiscard]] bool ConsumesMouseInput() const; // mouse cursor enabled and hovered over ui

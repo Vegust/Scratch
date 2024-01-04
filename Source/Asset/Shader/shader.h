@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "core.h"
 #include "Game/Entities/light.h"
 #include "Game/Entities/phong_material.h"
 #include "Containers/span.h"
@@ -8,36 +8,30 @@
 
 class shader {
 public:
-	str mPath;
-	u32 mRendererId{0};
+	str Path;
+	u32 RendererId{0};
 
 	struct uniform_identifier {
 		// First + Index + Second = full name string.
 		// (e.g. Lights + 2 + Attenuation = Lights[2].Attenuation).
 		// Stored separately, so we don't need to do string allocations when
 		// setting uniform values
-		str mFirstName{};
-		s32 mIndex{-1};
-		str mSecondName{};
+		str FirstName{};
+		s32 Index{-1};
+		str SecondName{};
 
 		struct hasher {
-			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(
-				const uniform_identifier& Identifier) {
-				return Hash(Identifier.mFirstName, Identifier.mIndex, Identifier.mSecondName);
+			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(const uniform_identifier& Identifier) {
+				return Hash(Identifier.FirstName, Identifier.Index, Identifier.SecondName);
 			}
 
-			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(
-				str_view First,
-				const s32 Index,
-				str_view Second) {
-				return hash::HashCombine(
-					hash::HashCombine(hash::Hash(First), hash::Hash(Second)), hash::Hash(Index));
+			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(str_view First, const s32 Index, str_view Second) {
+				return hash::HashCombine(hash::HashCombine(hash::Hash(First), hash::Hash(Second)), hash::Hash(Index));
 			}
 		};
 
 		FORCEINLINE bool operator==(const uniform_identifier& Other) const {
-			return Other.mIndex == mIndex && Other.mFirstName == mFirstName &&
-				   Other.mSecondName == mSecondName;
+			return Other.Index == Index && Other.FirstName == FirstName && Other.SecondName == SecondName;
 		}
 
 		[[nodiscard]] FORCEINLINE hash::hash_type GetHash() const {
@@ -48,31 +42,31 @@ public:
 	mutable struct uniforms_cache {
 		template <typename value_type>
 		struct cached_uniform {
-			s32 mResourceId{0};
-			value_type mValue{};
+			s32 ResourceId{0};
+			value_type Value{};
 		};
 
-		hash_table<uniform_identifier, cached_uniform<s32>> mInts;
-		hash_table<uniform_identifier, cached_uniform<float>> mFloats;
-		hash_table<uniform_identifier, cached_uniform<glm::vec3>> mVec3s;
-		hash_table<uniform_identifier, cached_uniform<glm::vec4>> mVec4s;
-		hash_table<uniform_identifier, cached_uniform<glm::mat3>> mMat3s;
-		hash_table<uniform_identifier, cached_uniform<glm::mat4>> mMat4s;
+		hash_table<uniform_identifier, cached_uniform<s32>> Ints;
+		hash_table<uniform_identifier, cached_uniform<float>> Floats;
+		hash_table<uniform_identifier, cached_uniform<glm::vec3>> Vec3s;
+		hash_table<uniform_identifier, cached_uniform<glm::vec4>> Vec4s;
+		hash_table<uniform_identifier, cached_uniform<glm::mat3>> Mat3s;
+		hash_table<uniform_identifier, cached_uniform<glm::mat4>> Mat4s;
 
 		template <typename value_type>
 		FORCEINLINE auto& GetCache() {
 			if constexpr (std::is_same_v<value_type, s32>) {
-				return mInts;
+				return Ints;
 			} else if constexpr (std::is_same_v<value_type, float>) {
-				return mFloats;
+				return Floats;
 			} else if constexpr (std::is_same_v<value_type, glm::vec3>) {
-				return mVec3s;
+				return Vec3s;
 			} else if constexpr (std::is_same_v<value_type, glm::vec4>) {
-				return mVec4s;
+				return Vec4s;
 			} else if constexpr (std::is_same_v<value_type, glm::mat3>) {
-				return mMat3s;
+				return Mat3s;
 			} else if constexpr (std::is_same_v<value_type, glm::mat4>) {
-				return mMat4s;
+				return Mat4s;
 			};
 		}
 
@@ -84,15 +78,15 @@ public:
 		static void SetValue(s32 ResourceId, const glm::mat4& Value);
 
 		FORCEINLINE void Clear() {
-			mInts.Clear();
-			mFloats.Clear();
-			mVec3s.Clear();
-			mVec4s.Clear();
-			mMat3s.Clear();
-			mMat4s.Clear();
+			Ints.Clear();
+			Floats.Clear();
+			Vec3s.Clear();
+			Vec4s.Clear();
+			Mat3s.Clear();
+			Mat4s.Clear();
 		}
 
-	} mUniformsCache;
+	} UniformsCache;
 
 	shader() = default;
 	~shader();
@@ -114,27 +108,25 @@ public:
 	void SetUniform(str_view Name, const glm::mat3& Matrix) const;
 	void SetUniform(str_view Name, const phong_material& Material) const;
 	void SetUniform(str_view Name, const light& Light, const glm::mat4& View, s32 Index = -1) const;
-	void SetUniform(str_view Name, str_view CountName, span<light> Lights, const glm::mat4& View)
-		const;
+	void SetUniform(str_view Name, str_view CountName, span<light> Lights, const glm::mat4& View) const;
 
-	// TODO: completely remove strings from hot path, do it preemtively and cache actual uniform ids
+	// TODO: completely remove strings from hot path, do it preemptively and cache actual uniform ids
 	// think about that after renderer refactor and shader tangent space refactor
 	template <typename input_type>
-	void MaybeSetUniform(const input_type& Value, str_view First, s32 Index = -1, str_view Second = {})
-		const {
+	void MaybeSetUniform(const input_type& Value, str_view First, s32 Index = -1, str_view Second = {}) const {
 		// Hot path:
 		using value_type = std::remove_const<input_type>::type;
 		const auto Hash = uniform_identifier::hasher::Hash(First, Index, Second);
-		if (auto* Existing = mUniformsCache.GetCache<value_type>().FindByPredicate(
-				Hash, [First, Index, Second](auto& Identifier) {
-					return Identifier.mKey.mSecondName == Second && Identifier.mKey.mIndex == Index &&
-						   Identifier.mKey.mFirstName == First;
+		if (auto* Existing =
+				UniformsCache.GetCache<value_type>().FindByPredicate(Hash, [First, Index, Second](auto& Identifier) {
+					return Identifier.Key.SecondName == Second && Identifier.Key.Index == Index &&
+						   Identifier.Key.FirstName == First;
 				})) {
-			if (Existing->mValue.mValue == Value) {
+			if (Existing->Value.Value == Value) {
 				return;
 			} else {
-				Existing->mValue.mValue = Value;
-				uniforms_cache::SetValue(Existing->mValue.mResourceId, Value);
+				Existing->Value.Value = Value;
+				uniforms_cache::SetValue(Existing->Value.ResourceId, Value);
 				return;
 			}
 		}
@@ -145,14 +137,15 @@ public:
 			FullName += '[' + str{Index} + ']';
 		}
 		str SecondString{Second};
-		if (!Second.Empty()) {
+		if (!Second.IsEmpty()) {
 			FullName += '.' + SecondString;
 		}
 		const auto Location = GetUniformLocation(FullName);
 		uniforms_cache::SetValue(Location, Value);
 		uniforms_cache::cached_uniform<value_type> NewUniform{Location, Value};
-		mUniformsCache.GetCache<value_type>()[uniform_identifier{
-			std::move(FirstString), Index, std::move(SecondString)}] = NewUniform;
+		UniformsCache
+			.GetCache<value_type>()[uniform_identifier{std::move(FirstString), Index, std::move(SecondString)}] =
+			NewUniform;
 	}
 
 	template <typename value_type>
@@ -162,9 +155,9 @@ public:
 
 private:
 	struct parsed_shaders {
-		str mVertexShader{};
-		str mGeometryShader{};
-		str mFragmentShader{};
+		str VertexShader{};
+		str GeometryShader{};
+		str FragmentShader{};
 	};
 
 	s32 GetUniformLocation(str_view FullName) const;

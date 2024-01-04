@@ -1,5 +1,3 @@
-#pragma once
-
 #include "application.h"
 #include "Application/Platform/platform.h"
 
@@ -14,8 +12,12 @@ static time_update_result UpdateTime(float LastFrameTime) {
 	return {DeltaTime, NewTime};
 }
 
-application::application(u32 WindowWidth, u32 WindowHeight)
-	: mWindow{WindowWidth, WindowHeight}, mRenderer{WindowWidth, WindowHeight}, mGame{}, mTime{0.f} {
+application::application(const application_settings& InSettings)
+	: Settings{InSettings}
+	, mWindow{InSettings.WindowWidth, InSettings.WindowHeight}
+	, mRenderer{InSettings.WindowWidth, InSettings.WindowHeight}
+	, mGame{}
+	, mTime{0.f} {
 }
 
 bool application::RunOneFrame() {

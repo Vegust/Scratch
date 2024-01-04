@@ -5,86 +5,86 @@
 #include "vertex_buffer_layout.h"
 
 vertex_array::vertex_array(vertex_array&& VertexArray) noexcept {
-	mRendererId = VertexArray.mRendererId;
-	mElementBufferSize = VertexArray.mElementBufferSize;
-	mInstanceCount = VertexArray.mInstanceCount;
-	VertexArray.mInstanceCount = 1;
-	VertexArray.mRendererId = 0;
-	VertexArray.mElementBufferSize = 0;
+	RendererId = VertexArray.RendererId;
+	IndexBufferSize = VertexArray.IndexBufferSize;
+	InstanceCount = VertexArray.InstanceCount;
+	VertexArray.InstanceCount = 1;
+	VertexArray.RendererId = 0;
+	VertexArray.IndexBufferSize = 0;
 }
 
 vertex_array& vertex_array::operator=(vertex_array&& VertexArray) noexcept{
-	if (mRendererId != 0) {
-		glDeleteVertexArrays(1, &mRendererId);
+	if (RendererId != 0) {
+		glDeleteVertexArrays(1, &RendererId);
 	}
-	mRendererId = VertexArray.mRendererId;
-	mElementBufferSize = VertexArray.mElementBufferSize;
-	mInstanceCount = VertexArray.mInstanceCount;
-	VertexArray.mInstanceCount = 1;
-	VertexArray.mRendererId = 0;
-	VertexArray.mElementBufferSize = 0;
+	RendererId = VertexArray.RendererId;
+	IndexBufferSize = VertexArray.IndexBufferSize;
+	InstanceCount = VertexArray.InstanceCount;
+	VertexArray.InstanceCount = 1;
+	VertexArray.RendererId = 0;
+	VertexArray.IndexBufferSize = 0;
 	return *this;
 }
 
 vertex_array::~vertex_array() {
-	if (mRendererId != 0) {
-		glDeleteVertexArrays(1, &mRendererId);
+	if (RendererId != 0) {
+		glDeleteVertexArrays(1, &RendererId);
 	}
 }
 
 void vertex_array::SetData(
-	vertex_buffer&& VertexBuffer,
-	index_buffer&& IndexBuffer,
-	const vertex_buffer_layout& Layout) {
-	if (mRendererId == 0) {
-		glGenVertexArrays(1, &mRendererId);
+	vertex_buffer&& InVertexBuffer,
+	index_buffer&& InIndexBuffer,
+	const vertex_buffer_layout& InLayout) {
+	if (RendererId == 0) {
+		glGenVertexArrays(1, &RendererId);
 	}
 	Bind();
-	VertexBuffer.Bind();
-	const auto& Attributes = Layout.GetAttributes();
+	InVertexBuffer.Bind();
+	const auto& Attributes = InLayout.GetAttributes();
 	u64 Offset = 0;
-	for (u32 AttrIndex = 0; AttrIndex < Layout.mSize; ++AttrIndex) {
+	for (u32 AttrIndex = 0; AttrIndex < InLayout.GetSize(); ++AttrIndex) {
 		const auto& Attribute = Attributes[AttrIndex];
 		glEnableVertexAttribArray(AttrIndex);
 		glVertexAttribPointer(
 			AttrIndex,
-			static_cast<GLint>(Attribute.mCount),
-			Attribute.mType,
-			Attribute.mNormalized,
-			static_cast<GLsizei>(Layout.GetStride()),
+			static_cast<GLint>(Attribute.Count),
+			Attribute.Type,
+			Attribute.Normalized,
+			static_cast<GLsizei>(InLayout.GetStride()),
 			reinterpret_cast<const void*>(Offset));
-		Offset += Attribute.mCount * vertex_buffer_attribute::GetSizeOfType(Attribute.mType);
+		Offset += Attribute.Count * vertex_buffer_attribute::GetSizeOfType(Attribute.Type);
 	}
-	IndexBuffer.Bind();
-	mElementBufferSize = IndexBuffer.GetCount();
-	mVertexBuffer = std::move(VertexBuffer);
-	mElementBuffer = std::move(IndexBuffer);
+	InIndexBuffer.Bind();
+	IndexBufferSize = InIndexBuffer.GetCount();
+	VertexBuffer = std::move(InVertexBuffer);
+	IndexBuffer = std::move(InIndexBuffer);
 }
 
 void vertex_array::Bind() const {
-	glBindVertexArray(mRendererId);
+	glBindVertexArray(RendererId);
 }
 
-void vertex_array::SetData(vertex_buffer&& VertexBuffer, const vertex_buffer_layout& Layout) {
-	if (mRendererId == 0) {
-		glGenVertexArrays(1, &mRendererId);
+void vertex_array::SetData(vertex_buffer&& InVertexBuffer, const vertex_buffer_layout& InLayout) {
+	if (RendererId == 0) {
+		glGenVertexArrays(1, &RendererId);
 	}
 	Bind();
-	VertexBuffer.Bind();
-	const auto& Attributes = Layout.GetAttributes();
+	InVertexBuffer.Bind();
+	const auto& Attributes = InLayout.GetAttributes();
 	u64 Offset = 0;
-	for (u32 AttrIndex = 0; AttrIndex < Layout.mSize; ++AttrIndex) {
+	for (u32 AttrIndex = 0; AttrIndex < InLayout.GetSize(); ++AttrIndex) {
 		const auto& Attribute = Attributes[AttrIndex];
 		glEnableVertexAttribArray(AttrIndex);
 		glVertexAttribPointer(
 			AttrIndex,
-			static_cast<GLint>(Attribute.mCount),
-			Attribute.mType,
-			Attribute.mNormalized,
-			static_cast<GLsizei>(Layout.GetStride()),
+			static_cast<GLint>(Attribute.Count),
+			Attribute.Type,
+			Attribute.Normalized,
+			static_cast<GLsizei>(InLayout.GetStride()),
 			reinterpret_cast<const void*>(Offset));
-		Offset += Attribute.mCount * vertex_buffer_attribute::GetSizeOfType(Attribute.mType);
+		Offset += Attribute.Count * vertex_buffer_attribute::GetSizeOfType(Attribute.Type);
 	}
-	mElementBufferSize = VertexBuffer.GetCount();
-	mVertexBuffer = std::move(VertexBuffer);
+	IndexBufferSize = InVertexBuffer.GetCount();
+	VertexBuffer = std::move(InVertexBuffer);
 }

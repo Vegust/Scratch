@@ -1,16 +1,17 @@
 ﻿#pragma once
 
+#include "basic.h"
 #include "Containers/array.h"
 #include "Containers/dyn_array.h"
-#include "core_types.h"
-#include "hash.h"
-#include "span.h"
+#include "Core/Utility/hash.h"
+#include "Core/Containers/span.h"
 
 #include <iostream>
 
 using str_view = span<char>;
 
-struct str final : trait_memcopy_relocatable {
+struct str : trait_memcopy_relocatable {
+public:
 	using char_type = char;
 	using value_type = char;
 	constexpr static index StackSize = 14;
@@ -18,28 +19,33 @@ struct str final : trait_memcopy_relocatable {
 	using iter = array_type::iter;
 	using const_iter = array_type::const_iter;
 
-	array_type mChars{};
+private:
+	array_type Bytes{};
+
+public:
+	// defines constexpr analogs to strlen etc
+	using traits = std::char_traits<char_type>;
 
 	str() = default;
 
 	str(const char* Characters) {	 // NOLINT(*-explicit-constructor)
-		const index Length = strlen(Characters);
-		mChars.EnsureCapacity(Length + 1);
-		std::memcpy(mChars.Data(), Characters, Length + 1);
-		mChars.mSize = Length + 1;
+		const index Length = traits::length(Characters);
+		Bytes.EnsureCapacity(Length + 1);
+		std::memcpy(Bytes.GetData(), Characters, Length + 1);
+		Bytes.OverwriteSize(Length + 1);
 	}
 
 	str(const char* Characters, index Length) {
-		mChars.EnsureCapacity(Length + 1);
-		std::memcpy(mChars.Data(), Characters, Length);
-		mChars[Length] = 0;
-		mChars.mSize = Length + 1;
+		Bytes.EnsureCapacity(Length + 1);
+		std::memcpy(Bytes.GetData(), Characters, Length);
+		Bytes[Length] = 0;
+		Bytes.OverwriteSize(Length + 1);
 	}
 
-	str(const str& Other) : mChars(Other.mChars) {
+	str(const str& Other) : Bytes(Other.Bytes) {
 	}
 
-	str(str&& Other) : mChars(std::move(Other.mChars)) {
+	str(str&& Other) : Bytes(std::move(Other.Bytes)) {
 	}
 
 	template <integral integral_type>
@@ -61,41 +67,51 @@ struct str final : trait_memcopy_relocatable {
 		if (Signed) {
 			*--NumberStart = '-';
 		}
-		mChars.EnsureCapacity(NumChars + 1);
-		std::memcpy(mChars.Data(), NumberStart, NumChars);
-		mChars[NumChars] = 0;
-		mChars.mSize = NumChars + 1;
+		Bytes.EnsureCapacity(NumChars + 1);
+		std::memcpy(Bytes.GetData(), NumberStart, NumChars);
+		Bytes[NumChars] = 0;
+		Bytes.OverwriteSize(NumChars + 1);
 	}
 
-	template <floating_point float_type>
+	template <fractional float_type>
 	explicit str(float_type FloatingNumber, index FractionalPrecision = 4) {
 		// TODO
 	}
 
+	str(char Char, const str& String) {
+		const index RequiredSize = String.GetByteLength() + 2;
+		Bytes.EnsureCapacity(RequiredSize);
+		Bytes.OverwriteSize(String.Bytes.GetSize() + 1);
+		std::memcpy(GetRaw() + 1, String.GetRaw(), String.GetByteLength());
+		Bytes[String.GetByteLength() + 1] = 0;
+		Bytes[0] = Char;
+	}
+
 	template <integral integral_type>
 	integral_type GetNumber() {
-
+		// TODO
 		return 0;
 	}
 
-	template <floating_point float_type>
+	template <fractional float_type>
 	float_type GetNumber() {
 		// TODO
 		return 0.f;
 	}
 
 	FORCEINLINE str_view GetIntegerString(str_view String) {
-//		str_view Start = EatSpaces(String);
-//		index NumberLength = 0;
-//		while (NumberLength < Start.Size() && )
+		//		str_view Start = EatSpaces(String);
+		//		index NumberLength = 0;
+		//		while (NumberLength < Start.Size() && )
+		return {};
 	}
 
 	str_view EatSpaces(str_view String) {
-		if (String.Empty()) {
+		if (String.IsEmpty()) {
 			return {};
 		}
-		const char* NewStart = String.Data();
-		const char* StringEnd = String.Data() + String.Size();
+		const char* NewStart = String.GetData();
+		const char* StringEnd = String.GetData() + String.GetSize();
 		while (IsSpace(*NewStart) && NewStart < StringEnd) {
 			++NewStart;
 		}
@@ -114,12 +130,12 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	str_view GetLine(str_view Previous = {}) {
-		if (Empty()) {
+		if (IsEmpty()) {
 			return {};
 		}
-		const char* LineStart = Raw();
-		if (Previous.Data() != nullptr) {
-			LineStart = Previous.Data() + Previous.Size();
+		const char* LineStart = GetRaw();
+		if (Previous.GetData() != nullptr) {
+			LineStart = Previous.GetData() + Previous.GetSize();
 			if (*LineStart == '\n') {
 				++LineStart;
 			} else {
@@ -127,7 +143,7 @@ struct str final : trait_memcopy_relocatable {
 			}
 		}
 		const char* LineEnd = LineStart;
-		const char* StringEnd = Data() + Length();
+		const char* StringEnd = GetData() + GetByteLength();
 		while (*LineEnd != '\n' && LineEnd < StringEnd) {
 			++LineEnd;
 		}
@@ -135,85 +151,95 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	FORCEINLINE str& operator=(str&& Other) noexcept {
-		mChars = std::move(Other.mChars);
+		Bytes = std::move(Other.Bytes);
 		return *this;
 	}
 
 	FORCEINLINE str& operator=(const str& Other) {
-		mChars = Other.mChars;
+		Bytes = Other.Bytes;
 		return *this;
 	}
 
 	FORCEINLINE str& operator=(const char* Characters) {
-		mChars.Clear(false);
+		Bytes.Clear(container_clear_type::dont_deallocate);
 		if (!Characters) {
 			return *this;
 		}
-		const index Length = strlen(Characters);
-		mChars.EnsureCapacity(Length + 1);
-		std::memcpy(mChars.Data(), Characters, Length + 1);
-		mChars.mSize = Length + 1;
+		const index Length = traits::length(Characters);
+		Bytes.EnsureCapacity(Length + 1);
+		std::memcpy(Bytes.GetData(), Characters, Length + 1);
+		Bytes.OverwriteSize(Length + 1);
 		return *this;
 	}
 
-	FORCEINLINE char_type* Data() {
-		return mChars.Data();
+	FORCEINLINE char_type* GetData() {
+		return Bytes.GetData();
 	}
 
-	FORCEINLINE char* Raw() {
-		return (char*) mChars.Data();
+	[[nodiscard]] FORCEINLINE const char_type* GetData() const {
+		return Bytes.GetData();
 	}
 
-	[[nodiscard]] FORCEINLINE const char* Raw() const {
-		return (char*) mChars.Data();
+	FORCEINLINE char* GetRaw() {
+		return (char*) Bytes.GetData();
 	}
 
-	[[nodiscard]] FORCEINLINE const char_type* Data() const {
-		return mChars.Data();
+	[[nodiscard]] FORCEINLINE const char* GetRaw() const {
+		return (char*) Bytes.GetData();
 	}
 
-	[[nodiscard]] FORCEINLINE index Length() const {
-		return mChars.Size() ? mChars.Size() - 1 : 0;
+	// bytes explicitly stated to distinguish from character length
+	// does not include null terminator
+	[[nodiscard]] FORCEINLINE index GetByteLength() const {
+		return Bytes.GetSize() ? Bytes.GetSize() - 1 : 0;
 	}
 
-	[[nodiscard]] FORCEINLINE index Empty() const {
-		return Length() == 0;
+	[[nodiscard]] FORCEINLINE index IsEmpty() const {
+		return GetByteLength() == 0;
+	}
+
+	FORCEINLINE char_type& operator[](const index Index) {
+		return Bytes[Index];
 	}
 
 	FORCEINLINE const char_type& operator[](const index Index) const {
-		return mChars[Index];
+		return Bytes[Index];
 	}
 
-	FORCEINLINE char_type& At(index Position) {
-		return mChars[Position];
+	FORCEINLINE char_type& GetAt(index Position) {
+		return Bytes[Position];
 	}
 
-	[[nodiscard]] FORCEINLINE const char_type& At(index Position) const {
-		return mChars[Position];
+	[[nodiscard]] FORCEINLINE const char_type& GetAt(index Position) const {
+		return Bytes[Position];
 	}
 
 	FORCEINLINE iter begin() {
-		return mChars.begin();
+		return Bytes.begin();
 	}
 
 	FORCEINLINE iter end() {
-		return mChars.end() - (Length() > 0 ? 1 : 0);
+		return Bytes.end() - (GetByteLength() > 0 ? 1 : 0);
 	}
 
 	[[nodiscard]] FORCEINLINE const_iter begin() const {
-		return mChars.begin();
+		return Bytes.begin();
 	}
 
 	[[nodiscard]] FORCEINLINE const_iter end() const {
-		return mChars.end() - (Length() > 0 ? 1 : 0);
+		return Bytes.end() - (GetByteLength() > 0 ? 1 : 0);
+	}
+	
+	FORCEINLINE bool Reserve(index TargetCapacity) {
+		return Bytes.Reserve(TargetCapacity);
 	}
 
 	[[nodiscard]] FORCEINLINE bool operator==(const str& Other) const {
-		if (Length() != Other.Length()) {
+		if (GetByteLength() != Other.GetByteLength()) {
 			return false;
 		}
-		for (index i = 0; i < Length(); ++i) {
-			if (mChars[i] != Other.mChars[i]) {
+		for (index i = 0; i < GetByteLength(); ++i) {
+			if (Bytes[i] != Other.Bytes[i]) {
 				return false;
 			}
 		}
@@ -221,24 +247,24 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	[[nodiscard]] FORCEINLINE bool operator<(const str& Other) const {
-		return Strcmp(Raw(), Other.Raw()) < 0;
+		return Strcmp(GetRaw(), Other.GetRaw()) < 0;
 	}
 
 	[[nodiscard]] FORCEINLINE bool operator>(const str& Other) const {
-		return Strcmp(Raw(), Other.Raw()) > 0;
+		return Strcmp(GetRaw(), Other.GetRaw()) > 0;
 	}
 
 	[[nodiscard]] FORCEINLINE bool operator<=(const str& Other) const {
-		return Strcmp(Raw(), Other.Raw()) <= 0;
+		return Strcmp(GetRaw(), Other.GetRaw()) <= 0;
 	}
 
 	[[nodiscard]] FORCEINLINE bool operator>=(const str& Other) const {
-		return Strcmp(Raw(), Other.Raw()) >= 0;
+		return Strcmp(GetRaw(), Other.GetRaw()) >= 0;
 	}
 
 	FORCEINLINE str operator+(char Char) const& {
 		str Result;
-		Result.mChars.EnsureCapacity(Length() + 2);
+		Result.Bytes.EnsureCapacity(GetByteLength() + 2);
 		Result = *this;
 		Result += Char;
 		return Result;
@@ -246,11 +272,11 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(char Char) && {
 		str Result;
-		const index RequiredSize = Length() + 2;
-		if (mChars.mCapacity >= RequiredSize) {
+		const index RequiredSize = GetByteLength() + 2;
+		if (Bytes.GetCapacity() >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
-			Result.mChars.EnsureCapacity(RequiredSize);
+			Result.Bytes.EnsureCapacity(RequiredSize);
 			Result = *this;
 		}
 		Result += Char;
@@ -259,7 +285,7 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(const str& Other) const& {
 		str Result;
-		Result.mChars.EnsureCapacity(Length() + Other.Length() + 1);
+		Result.Bytes.EnsureCapacity(GetByteLength() + Other.GetByteLength() + 1);
 		Result = *this;
 		Result += Other;
 		return Result;
@@ -267,11 +293,11 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(const str& Other) && {
 		str Result;
-		const index RequiredSize = Length() + Other.Length() + 1;
-		if (mChars.mCapacity >= RequiredSize) {
+		const index RequiredSize = GetByteLength() + Other.GetByteLength() + 1;
+		if (Bytes.GetCapacity() >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
-			Result.mChars.EnsureCapacity(RequiredSize);
+			Result.Bytes.EnsureCapacity(RequiredSize);
 			Result = *this;
 		}
 		Result += Other;
@@ -280,7 +306,7 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(const char* Characters) const& {
 		str Result;
-		Result.mChars.EnsureCapacity(Length() + strlen(Characters) + 1);
+		Result.Bytes.EnsureCapacity(GetByteLength() + traits::length(Characters) + 1);
 		Result = *this;
 		Result += Characters;
 		return Result;
@@ -288,11 +314,11 @@ struct str final : trait_memcopy_relocatable {
 
 	FORCEINLINE str operator+(const char* Characters) && {
 		str Result;
-		const index RequiredSize = Length() + strlen(Characters) + 1;
-		if (mChars.mCapacity >= RequiredSize) {
+		const index RequiredSize = GetByteLength() + traits::length(Characters) + 1;
+		if (Bytes.GetCapacity() >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
-			Result.mChars.EnsureCapacity(RequiredSize);
+			Result.Bytes.EnsureCapacity(RequiredSize);
 			Result = *this;
 		}
 		Result += Characters;
@@ -300,35 +326,35 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	FORCEINLINE str& operator+=(char Char) {
-		const index LhsLen = Length();
+		const index LhsLen = GetByteLength();
 		if (LhsLen == 0) {
-			mChars.EnsureCapacity(2);
-			mChars[0] = Char;
-			mChars[1] = 0;
-			mChars.mSize = 2;
+			Bytes.EnsureCapacity(2);
+			Bytes[0] = Char;
+			Bytes[1] = 0;
+			Bytes.OverwriteSize(2);
 			return *this;
 		}
-		mChars.EnsureCapacity(LhsLen + 2);
-		mChars[LhsLen] = Char;
-		mChars[LhsLen + 1] = 0;
-		mChars.mSize = LhsLen + 2;
+		Bytes.EnsureCapacity(LhsLen + 2);
+		Bytes[LhsLen] = Char;
+		Bytes[LhsLen + 1] = 0;
+		Bytes.OverwriteSize(LhsLen + 2);
 		return *this;
 	}
 
 	FORCEINLINE str& operator+=(const str& Other) {
-		const index LhsLen = Length();
+		const index LhsLen = GetByteLength();
 		if (LhsLen == 0) {
 			*this = Other;
 			return *this;
 		}
-		const index RhsLen = Other.Length();
+		const index RhsLen = Other.GetByteLength();
 		if (RhsLen == 0) {
 			return *this;
 		}
-		mChars.EnsureCapacity(LhsLen + RhsLen + 1);
-		memcpy(Raw() + LhsLen, Other.Raw(), RhsLen);
-		mChars[LhsLen + RhsLen] = 0;
-		mChars.mSize = LhsLen + RhsLen + 1;
+		Bytes.EnsureCapacity(LhsLen + RhsLen + 1);
+		memcpy(GetRaw() + LhsLen, Other.GetRaw(), RhsLen);
+		Bytes[LhsLen + RhsLen] = 0;
+		Bytes.OverwriteSize(LhsLen + RhsLen + 1);
 		return *this;
 	}
 
@@ -336,27 +362,27 @@ struct str final : trait_memcopy_relocatable {
 		if (!Chars || Chars[0] == 0) {
 			return *this;
 		}
-		const index LhsLen = Length();
+		const index LhsLen = GetByteLength();
 		if (LhsLen == 0) {
 			*this = Chars;
 			return *this;
 		}
-		const index RhsLen = strlen(Chars);
-		mChars.EnsureCapacity(LhsLen + RhsLen + 1);
-		memcpy(Raw() + LhsLen, Chars, RhsLen);
-		mChars[LhsLen + RhsLen] = 0;
-		mChars.mSize = LhsLen + RhsLen + 1;
+		const index RhsLen = traits::length(Chars);
+		Bytes.EnsureCapacity(LhsLen + RhsLen + 1);
+		memcpy(GetRaw() + LhsLen, Chars, RhsLen);
+		Bytes[LhsLen + RhsLen] = 0;
+		Bytes.OverwriteSize(LhsLen + RhsLen + 1);
 		return *this;
 	}
 
 	FORCEINLINE str Substr(index Begin, index End) const {
-		return str{Raw() + Begin, End - Begin};
+		return str{GetRaw() + Begin, End - Begin};
 	}
 
 	FORCEINLINE index FindLastOf(char Char) const {
 		index LastIndex = InvalidIndex;
-		for (int i = 0; i < Length(); ++i) {
-			if (mChars[i] == Char) {
+		for (int i = 0; i < GetByteLength(); ++i) {
+			if (Bytes[i] == Char) {
 				LastIndex = i;
 			}
 		}
@@ -364,15 +390,15 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	FORCEINLINE index Find(const char* Substring, index StartIndex = 0) const {
-		if (!Substring || Empty() || mChars.mSize <= StartIndex) {
+		if (!Substring || IsEmpty() || Bytes.GetSize() <= StartIndex) {
 			return InvalidIndex;
 		}
-		const char* RawData = Raw() + StartIndex;
+		const char* RawData = GetRaw() + StartIndex;
 		char Current = *RawData++;
 		const char Start = *Substring;
 		while (Current) {
 			if (Current == Start && !Strcmp<true>(RawData, Substring + 1)) {
-				return RawData - 1 - Raw();
+				return RawData - 1 - GetRaw();
 			}
 			Current = *RawData++;
 		}
@@ -380,9 +406,10 @@ struct str final : trait_memcopy_relocatable {
 	}
 
 	[[nodiscard]] FORCEINLINE hash::hash_type GetHash() const {
-		return hash::MurmurHash(Data(), (s32) Length());
+		return hash::MurmurHash(GetData(), (s32) GetByteLength());
 	}
 
+	// NOTE: I don't like this function
 	template <bool SubstringCmp = false>
 	[[nodiscard]] FORCEINLINE s32 Strcmp(const char* Lhs, const char* Rhs) const {
 		for (;;) {
@@ -407,22 +434,19 @@ struct str final : trait_memcopy_relocatable {
 		}
 	}
 
-	FORCEINLINE void Clear(bool Deallocate = true) {
-		mChars.Clear(Deallocate);
+	FORCEINLINE void Clear(container_clear_type ClearType = container_clear_type::deallocate) {
+		Bytes.Clear(ClearType);
+	}
+	
+	FORCEINLINE void OverwriteSize(const index NewSize) {
+		Bytes.OverwriteSize(NewSize);
 	}
 };
 
 FORCEINLINE str operator+(char Char, const str& String) {
-	str Result;
-	const index RequiredSize = String.Length() + 2;
-	Result.mChars.EnsureCapacity(RequiredSize);
-	Result.mChars.mSize = String.mChars.mSize + 1;
-	std::memcpy(Result.Raw() + 1, String.Raw(), String.Length());
-	Result.mChars[String.Length() + 1] = 0;
-	Result.mChars[0] = Char;
-	return Result;
+	return str(Char, String);
 }
 
 inline std::ostream& operator<<(std::ostream& Os, const str& String) {
-	return Os << String.mChars.Data();
+	return Os << String.GetData();
 }

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include "core_types.h"
+#include "basic.h"
+#include "Templates/concepts.h"
 
 #include <bit>
 #include <cstring>
@@ -80,16 +81,16 @@ template <integral integral_type>
 	}
 }
 
-template <floating_point floating_type>
-[[nodiscard]] FORCEINLINE hash_type Hash(floating_type Key) {
-	if constexpr (sizeof(floating_type) <= 4) {
+template <fractional float_type>
+[[nodiscard]] FORCEINLINE hash_type Hash(float_type Key) {
+	if constexpr (sizeof(float_type) <= 4) {
 		return Hash(*(hash_type*) &Key);
 	} else {
 		return Hash(*(hash_type*) &Key);
 	}
 }
 
-template <enumeration enum_type>
+template <enumerable enum_type>
 [[nodiscard]] FORCEINLINE hash_type Hash(enum_type Key) {
 	return Hash(static_cast<std::underlying_type_t<enum_type>>(Key));
 }

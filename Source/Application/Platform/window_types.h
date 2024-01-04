@@ -1,12 +1,12 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "Application/Input/input.h"
 #include "Containers/dyn_array.h"
 
 struct window_state {
-	bool mVSync{true};
-	bool mCursorEnabled{true};
-	u32 mWidth{1000};
-	u32 mHeight{800};
+	bool VSync{true};
+	bool CursorEnabled{true};
+	u32 Width{1000};
+	u32 Height{800};
 };

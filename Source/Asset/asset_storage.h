@@ -1,6 +1,6 @@
 #pragma once
 
-#include "atom.h"
+#include "Core/String/atom.h"
 #include "asset_info.h"
 #include "Asset/Model/model.h"
 #include "Asset/Texture/texture.h"

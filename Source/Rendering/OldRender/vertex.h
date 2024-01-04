@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "vertex_buffer_layout.h"
 
 struct vertex {

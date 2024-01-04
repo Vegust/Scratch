@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "Asset/Model/model.h"
 #include "Game/Entities/light.h"
 #include "Game/Entities/model_instance.h"

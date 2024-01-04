@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 class vertex_buffer {
 private:

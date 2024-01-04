@@ -7,9 +7,9 @@
 #include <GLFW/glfw3.h>
 
 struct proc_data {
-	window_process_result& mResult;
-	frame_input_state& mFrameInput;
-	windows_window& mWindow;
+	window_process_result& Result;
+	frame_input_state& FrameInput;
+	windows_window& Window;
 };
 
 static proc_data* GetData(struct GLFWwindow* Window) {
@@ -18,32 +18,32 @@ static proc_data* GetData(struct GLFWwindow* Window) {
 
 static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight) {
 	proc_data* Data = GetData(Window);
-	Data->mWindow.mState.mHeight = NewHeight;
-	Data->mWindow.mState.mWidth = NewWidth;
-	const auto Index = Data->mResult.mMessages.FindFirstByPredicate(
-		[](const auto& Message) { return Message.mType == app_message_type::render_resize; });
+	Data->Window.State.Height = NewHeight;
+	Data->Window.State.Width = NewWidth;
+	const auto Index = Data->Result.Messages.FindFirstByPredicate(
+		[](const auto& Message) { return Message.Type == app_message_type::render_resize; });
 	if (Index != InvalidIndex) {
-		Data->mResult.mMessages[Index].mRenderResize.NewWidth = NewWidth;
-		Data->mResult.mMessages[Index].mRenderResize.NewHeight = NewHeight;
+		Data->Result.Messages[Index].RenderResize.NewWidth = NewWidth;
+		Data->Result.Messages[Index].RenderResize.NewHeight = NewHeight;
 	} else {
 		app_message ResizeMessage;
-		ResizeMessage.mType = app_message_type::render_resize;
-		ResizeMessage.mRenderResize.NewWidth = NewWidth;
-		ResizeMessage.mRenderResize.NewHeight = NewHeight;
-		Data->mResult.mMessages.Add(ResizeMessage);
+		ResizeMessage.Type = app_message_type::render_resize;
+		ResizeMessage.RenderResize.NewWidth = NewWidth;
+		ResizeMessage.RenderResize.NewHeight = NewHeight;
+		Data->Result.Messages.Add(ResizeMessage);
 	}
 }
 
 static void OnMouseMoved(GLFWwindow* Window, double XPos, double YPos) {
 	proc_data* Data = GetData(Window);
-	auto& MouseState = Data->mFrameInput.mMouseState;
-	MouseState.mPos = {XPos, YPos};
+	auto& MouseState = Data->FrameInput.MouseState;
+	MouseState.Pos = {XPos, YPos};
 }
 
 static void OnMouseScroll(GLFWwindow* Window, double XDelta, double YDelta) {
 	proc_data* Data = GetData(Window);
-	auto& MouseState = Data->mFrameInput.mMouseState;
-	MouseState.mScroll = {XDelta, YDelta};
+	auto& MouseState = Data->FrameInput.MouseState;
+	MouseState.Scroll = {XDelta, YDelta};
 }
 
 static void OnKeyChange(GLFWwindow* Window, input_key Key, s32 Action) {
@@ -54,7 +54,7 @@ static void OnKeyChange(GLFWwindow* Window, input_key Key, s32 Action) {
 		KeyState = key_state::released;
 	}
 	proc_data* Data = GetData(Window);
-	Data->mFrameInput.mKeyStates[static_cast<u32>(Key)] = KeyState;
+	Data->FrameInput.KeyStates[static_cast<u32>(Key)] = KeyState;
 }
 
 static void OnKeyAction(GLFWwindow* Window, s32 GlfwKey, s32 Scancode, s32 Action, s32 ModsMask) {
@@ -68,18 +68,18 @@ static void OnMouseAction(GLFWwindow* Window, s32 MouseButton, s32 Action, s32 M
 }
 
 windows_window::windows_window(u32 WindowWidth, u32 WindowHeight) {
-	mState.mHeight = WindowHeight;
-	mState.mWidth = WindowWidth;
+	State.Height = WindowHeight;
+	State.Width = WindowWidth;
 	glfwInit();
-	mWindow = glfwCreateWindow((s32) WindowWidth, (s32) WindowHeight, "Scratch", nullptr, nullptr);
-	CHECK(mWindow)
-	glfwSwapInterval(mState.mVSync ? 1 : 0);
-	glfwSetFramebufferSizeCallback(mWindow, OnWindowResize);
-	glfwSetCursorPosCallback(mWindow, OnMouseMoved);
-	glfwSetScrollCallback(mWindow, OnMouseScroll);
-	glfwSetKeyCallback(mWindow, OnKeyAction);
-	glfwSetMouseButtonCallback(mWindow, OnMouseAction);
-	glfwMakeContextCurrent(mWindow);
+	Window = glfwCreateWindow((s32) WindowWidth, (s32) WindowHeight, "Scratch", nullptr, nullptr);
+	CHECK(Window)
+	glfwSwapInterval(State.VSync ? 1 : 0);
+	glfwSetFramebufferSizeCallback(Window, OnWindowResize);
+	glfwSetCursorPosCallback(Window, OnMouseMoved);
+	glfwSetScrollCallback(Window, OnMouseScroll);
+	glfwSetKeyCallback(Window, OnKeyAction);
+	glfwSetMouseButtonCallback(Window, OnMouseAction);
+	glfwMakeContextCurrent(Window);
 }
 
 windows_window::~windows_window() {
@@ -88,31 +88,31 @@ windows_window::~windows_window() {
 
 window_process_result windows_window::ProcessExternalEvents() {
 	window_process_result Result;
-	Result.mInput.mLastFrame = mFrameInput;
-	proc_data Data{Result, mFrameInput, *this};
-	glfwSetWindowUserPointer(mWindow, &Data);
+	Result.Input.LastFrame = FrameInput;
+	proc_data Data{Result, FrameInput, *this};
+	glfwSetWindowUserPointer(Window, &Data);
 	glfwPollEvents();
-	glfwSetWindowUserPointer(mWindow, nullptr);
-	Result.mInput.mThisFrame = mFrameInput;
-	Result.mState = mState;
+	glfwSetWindowUserPointer(Window, nullptr);
+	Result.Input.ThisFrame = FrameInput;
+	Result.State = State;
 	return Result;
 }
 
 dyn_array<app_message> windows_window::HandleMessages(const dyn_array<app_message>& Messages) {
 	dyn_array<app_message> OutMessages;
 	for (const auto& Message : Messages) {
-		switch (Message.mType) {
+		switch (Message.Type) {
 			case app_message_type::window_close:
-				glfwSetWindowShouldClose(mWindow, true);
+				glfwSetWindowShouldClose(Window, true);
 				break;
 			case app_message_type::window_vsync:
-				mState.mVSync = Message.mWindowVsync.mVSync;
-				glfwSwapInterval(mState.mVSync ? 1 : 0);
+				State.VSync = Message.WindowVsync.VSync;
+				glfwSwapInterval(State.VSync ? 1 : 0);
 				break;
 			case app_message_type::window_cursor:
-				mState.mCursorEnabled = Message.mWindowCursor.mCursor;
+				State.CursorEnabled = Message.WindowCursor.Cursor;
 				glfwSetInputMode(
-					mWindow, GLFW_CURSOR, mState.mCursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+					Window, GLFW_CURSOR, State.CursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 				break;
 			default:
 				OutMessages.Add(Message);
@@ -123,11 +123,11 @@ dyn_array<app_message> windows_window::HandleMessages(const dyn_array<app_messag
 }
 
 bool windows_window::ShouldClose() const {
-	return glfwWindowShouldClose(mWindow);
+	return glfwWindowShouldClose(Window);
 }
 
 void windows_window::SwapBuffers() {
-	glfwSwapBuffers(mWindow);
+	glfwSwapBuffers(Window);
 }
 
 #endif

@@ -1,16 +1,16 @@
 ﻿#pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "Logger/logger.h"
 
 #include <iostream>
 
 template <typename allocator_type>
 struct allocator_instance {
-	NO_UNIQUE_ADDRESS allocator_type mAllocator{};
+	NO_UNIQUE_ADDRESS allocator_type Allocator{};
 	
 	void SetAllocator(allocator_type& Allocator) {
-		mAllocator = Allocator;
+		Allocator = Allocator;
 	}
 };
 

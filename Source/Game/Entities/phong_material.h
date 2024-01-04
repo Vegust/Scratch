@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "Asset/Texture/texture.h"
 #include "Rendering/bind_constants.h"
 
@@ -11,12 +11,12 @@ public:
 //	ref<texture> mEmissionMap{};
 //	ref<texture> mNormalMap{};
 
-	texture mDiffuseMap{};
-	texture mSpecularMap{};
-	texture mEmissionMap{};
-	texture mNormalMap{};
+	texture DiffuseMap{};
+	texture SpecularMap{};
+	texture EmissionMap{};
+	texture NormalMap{};
 
-	float mShininess{32.f};
+	float Shininess{32.f};
 
 	void InitTextures(
 		//asset_storage& AssetStorage,
@@ -24,25 +24,25 @@ public:
 		const str& SpecularPath = {},
 		const str& EmissionPath = {},
 		const str& NormalPath = {}) {
-		if (!DiffusePath.Empty()) {
+		if (!DiffusePath.IsEmpty()) {
 			//mDiffuseMap = AssetStorage.Load<texture>(DiffusePath);
-			mDiffuseMap.Load(DiffusePath, true);
+			DiffuseMap.Load(DiffusePath, true);
 		}
-		if (!SpecularPath.Empty()) {
-			mSpecularMap.Load(SpecularPath);
+		if (!SpecularPath.IsEmpty()) {
+			SpecularMap.Load(SpecularPath);
 		}
-		if (!EmissionPath.Empty()) {
-			mEmissionMap.Load(EmissionPath);
+		if (!EmissionPath.IsEmpty()) {
+			EmissionMap.Load(EmissionPath);
 		}
-		if (!NormalPath.Empty()) {
-			mNormalMap.Load(NormalPath);
+		if (!NormalPath.IsEmpty()) {
+			NormalMap.Load(NormalPath);
 		}
 	}
 
 	void Bind() const {
-		mDiffuseMap.Bind(DIFFUSE_TEXTURE_SLOT);
-		mSpecularMap.Bind(SPECULAR_TEXTURE_SLOT);
-		mEmissionMap.Bind(EMISSION_TEXTURE_SLOT);
-		mNormalMap.Bind(NORMAL_TEXTURE_SLOT);
+		DiffuseMap.Bind(DIFFUSE_TEXTURE_SLOT);
+		SpecularMap.Bind(SPECULAR_TEXTURE_SLOT);
+		EmissionMap.Bind(EMISSION_TEXTURE_SLOT);
+		NormalMap.Bind(NORMAL_TEXTURE_SLOT);
 	}
 };

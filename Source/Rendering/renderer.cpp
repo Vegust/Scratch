@@ -121,11 +121,11 @@ renderer::~renderer() {
 render_state renderer::HandleMessages(const dyn_array<app_message>& Messages) {
 	dyn_array<app_message> OutMessages;
 	for (const auto& Message : Messages) {
-		switch (Message.mType) {
+		switch (Message.Type) {
 			case app_message_type::render_resize:
-				mOldRenderer.OnScreenSizeChanged(Message.mRenderResize.NewWidth, Message.mRenderResize.NewHeight);
-				mSceneFramebuffer.mParams.mHeight = (s32) Message.mRenderResize.NewHeight;
-				mSceneFramebuffer.mParams.mWidth = (s32) Message.mRenderResize.NewWidth;
+				mOldRenderer.OnScreenSizeChanged(Message.RenderResize.NewWidth, Message.RenderResize.NewHeight);
+				mSceneFramebuffer.mParams.mHeight = (s32) Message.RenderResize.NewHeight;
+				mSceneFramebuffer.mParams.mWidth = (s32) Message.RenderResize.NewWidth;
 				mSceneFramebuffer.Reload(mSceneFramebuffer.mParams);
 				break;
 			default:

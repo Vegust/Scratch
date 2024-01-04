@@ -1,20 +1,21 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "vertex_buffer.h"
 #include "index_buffer.h"
 
 struct vertex_buffer_layout;
 
 class vertex_array {
+private:
+	u32 RendererId{0};
+	index IndexBufferSize{0};
+	index InstanceCount = 1;
+
+	vertex_buffer VertexBuffer;
+	index_buffer IndexBuffer;
+
 public:
-	u32 mRendererId{0};
-	u32 mElementBufferSize{0};
-	u32 mInstanceCount = 1;
-
-	vertex_buffer mVertexBuffer;
-	index_buffer mElementBuffer;
-
 	vertex_array() = default;
 	~vertex_array();
 
@@ -23,8 +24,12 @@ public:
 
 	vertex_array(vertex_array&& InVertexArray) noexcept;
 	vertex_array& operator=(vertex_array&& InVertexArray) noexcept;
+	
+	[[nodiscard]] FORCEINLINE index GetIndexBufferSize() const {
+		return IndexBufferSize;
+	}
 
-	void SetData(vertex_buffer&& VertexBuffer, index_buffer&& IndexBuffer, const vertex_buffer_layout& Layout);
+	void SetData(vertex_buffer&& VertexBuffer, index_buffer&& InElementBuffer, const vertex_buffer_layout& Layout);
 	void SetData(vertex_buffer&& VertexBuffer, const vertex_buffer_layout& Layout);
 
 	void Bind() const;

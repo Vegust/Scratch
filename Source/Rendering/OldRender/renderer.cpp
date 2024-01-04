@@ -55,7 +55,7 @@ void old_rebderer::DrawCubes(const phong_material& Material, span<glm::mat4> Tra
 		mActiveShader->SetUniform("u_Model", Transform);
 		mActiveShader->SetUniform("u_ModelNormal", glm::transpose(glm::inverse(Transform)));
 		GL_CALL(glDrawElements(
-			mDrawElementsMode, static_cast<GLsizei>(mNormalCubeVAO.mElementBufferSize), GL_UNSIGNED_INT, nullptr));
+			mDrawElementsMode, static_cast<GLsizei>(mNormalCubeVAO.GetIndexBufferSize()), GL_UNSIGNED_INT, nullptr));
 	}
 }
 
@@ -138,9 +138,9 @@ void old_rebderer::InitNormalCubeVAO() {
 												 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
 
 	index_buffer IndexBuffer{};
-	IndexBuffer.SetData(Indices.Data(), Indices.Size());
+	IndexBuffer.SetData(Indices.GetData(), Indices.GetSize());
 	vertex_buffer VertexBuffer{};
-	VertexBuffer.SetData(Vertices.Data(), Vertices.Size() * sizeof(vertex), Vertices.Size());
+	VertexBuffer.SetData(Vertices.GetData(), Vertices.GetSize() * sizeof(vertex), Vertices.GetSize());
 	mNormalCubeVAO.SetData(std::move(VertexBuffer), std::move(IndexBuffer), vertex::GetLayout());
 }
 
@@ -157,7 +157,7 @@ void old_rebderer::InitScreenQuadVAO() {
 	};
 
 	vertex_buffer VertexBuffer{};
-	VertexBuffer.SetData(Vertices.Data(), Vertices.Size() * sizeof(float), 6);
+	VertexBuffer.SetData(Vertices.GetData(), Vertices.GetSize() * sizeof(float), 6);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(2);
 	VertexLayout.Push<float>(2);
@@ -212,7 +212,7 @@ void old_rebderer::InitSkyboxVAO() {
 	};
 
 	vertex_buffer VertexBuffer{};
-	VertexBuffer.SetData(Vertices.Data(), Vertices.Size() * sizeof(float), 36);
+	VertexBuffer.SetData(Vertices.GetData(), Vertices.GetSize() * sizeof(float), 36);
 	vertex_buffer_layout VertexLayout{};
 	VertexLayout.Push<float>(3);
 	mSkyboxVAO.SetData(std::move(VertexBuffer), VertexLayout);
@@ -330,19 +330,19 @@ void old_rebderer::InitLightsSSBO() {
 	glGenBuffers(1, &LightsSSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, LightsSSBO);
 	GL_CALL(glBufferData(
-		GL_SHADER_STORAGE_BUFFER, sizeof(light) * mSceneLights.Size(), mSceneLights.Data(), GL_DYNAMIC_DRAW));
+		GL_SHADER_STORAGE_BUFFER, sizeof(light) * mSceneLights.GetSize(), mSceneLights.GetData(), GL_DYNAMIC_DRAW));
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, LightsSSBOBindingPoint, LightsSSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void old_rebderer::UpdateLightsSSBO() {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, LightsSSBO);
-	if (mSceneLights.Size() > LastUpdateSize) {
-		LastUpdateSize = mSceneLights.Size();
+	if (mSceneLights.GetSize() > LastUpdateSize) {
+		LastUpdateSize = mSceneLights.GetSize();
 		glBufferData(
-			GL_SHADER_STORAGE_BUFFER, mSceneLights.Size() * sizeof(light), mSceneLights.Data(), GL_DYNAMIC_DRAW);
+			GL_SHADER_STORAGE_BUFFER, mSceneLights.GetSize() * sizeof(light), mSceneLights.GetData(), GL_DYNAMIC_DRAW);
 	} else {
-		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mSceneLights.Size() * sizeof(light), mSceneLights.Data());
+		glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, mSceneLights.GetSize() * sizeof(light), mSceneLights.GetData());
 	}
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "mesh.h"
-#include "atom.h"
+#include "Core/String/atom.h"
 
 struct model {
 	atom mName;

@@ -8,7 +8,7 @@ struct array_test {
 
 template <typename T>
 static bool Compare(const std::vector<T>& lhs, const dyn_array<T>& rhs) {
-	if (lhs.size() != rhs.Size()) {
+	if (lhs.size() != rhs.GetSize()) {
 		return false;
 	}
 
@@ -162,7 +162,7 @@ static void PerformanceTests(s64 Count, s64 Iters) {
 		srand(0);
 		tVectorRemoveSwap.Start();
 		for (size_t i = 0; i < countToRemoveSwap; i++) {
-			const size_t pos = rand() % container.Size();
+			const size_t pos = rand() % container.GetSize();
 			const auto valueToRemove = container[pos];
 
 			container.RemoveAtSwap(pos);
@@ -175,7 +175,7 @@ static void PerformanceTests(s64 Count, s64 Iters) {
 		srand(0);
 		tVectorRemoveAt.Start();
 		for (size_t i = 0; i < countToDelete; i++) {
-			const int32_t value = rand() % container.Size();
+			const int32_t value = rand() % container.GetSize();
 			container.RemoveAt(value);
 		}
 		tVectorRemoveAt.Stop();
@@ -195,7 +195,7 @@ static void PerformanceTests(s64 Count, s64 Iters) {
 		tVectorInsert.Start();
 		for (size_t i = 0; i < countToAdd; i++) {
 			const size_t num = rand() % 16;
-			const size_t pos = rand() % container.Size();
+			const size_t pos = rand() % container.GetSize();
 			container.EmplaceAt(pos, test_type((uint32_t) i));
 		}
 		tVectorInsert.Stop();

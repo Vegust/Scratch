@@ -1,49 +1,50 @@
 ﻿#pragma once
 
+#include "basic.h"
 #include "Templates/less.h"
+#include "Templates/concepts.h"
+#include "Templates/traits.h"
+#include "Math/math.h"
 #include "Memory/memory.h"
-#include "core_utility.h"
 #include "array_iter.h"
 
 #include <initializer_list>
 #include <limits>
 
-
 template <typename element_type, u64 StackSize>
-struct array_stack_storage {
+struct array_storage {
 public:
-	array_stack_storage() {
+	array_storage() {
 	}
 
 protected:
-	NO_UNIQUE_ADDRESS alignas(element_type) u8 mStackStorage[StackSize * sizeof(element_type)] = {
-		0};
+	NO_UNIQUE_ADDRESS alignas(element_type) u8 StackStorage[StackSize * sizeof(element_type)] = {0};
 };
 
 template <typename element_type>
-class array_stack_storage<element_type, 0> {};
+class array_storage<element_type, 0> {};
 
-template <typename element_type, typename allocator_type = default_allocator, index StackSize = 0>
-struct dyn_array : array_stack_storage<element_type, StackSize>,
-			   trait_memcopy_relocatable,
-			   allocator_instance<allocator_type> {
+template <typename element_type, typename allocator_type = default_allocator, index InStackSize = 0>
+struct dyn_array : array_storage<element_type, InStackSize>,
+				   trait_memcopy_relocatable,
+				   allocator_instance<allocator_type> {
+private:
+	element_type* Data{nullptr};
+	index Size{0};
+	index Capacity{0};
+
 public:
-	element_type* mData = nullptr;
-	index mSize = 0;
-	index mCapacity = StackSize;
-
-	using iter = array_iter<dyn_array, false>;
+	using iter = array_iter<dyn_array, iterator_constness::non_constant>;
+	using const_iter = array_iter<dyn_array, iterator_constness::constant>;
 	using value_type = element_type;
-	using const_iter = array_iter<dyn_array, true>;
 	using alloc_base = allocator_instance<allocator_type>;
+	constexpr static index StackSize = InStackSize;
 	constexpr static bool FastCopy = trivially_copyable<element_type>;
 	constexpr static bool FastDestruct = trivially_destructible<element_type>;
 	constexpr static bool MemcopyRealloc = memcopy_relocatable<element_type>;
-	constexpr static index MaxSingleByteSizeIncrease = 1024 * 1024 * 10;	 // 10 MB,
-																				 // completely
-																				 // arbitrary
-	constexpr static index MaxSingleCapacityIncrease =
-		Max(1, MaxSingleByteSizeIncrease / sizeof(element_type));
+	// 10 MB, completely arbitrary for now TODO: this number should be backed by something I guess
+	constexpr static index MaxSingleByteSizeIncrease = 1024 * 1024 * 10;
+	constexpr static index MaxSingleCapacityIncrease = math::Max(1, MaxSingleByteSizeIncrease / sizeof(element_type));
 
 	dyn_array() = default;
 
@@ -55,26 +56,25 @@ public:
 		EnsureCapacity(InitialCapacity);
 	}
 
-	FORCEINLINE explicit dyn_array(element_type* Source, index Count) {
-		mData = Source;
-		mCapacity = Count;
-		mSize = Count;
+	FORCEINLINE explicit dyn_array(element_type* InData, index InSize) {
+		Data = InData;
+		Capacity = InSize;
+		Size = InSize;
 	}
 
-	FORCEINLINE explicit dyn_array(const element_type* Source, index Count) {
-		EnsureCapacity(Count);
-		CopyConstructElements(Data(), Source, Count);
-		mSize = Count;
+	FORCEINLINE explicit dyn_array(const element_type* InData, index InSize) {
+		EnsureCapacity(InSize);
+		CopyConstructElements(GetData(), InData, InSize);
+		Size = InSize;
 	}
 
-	FORCEINLINE dyn_array(std::initializer_list<element_type> InitList)
-		: dyn_array(InitList.begin(), InitList.size()) {
+	FORCEINLINE dyn_array(std::initializer_list<element_type> InitList) : dyn_array(InitList.begin(), InitList.size()) {
 	}
 
 	FORCEINLINE dyn_array(const dyn_array& Other) {
-		EnsureCapacity(Other.mSize);
-		CopyConstructElements(Data(), Other.Data(), Other.mSize);
-		mSize = Other.mSize;
+		EnsureCapacity(Other.Size);
+		CopyConstructElements(GetData(), Other.GetData(), Other.Size);
+		Size = Other.Size;
 	}
 
 	FORCEINLINE dyn_array(dyn_array&& Other) noexcept {
@@ -82,10 +82,10 @@ public:
 	}
 
 	FORCEINLINE bool operator==(const dyn_array& Other) const {
-		if (mSize != Other.mSize) {
+		if (Size != Other.Size) {
 			return false;
 		}
-		for (index i = 0; i < mSize; ++i) {
+		for (index i = 0; i < Size; ++i) {
 			if (Other[i] != operator[](i)) {
 				return false;
 			}
@@ -94,24 +94,24 @@ public:
 	}
 
 	FORCEINLINE dyn_array& AppendInplace(const dyn_array& Other) {
-		EnsureCapacity(mSize + Other.mSize);
-		CopyConstructElements(end(), Other.Data(), Other.mSize);
-		mSize = mSize + Other.mSize;
+		EnsureCapacity(Size + Other.Size);
+		CopyConstructElements(end(), Other.GetData(), Other.Size);
+		Size = Size + Other.Size;
 		return *this;
 	}
 
 	FORCEINLINE dyn_array& AppendInplace(dyn_array&& Other) {
-		EnsureCapacity(mSize + Other.mSize);
-		std::memcpy(end(), Other.Data(), Other.mSize * sizeof(element_type));
-		mSize = mSize + Other.mSize;
+		EnsureCapacity(Size + Other.Size);
+		std::memcpy(end(), Other.GetData(), Other.Size * sizeof(element_type));
+		Size = Size + Other.Size;
 		return *this;
 	}
 
 	FORCEINLINE dyn_array& operator=(std::initializer_list<element_type> InitList) {
 		Clear(false);
 		EnsureCapacity(InitList.size());
-		CopyConstructElements(Data(), InitList.begin(), InitList.size());
-		mSize = InitList.size();
+		CopyConstructElements(GetData(), InitList.begin(), InitList.size());
+		Size = InitList.size();
 		return *this;
 	}
 
@@ -119,7 +119,7 @@ public:
 		if (&Other == this) {
 			return *this;
 		}
-		Clear(false);
+		Clear(container_clear_type::dont_deallocate);
 		GrabFromOther(std::move(Other));
 
 		return *this;
@@ -130,62 +130,62 @@ public:
 			return *this;
 		}
 
-		Clear(false);
-		EnsureCapacity(Other.mSize);
-		CopyConstructElements(Data(), Other.Data(), Other.mSize);
-		mSize = Other.mSize;
+		Clear(container_clear_type::dont_deallocate);
+		EnsureCapacity(Other.Size);
+		CopyConstructElements(GetData(), Other.GetData(), Other.Size);
+		Size = Other.Size;
 
 		return *this;
 	}
 
-	FORCEINLINE element_type* Data() {
+	FORCEINLINE element_type* GetData() {
 		if constexpr (StackSize > 0) {
-			if (mCapacity <= StackSize) {
-				return reinterpret_cast<element_type*>(this->mStackStorage);
+			if (Capacity <= StackSize) {
+				return reinterpret_cast<element_type*>(this->StackStorage);
 			}
 		}
-		return mData;
+		return Data;
 	}
 
-	FORCEINLINE const element_type* Data() const {
+	FORCEINLINE const element_type* GetData() const {
 		if constexpr (StackSize > 0) {
-			if (mCapacity <= StackSize) {
-				return reinterpret_cast<const element_type*>(this->mStackStorage);
+			if (Capacity <= StackSize) {
+				return reinterpret_cast<const element_type*>(this->StackStorage);
 			}
 		}
-		return mData;
+		return Data;
 	}
 
-	FORCEINLINE index Capacity() const {
-		return mCapacity;
+	FORCEINLINE index GetCapacity() const {
+		return Capacity;
 	}
 
-	FORCEINLINE index Size() const {
-		return mSize;
+	FORCEINLINE index GetSize() const {
+		return Size;
 	}
 
 	FORCEINLINE element_type& operator[](const index Index) {
-		return Data()[Index];
+		return GetData()[Index];
 	}
 
 	FORCEINLINE const element_type& operator[](const index Index) const {
-		return Data()[Index];
+		return GetData()[Index];
 	}
 
 	template <typename... TArgs>
 	FORCEINLINE index Emplace(TArgs&&... Args) {
-		return EmplaceAt(mSize, std::forward<TArgs>(Args)...);
+		return EmplaceAt(Size, std::forward<TArgs>(Args)...);
 	}
 
 	FORCEINLINE index Add(const element_type& Element) {
-		return AddAt(mSize, Element);
+		return AddAt(Size, Element);
 	}
 
 	FORCEINLINE index AddAt(const index Index, const element_type& Element) {
-		if (EnsureCapacity(mSize + 1)) {
+		if (EnsureCapacity(Size + 1)) {
 			ShiftForwardOne(Index);	   // TODO: potentially 1 redundant memmove
-			new (&(Data()[Index])) element_type(Element);
-			++mSize;
+			new (&(GetData()[Index])) element_type(Element);
+			++Size;
 			return Index;
 		}
 		return InvalidIndex;
@@ -193,10 +193,10 @@ public:
 
 	template <typename... TArgs>
 	FORCEINLINE index EmplaceAt(const index Index, TArgs&&... Args) {
-		if (EnsureCapacity(mSize + 1)) {
+		if (EnsureCapacity(Size + 1)) {
 			ShiftForwardOne(Index);	   // TODO: potentially 1 redundant move
-			new (&(Data()[Index])) element_type(std::forward<TArgs>(Args)...);
-			++mSize;
+			new (&(GetData()[Index])) element_type(std::forward<TArgs>(Args)...);
+			++Size;
 			return Index;
 		}
 		return InvalidIndex;
@@ -205,36 +205,36 @@ public:
 	FORCEINLINE void RemoveAt(const index Index) {
 		DestroyElement(Index);
 		ShiftBackOne(Index + 1);
-		--mSize;
+		--Size;
 	}
 
 	FORCEINLINE void RemoveAtSwap(const index Index) {
 		if constexpr (StackSize > 0) {
-			element_type* ActualData = Data();
+			element_type* ActualData = GetData();
 			if constexpr (MemcopyRealloc) {
 				DestroyElement(Index);
-				std::memmove(&ActualData[Index], &ActualData[mSize - 1], sizeof(element_type));
+				std::memmove(&ActualData[Index], &ActualData[Size - 1], sizeof(element_type));
 			} else {
-				SwapElements(ActualData[Index], ActualData[mSize - 1]);
-				DestroyElement(mSize - 1);
+				SwapElements(ActualData[Index], ActualData[Size - 1]);
+				DestroyElement(Size - 1);
 			}
 		} else {
 			if constexpr (MemcopyRealloc) {
 				DestroyElement(Index);
-				std::memmove(&mData[Index], &mData[mSize - 1], sizeof(element_type));
+				std::memmove(&Data[Index], &Data[Size - 1], sizeof(element_type));
 			} else {
-				SwapElements(mData[Index], mData[mSize - 1]);
-				DestroyElement(mSize - 1);
+				SwapElements(Data[Index], Data[Size - 1]);
+				DestroyElement(Size - 1);
 			}
 		}
-		--mSize;
+		--Size;
 		return;
 	}
 
 	FORCEINLINE void DestroyElement(index Index)
 		requires(!FastDestruct)
 	{
-		Data()[Index].~element_type();
+		GetData()[Index].~element_type();
 	}
 
 	FORCEINLINE void DestroyElement(index Index)
@@ -244,81 +244,80 @@ public:
 
 	// Reserve() allocates exactly provided amount (contrary to EnsureCapacity())
 	FORCEINLINE bool Reserve(index TargetCapacity) {
-		if (mCapacity >= TargetCapacity) {
+		if (Capacity >= TargetCapacity) {
 			return true;
 		}
-		if (mData && alloc_base::mAllocator.Expand(mData, TargetCapacity * sizeof(element_type))) {
-			mCapacity = TargetCapacity;
+		if (Data && alloc_base::Allocator.Expand(Data, TargetCapacity * sizeof(element_type))) {
+			Capacity = TargetCapacity;
 			return true;
 		}
-		element_type* OldData = Data();
-		element_type* NewData =
-			(element_type*) alloc_base::mAllocator.Allocate(TargetCapacity * sizeof(element_type));
+		element_type* OldData = GetData();
+		element_type* NewData = (element_type*) alloc_base::Allocator.Allocate(TargetCapacity * sizeof(element_type));
 		if (NewData) {
-			std::memcpy(NewData, OldData, mSize * sizeof(element_type));
-			alloc_base::mAllocator.Free(mData);
-			mData = NewData;
-			mCapacity = TargetCapacity;
+			std::memcpy(NewData, OldData, Size * sizeof(element_type));
+			alloc_base::Allocator.Free(Data);
+			Data = NewData;
+			Capacity = TargetCapacity;
 			return true;
 		}
 
 		return false;
 	}
 
-	FORCEINLINE void Clear(bool Deallocate = true) {
+	FORCEINLINE void Clear(container_clear_type ClearType = container_clear_type::deallocate) {
 		if (!FastDestruct) {
-			for (index i = 0; i < mSize; ++i) {
+			for (index i = 0; i < Size; ++i) {
 				DestroyElement(i);
 			}
 		}
-		if (mData && Deallocate) {
-			alloc_base::mAllocator.Free(mData);
-			mData = nullptr;
-			mCapacity = StackSize;
+		if (Data && ClearType == container_clear_type::deallocate) {
+			alloc_base::Allocator.Free(Data);
+			Data = nullptr;
+			Capacity = StackSize;
 		}
-		mSize = 0;
+		Size = 0;
 	}
 
 	FORCEINLINE iter begin() {
 		if constexpr (StackSize > 0) {
-			if (mCapacity <= StackSize) {
-				return iter(reinterpret_cast<element_type*>(this->mStackStorage));
+			if (Capacity <= StackSize) {
+				return iter(reinterpret_cast<element_type*>(this->StackStorage));
 			}
 		}
-		return iter(mData);
+		return iter(Data);
 	}
 
 	FORCEINLINE iter end() {
 		if constexpr (StackSize > 0) {
-			if (mCapacity <= StackSize) {
-				return iter(reinterpret_cast<element_type*>(this->mStackStorage) + mSize);
+			if (Capacity <= StackSize) {
+				return iter(reinterpret_cast<element_type*>(this->StackStorage) + Size);
 			}
 		}
-		return iter(mData + mSize);
+		return iter(Data + Size);
 	}
 
 	FORCEINLINE const_iter begin() const {
 		if constexpr (StackSize > 0) {
-			if (mCapacity <= StackSize) {
-				return const_iter(reinterpret_cast<const element_type*>(this->mStackStorage));
+			if (Capacity <= StackSize) {
+				return const_iter(reinterpret_cast<const element_type*>(this->StackStorage));
 			}
 		}
-		return const_iter(mData);
+		return const_iter(Data);
 	}
 
 	FORCEINLINE const_iter end() const {
 		if constexpr (StackSize > 0) {
-			if (mCapacity <= StackSize) {
-				return const_iter(reinterpret_cast<const element_type*>(
-					reinterpret_cast<const element_type*>(this->mStackStorage) + mSize));
+			if (Capacity <= StackSize) {
+				return const_iter(
+					reinterpret_cast<const element_type*>(reinterpret_cast<const element_type*>(this->StackStorage) + Size));
 			}
 		}
-		return const_iter(mData + mSize);
+		return const_iter(Data + Size);
 	}
 
 	FORCEINLINE index FindFirst(const element_type& Value) {
-		for (index i = 0; i < mSize; ++i) {
-			if (Value == mData[i]) {
+		for (index i = 0; i < Size; ++i) {
+			if (Value == Data[i]) {
 				return i;
 			}
 		}
@@ -326,8 +325,8 @@ public:
 	}
 
 	FORCEINLINE index FindLast(const element_type& Value) {
-		for (index i = mSize - 1;; --i) {
-			if (Value == mData[i]) {
+		for (index i = Size - 1;; --i) {
+			if (Value == Data[i]) {
 				return i;
 			}
 			if (i == 0) {
@@ -339,8 +338,8 @@ public:
 
 	template <typename predicate_type>
 	FORCEINLINE index FindFirstByPredicate(const predicate_type& Predicate) {
-		for (index i = 0; i < mSize; ++i) {
-			if (Predicate(mData[i])) {
+		for (index i = 0; i < Size; ++i) {
+			if (Predicate(Data[i])) {
 				return i;
 			}
 		}
@@ -349,8 +348,8 @@ public:
 
 	template <typename predicate_type>
 	FORCEINLINE index FindLastByPredicate(const predicate_type& Predicate) {
-		for (index i = mSize - 1;; --i) {
-			if (Predicate(mData[i])) {
+		for (index i = Size - 1;; --i) {
+			if (Predicate(Data[i])) {
 				return i;
 			}
 			if (i == 0) {
@@ -362,19 +361,19 @@ public:
 
 	template <typename less_type = default_less_op>
 	FORCEINLINE void Sort(less_type LessOp = default_less_op{}) {
-		Quicksort(mData, mData + mSize, LessOp);
+		Quicksort(Data, Data + Size, LessOp);
 	}
 
 	template <typename less_type = default_less_op>
 	FORCEINLINE void StableSort(less_type LessOp = default_less_op{}) {
-		MergeSort(mData, mData + mSize, LessOp);
+		MergeSort(Data, Data + Size, LessOp);
 	}
 
 	template <typename less_type>
 	void Quicksort(element_type* Begin, element_type* End, less_type LessOp) {
 		struct sort_partition {
-			element_type* mFirst;
-			element_type* mLast;
+			element_type* First;
+			element_type* Last;
 		};
 
 		sort_partition Stack[32];
@@ -389,43 +388,43 @@ public:
 			bool Loop;
 			do {
 				Loop = false;
-				index Count = Current.mLast - Current.mFirst + 1;
+				index Count = Current.Last - Current.First + 1;
 				if (Count <= 32) {
-					InsertionSort(Current.mFirst, Current.mLast + 1, LessOp);
+					InsertionSort(Current.First, Current.Last + 1, LessOp);
 					continue;
 				}
-				SwapElements(*(Current.mFirst), (Current.mFirst[Count / 2]));
-				element_type* Left = Current.mFirst;
-				element_type* Right = Current.mLast + 1;
+				SwapElements(*(Current.First), (Current.First[Count / 2]));
+				element_type* Left = Current.First;
+				element_type* Right = Current.Last + 1;
 				for (;;) {
-					while (++Left <= Current.mLast && !LessOp(*(Current.mFirst), *Left))
+					while (++Left <= Current.Last && !LessOp(*(Current.First), *Left))
 						;
-					while (--Right > Current.mFirst && !LessOp(*Right, *(Current.mFirst)))
+					while (--Right > Current.First && !LessOp(*Right, *(Current.First)))
 						;
 					if (Left > Right) {
 						break;
 					}
 					SwapElements(*Left, *Right);
 				}
-				SwapElements(*(Current.mFirst), *Right);
-				if (Right - Current.mFirst - 1 >= Current.mLast - Left) {
-					if (Current.mFirst + 1 < Right) {
-						StackTop->mFirst = Current.mFirst;
-						StackTop->mLast = Right - 1;
+				SwapElements(*(Current.First), *Right);
+				if (Right - Current.First - 1 >= Current.Last - Left) {
+					if (Current.First + 1 < Right) {
+						StackTop->First = Current.First;
+						StackTop->Last = Right - 1;
 						++StackTop;
 					}
-					if (Current.mLast > Left) {
-						Current.mFirst = Left;
+					if (Current.Last > Left) {
+						Current.First = Left;
 						Loop = true;
 					}
 				} else {
-					if (Current.mLast > Left) {
-						StackTop->mFirst = Left;
-						StackTop->mLast = Current.mLast;
+					if (Current.Last > Left) {
+						StackTop->First = Left;
+						StackTop->Last = Current.Last;
 						++StackTop;
 					}
-					if (Current.mFirst + 1 < Right) {
-						Current.mLast = Right - 1;
+					if (Current.First + 1 < Right) {
+						Current.Last = Right - 1;
 						Loop = true;
 					}
 				}
@@ -449,8 +448,7 @@ public:
 				alignas(element_type) u8 ValueBuffer[sizeof(element_type)]{};
 				auto* Value = (element_type*) (&ValueBuffer);
 				memcpy(Value, Mid, sizeof(element_type));
-				for (element_type* Prev = Hole - 1; LessOp(*Value, *Prev) && Prev >= Begin;
-					 --Prev) {
+				for (element_type* Prev = Hole - 1; LessOp(*Value, *Prev) && Prev >= Begin; --Prev) {
 					memcpy(Hole, Prev, sizeof(element_type));
 					Hole = Prev;
 				}
@@ -473,48 +471,44 @@ public:
 
 	// EnsureCapacity() allocates to next power of 2 (contrary to Reserve())
 	FORCEINLINE bool EnsureCapacity(const index NewCapacity) {
-		if (mCapacity == 0 && NewCapacity != 0) {
+		if (Capacity == 0 && NewCapacity != 0) {
 			constexpr index InitialCapacity = 4;
-			const index TargetCapacity = Max(InitialCapacity, NewCapacity);
-			mData = (element_type*) alloc_base::mAllocator.Allocate(
-				TargetCapacity * sizeof(element_type));
-			if (mData) {
-				mCapacity = TargetCapacity;
+			const index TargetCapacity = math::Max(InitialCapacity, NewCapacity);
+			Data = (element_type*) alloc_base::Allocator.Allocate(TargetCapacity * sizeof(element_type));
+			if (Data) {
+				Capacity = TargetCapacity;
 			}
-			return mData;
+			return Data;
 
-		} else if (mCapacity < NewCapacity) {
-			const index DoubledCapacity = 1 << (LogOfTwoCeil(mCapacity) + 1);
-			return Reserve(
-				Min(MaxSingleCapacityIncrease + mCapacity, Max(DoubledCapacity, NewCapacity)));
+		} else if (Capacity < NewCapacity) {
+			const index DoubledCapacity = 1 << (math::LogOfTwoCeil(Capacity) + 1);
+			return Reserve(math::Min(MaxSingleCapacityIncrease + Capacity, math::Max(DoubledCapacity, NewCapacity)));
 		}
 		return true;
 	}
 
 	FORCEINLINE void ShiftBackOne(index From) {
-		element_type* ActualData = Data();
+		element_type* ActualData = GetData();
 		if constexpr (MemcopyRealloc) {
-			std::memmove(
-				&ActualData[From - 1], &ActualData[From], (mSize - From) * sizeof(element_type));
+			std::memmove(&ActualData[From - 1], &ActualData[From], (Size - From) * sizeof(element_type));
 		} else {
-			if (From < mSize) {
+			if (From < Size) {
 				new (&ActualData[From - 1]) element_type(std::move(ActualData[From]));
-				for (++From; From != mSize; ++From) {
+				for (++From; From != Size; ++From) {
 					ActualData[From - 1] = std::move(ActualData[From]);
 				}
-				DestroyElement(mSize - 1);
+				DestroyElement(Size - 1);
 			}
 		}
 	}
 
 	FORCEINLINE void ShiftForwardOne(index From) {
-		element_type* ActualData = Data();
+		element_type* ActualData = GetData();
 		if constexpr (MemcopyRealloc) {
-			std::memmove(
-				&ActualData[From + 1], &ActualData[From], (mSize - From) * sizeof(element_type));
+			std::memmove(&ActualData[From + 1], &ActualData[From], (Size - From) * sizeof(element_type));
 		} else {
-			if (From < mSize) {
-				index Source = mSize;
+			if (From < Size) {
+				index Source = Size;
 				new (&ActualData[Source]) element_type(std::move(ActualData[Source - 1]));
 				for (--Source; Source != From; --Source) {
 					ActualData[Source] = std::move(ActualData[Source - 1]);
@@ -524,10 +518,7 @@ public:
 		}
 	}
 
-	FORCEINLINE void CopyConstructElements(
-		element_type* Dest,
-		const element_type* Source,
-		const index Count) {
+	FORCEINLINE void CopyConstructElements(element_type* Dest, const element_type* Source, const index Count) {
 		if constexpr (FastCopy) {
 			std::memcpy(Dest, Source, Count * sizeof(element_type));
 		} else {
@@ -547,21 +538,26 @@ public:
 
 	FORCEINLINE void GrabFromOther(dyn_array&& Other) {
 		if constexpr (StackSize > 0) {
-			if (Other.mCapacity <= StackSize) {
+			if (Other.Capacity <= StackSize) {
 				std::memcpy(
-					reinterpret_cast<element_type*>(this->mStackStorage),
-					reinterpret_cast<element_type*>(Other.mStackStorage),
-					Other.mSize);
+					reinterpret_cast<element_type*>(this->StackStorage),
+					reinterpret_cast<element_type*>(Other.StackStorage),
+					Other.Size);
 			} else {
-				mData = Other.mData;
+				Data = Other.Data;
 			}
 		} else {
-			mData = Other.mData;
+			Data = Other.Data;
 		}
-		mSize = Other.mSize;
-		mCapacity = Other.mCapacity;
-		Other.mData = nullptr;
-		Other.mSize = 0;
-		Other.mCapacity = StackSize;
+		Size = Other.Size;
+		Capacity = Other.Capacity;
+		Other.Data = nullptr;
+		Other.Size = 0;
+		Other.Capacity = StackSize;
+	}
+
+	// NOTE: ugly
+	FORCEINLINE void OverwriteSize(const index NewSize) {
+		Size = NewSize;
 	}
 };

@@ -1,97 +1,99 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "Memory/memory.h"
 
 template <typename owned_type>
 struct owned {
-	owned_type* mPointer = nullptr;
+private:
+	owned_type* Pointer = nullptr;
 
+public:
 	FORCEINLINE owned() = default;
 	owned(const owned&) = delete;
 	owned& operator=(const owned&) = delete;
 
 	FORCEINLINE ~owned() {
-		StaticFree(mPointer);
+		StaticFree(Pointer);
 	}
 
 	FORCEINLINE explicit owned(owned_type* Pointer) {
-		mPointer = Pointer;
+		Pointer = Pointer;
 	}
 
 	template <typename child_type>
 		requires(std::is_base_of_v<owned_type, child_type> && !std::is_same_v<owned_type, child_type>)
 	FORCEINLINE explicit owned(child_type* Pointer) : owned() {
-		mPointer = Pointer;
+		Pointer = Pointer;
 	}
 
-	FORCEINLINE owned& operator=(owned_type* Pointer) {
-		if (mPointer == Pointer) {
+	FORCEINLINE owned& operator=(owned_type* InPointer) {
+		if (Pointer == InPointer) {
 			return *this;
 		}
-		StaticFree(mPointer);
-		mPointer = Pointer;
+		StaticFree(Pointer);
+		Pointer = InPointer;
 		return *this;
 	}
 
 	template <typename child_type>
 		requires(std::is_base_of_v<owned_type, child_type> && !std::is_same_v<owned_type, child_type>)
 	FORCEINLINE owned& operator=(child_type* Pointer) {
-		if (mPointer == Pointer) {
+		if (Pointer == Pointer) {
 			return *this;
 		}
-		StaticFree(mPointer);
-		mPointer = Pointer;
+		StaticFree(Pointer);
+		Pointer = Pointer;
 		return *this;
 	}
 
-	FORCEINLINE owned(owned&& Other) : mPointer{Other.mPointer} {
-		Other.mPointer = nullptr;
+	FORCEINLINE owned(owned&& Other) : Pointer{Other.Pointer} {
+		Other.Pointer = nullptr;
 	}
 
 	FORCEINLINE owned& operator=(owned&& Other) {
-		if (mPointer == Other.mPointer) {
+		if (Pointer == Other.Pointer) {
 			return *this;
 		}
-		StaticFree(mPointer);
-		mPointer = Other.mPointer;
-		Other.mPointer = nullptr;
+		StaticFree(Pointer);
+		Pointer = Other.Pointer;
+		Other.Pointer = nullptr;
 		return *this;
 	}
 
-	FORCEINLINE bool operator==(const owned_type* Pointer) const {
-		return mPointer == Pointer;
+	FORCEINLINE bool operator==(const owned_type* InPointer) const {
+		return Pointer == InPointer;
 	}
 
-	FORCEINLINE bool operator!=(const owned_type* Pointer) const {
-		return mPointer != Pointer;
+	FORCEINLINE bool operator!=(const owned_type* InPointer) const {
+		return Pointer != InPointer;
 	}
 
 	FORCEINLINE bool operator==(const owned& Other) const {
-		return mPointer == Other.mPointer;
+		return Pointer == Other.Pointer;
 	}
 
 	FORCEINLINE bool operator!=(const owned& Other) const {
-		return mPointer != Other.mPointer;
+		return Pointer != Other.Pointer;
 	}
 
 	const owned_type* operator->() const {
-		return mPointer;
+		return Pointer;
 	}
 
 	owned_type* operator->() {
-		return mPointer;
+		return Pointer;
 	}
 
 	owned_type& operator*() noexcept {
-		return *mPointer;
+		return *Pointer;
 	}
 
 	const owned_type& operator*() const {
-		return *mPointer;
+		return *Pointer;
 	}
 
 	FORCEINLINE bool Valid() const {
-		return mPointer != nullptr;
+		return Pointer != nullptr;
 	}
 };

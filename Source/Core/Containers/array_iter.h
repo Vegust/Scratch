@@ -1,19 +1,19 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 // shared between array/dyn_array/span
-template <typename array_type, bool Const>
+template <typename array_type, iterator_constness Constness>
 class array_iter {
 public:
 	using value_type = array_type::value_type;
-	using pointer = std::conditional<Const, const value_type*, value_type*>::type;
-	using reference = std::conditional<Const, const value_type&, value_type&>::type;
+	using pointer = std::conditional<Constness == iterator_constness::constant, const value_type*, value_type*>::type;
+	using reference = std::conditional<Constness == iterator_constness::constant, const value_type&, value_type&>::type;
 
 	constexpr static bool Contiguous = true;
 
 private:
-	pointer mElement = nullptr;
+	pointer Element = nullptr;
 
 public:
 	FORCEINLINE constexpr array_iter() = default;
@@ -21,57 +21,57 @@ public:
 	FORCEINLINE constexpr array_iter(array_iter&&) noexcept = default;
 	FORCEINLINE constexpr ~array_iter() = default;
 
-	FORCEINLINE constexpr explicit array_iter(pointer Element) : mElement(Element) {
+	FORCEINLINE constexpr explicit array_iter(pointer InElement) : Element(InElement) {
 	}
 
 	// implicit conversion
-	FORCEINLINE constexpr operator pointer() const {
-		return mElement;
+	FORCEINLINE constexpr operator pointer() const {	// NOLINT(*-explicit-constructor)
+		return Element;
 	}
 
 	FORCEINLINE constexpr array_iter& operator++() {
-		mElement++;
+		Element++;
 		return *this;
 	}
 
 	FORCEINLINE constexpr const array_iter operator++(int) {
 		auto Tmp = *this;
-		mElement++;
+		Element++;
 		return Tmp;
 	}
 
 	FORCEINLINE constexpr array_iter& operator--() {
-		mElement--;
+		Element--;
 		return *this;
 	}
 
 	FORCEINLINE constexpr const array_iter operator--(int) {
 		auto Tmp = *this;
-		mElement--;
+		Element--;
 		return Tmp;
 	}
 
 	FORCEINLINE constexpr array_iter operator-(int Val) const {
-		return array_iter(mElement - Val);
+		return array_iter(Element - Val);
 	}
 
 	FORCEINLINE constexpr array_iter operator+(int Val) const {
-		return array_iter(mElement + Val);
+		return array_iter(Element + Val);
 	}
 
 	FORCEINLINE constexpr reference operator[](index Index) {
-		return *(mElement + Index);
+		return *(Element + Index);
 	}
 
 	FORCEINLINE constexpr pointer operator->() {
-		return mElement;
+		return Element;
 	}
 
 	FORCEINLINE constexpr reference operator*() {
-		return *mElement;
+		return *Element;
 	}
 
 	FORCEINLINE constexpr bool operator==(const array_iter& Other) const {
-		return mElement == Other.mElement;
+		return Element == Other.Element;
 	}
 };

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 class index_buffer {
 private:

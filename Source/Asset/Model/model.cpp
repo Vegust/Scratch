@@ -16,7 +16,7 @@ void model::Load(const str& Path) {
 
 	Assimp::Importer Importer;
 	const aiScene* Scene = Importer.ReadFile(
-		Path.Raw(),
+		Path.GetRaw(),
 		aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph |
 			aiProcess_FlipUVs | aiProcess_GenNormals);
 
@@ -73,16 +73,16 @@ mesh ProcessMesh(model& Model, aiMesh* MeshData, const aiScene* Scene) {
 	if (Material->GetTextureCount(aiTextureType_DIFFUSE) > 0) {
 		aiString str;
 		Material->GetTexture(aiTextureType_DIFFUSE, 0, &str);
-		OutMesh.mMaterial.mDiffuseMap.Load(Model.mDirectory + '/' + str.C_Str(), true);
+		OutMesh.mMaterial.DiffuseMap.Load(Model.mDirectory + '/' + str.C_Str(), true);
 	} else {
-		OutMesh.mMaterial.mDiffuseMap.Load("Assets/Textures/DefaultDiffuse.jpg", true);
+		OutMesh.mMaterial.DiffuseMap.Load("Assets/Textures/DefaultDiffuse.jpg", true);
 	}
 	if (Material->GetTextureCount(aiTextureType_SPECULAR) > 0) {
 		aiString str;
 		Material->GetTexture(aiTextureType_SPECULAR, 0, &str);
-		OutMesh.mMaterial.mSpecularMap.Load(Model.mDirectory + '/' + str.C_Str());
+		OutMesh.mMaterial.SpecularMap.Load(Model.mDirectory + '/' + str.C_Str());
 	} else {
-		OutMesh.mMaterial.mSpecularMap.Load("Assets/Textures/DefaultSpecular.jpg");
+		OutMesh.mMaterial.SpecularMap.Load("Assets/Textures/DefaultSpecular.jpg");
 	}
 
 	OutMesh.Init();

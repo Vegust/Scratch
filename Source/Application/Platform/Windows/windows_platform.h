@@ -2,7 +2,7 @@
 
 #ifdef WIN32
 
-#include "core_types.h"
+#include "basic.h"
 
 class windows_window;
 using window = windows_window;

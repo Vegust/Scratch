@@ -1,5 +1,6 @@
 ﻿#include "tree_allocator.h"
 
+#include "Math/math.h"
 #include "Containers/array.h"
 #include "Containers/dyn_array.h"
 #include "Containers/rb_set.h"
@@ -10,80 +11,78 @@ struct tree_allocator_impl {
 			// padding so mAllocIndex for pool header and tree header are identical
 			u32 : 32;
 			bool : 8;
-			u16 mAllocIndex{0};
+			u16 AllocIndex{0};
 		};
 
 		constexpr static u32 FirstAllocationSize = 256;
-		dyn_array<void*, malloc_allocator> mAllocations{};
-		void* mFreeElement{nullptr};
-		u32 mNextIndex{0};
+		dyn_array<void*, malloc_allocator> Allocations{};
+		void* FreeElement{nullptr};
+		u32 NextIndex{0};
 
 		void* Allocate(u32 Size, u32 AllocIndex) {
 			Size = Size + sizeof(pool_header);
-			if (mFreeElement) {
-				void* Element = mFreeElement;
-				mFreeElement = *(void**) Element;
+			if (FreeElement) {
+				void* Element = FreeElement;
+				FreeElement = *(void**) Element;
 				return Element;
 			}
-			u32 LastAllocationSize = FirstAllocationSize * (1 << (mAllocations.Size() - 1));
-			if (mNextIndex != 0 && mNextIndex < LastAllocationSize) {
-				void* LastAllocation = mAllocations[mAllocations.Size() - 1];
-				pool_header* Header =
-					(pool_header*) ((u8*) LastAllocation + ((mNextIndex++) * Size));
-				Header->mAllocIndex = AllocIndex;
+			u32 LastAllocationSize = FirstAllocationSize * (1 << (Allocations.GetSize() - 1));
+			if (NextIndex != 0 && NextIndex < LastAllocationSize) {
+				void* LastAllocation = Allocations[Allocations.GetSize() - 1];
+				pool_header* Header = (pool_header*) ((u8*) LastAllocation + ((NextIndex++) * Size));
+				Header->AllocIndex = AllocIndex;
 				return Header + 1;
 			} else {
-				void* NewAllocation =
-					MemoryMalloc(Size * FirstAllocationSize * (1 << mAllocations.Size()));
-				mAllocations.Add(NewAllocation);
-				mNextIndex = 1;
-				((pool_header*) NewAllocation)->mAllocIndex = AllocIndex;
+				void* NewAllocation = MemoryMalloc(Size * FirstAllocationSize * (1 << Allocations.GetSize()));
+				Allocations.Add(NewAllocation);
+				NextIndex = 1;
+				((pool_header*) NewAllocation)->AllocIndex = AllocIndex;
 				return (u8*) NewAllocation + sizeof(pool_header);
 			}
 		}
 
 		void Free(void* Ptr) {
-			*(void**) Ptr = mFreeElement;
-			mFreeElement = Ptr;
+			*(void**) Ptr = FreeElement;
+			FreeElement = Ptr;
 		}
 
 		void Clear() {
-			for (void* Allocation : mAllocations) {
+			for (void* Allocation : Allocations) {
 				MemoryFree(Allocation);
 			}
-			mAllocations.Clear();
-			mFreeElement = nullptr;
-			mNextIndex = 0;
+			Allocations.Clear();
+			FreeElement = nullptr;
+			NextIndex = 0;
 		}
 	};
 
 	struct header {
-		u32 mSize{0};
-		u32 mPrev{InvalidIndex};
-		u32 mNext{InvalidIndex};
-		bool mOccupied{false};
-		u16 mAllocIndex{0};
+		u32 Size{0};
+		u32 Prev{InvalidIndex};
+		u32 Next{InvalidIndex};
+		bool Occupied{false};
+		u16 AllocIndex{0};
 
 		FORCEINLINE header* Occupy(u32 NewSize) {
-			if (mSize < (NewSize + HeaderSize + MinAllocSize)) {
+			if (Size < (NewSize + HeaderSize + MinAllocSize)) {
 				// Not enough space for leftover header
 				return nullptr;
 			}
 			header* LeftoverHeader = this + NewSize + HeaderSize;
-			LeftoverHeader->mAllocIndex = mAllocIndex;
+			LeftoverHeader->AllocIndex = AllocIndex;
 			u32 LeftoverHeaderIndex = GetIndex(LeftoverHeader);
-			LeftoverHeader->mSize = mSize - NewSize - HeaderSize;
-			LeftoverHeader->mPrev = GetIndex(this);
-			LeftoverHeader->mOccupied = false;
-			if (mNext != InvalidIndex) {
-				header* NextHeader = GetHeader(mNext, mAllocIndex);
-				NextHeader->mPrev = LeftoverHeaderIndex;
-				LeftoverHeader->mNext = mNext;
+			LeftoverHeader->Size = Size - NewSize - HeaderSize;
+			LeftoverHeader->Prev = GetIndex(this);
+			LeftoverHeader->Occupied = false;
+			if (Next != InvalidIndex) {
+				header* NextHeader = GetHeader(Next, AllocIndex);
+				NextHeader->Prev = LeftoverHeaderIndex;
+				LeftoverHeader->Next = Next;
 			} else {
-				LeftoverHeader->mNext = InvalidIndex;
+				LeftoverHeader->Next = InvalidIndex;
 			}
-			mNext = LeftoverHeaderIndex;
-			mSize = NewSize;
+			Next = LeftoverHeaderIndex;
+			Size = NewSize;
 			return LeftoverHeader;
 		}
 
@@ -97,26 +96,22 @@ struct tree_allocator_impl {
 	};
 
 	struct free_header_data {
-		header* mHeader{nullptr};
-		u32 mSize{0};
+		header* Header{nullptr};
+		u32 Size{0};
 	};
 
 	struct free_header_less_op {
-		FORCEINLINE constexpr static bool Less(
-			const free_header_data& Lhs,
-			const free_header_data& Rhs) {
-			if (Lhs.mSize == Rhs.mSize) {
-				return (u64) Lhs.mHeader < (u64) Rhs.mHeader;
+		FORCEINLINE constexpr static bool Less(const free_header_data& Lhs, const free_header_data& Rhs) {
+			if (Lhs.Size == Rhs.Size) {
+				return (u64) Lhs.Header < (u64) Rhs.Header;
 			}
-			return Lhs.mSize < Rhs.mSize;
+			return Lhs.Size < Rhs.Size;
 		}
 	};
 
 	struct free_header_equals_op {
-		FORCEINLINE constexpr static bool Equals(
-			const free_header_data& Lhs,
-			const free_header_data& Rhs) {
-			return Lhs.mHeader == Rhs.mHeader;
+		FORCEINLINE constexpr static bool Equals(const free_header_data& Lhs, const free_header_data& Rhs) {
+			return Lhs.Header == Rhs.Header;
 		}
 	};
 
@@ -129,27 +124,23 @@ struct tree_allocator_impl {
 	constexpr static u32 BlockSize = 1024;					   // * 16 = 16384 bytes
 	constexpr static u32 MaxDoublingSize = 1024 * 1024 * 8;	   // 128 MB after that we allocate only
 															   // as much as needed
-	dyn_array<void*, malloc_allocator> mAllocations{};
+	dyn_array<void*, malloc_allocator> Allocations{};
 	// set allocates nodes using this allocator but because nodes are small they are allocated
 	// using pools so there is no recursion
-	rb_set<
-		free_header_data,
-		free_header_less_op,
-		free_header_equals_op>
-		mFreeHeaders{};
-	array<pool, NumPools> mPools{};	// 16,32,48,64
-	s32 mNumBlocks = 0;
+	rb_set<free_header_data, free_header_less_op, free_header_equals_op> FreeHeaders{};
+	array<pool, NumPools> Pools{};	  // 16,32,48,64
+	s32 NumBlocks = 0;
 
 	FORCEINLINE static u32 GranularSize(u64 Size) {
 		return Size > 0 ? (Size >> 4) + 1 : 0;
 	}
 
 	FORCEINLINE static u32 GetIndex(const header* Header) {
-		return Header - (header*) (Impl.mAllocations[Header->mAllocIndex - NumPools]);
+		return Header - (header*) (Impl.Allocations[Header->AllocIndex - NumPools]);
 	}
 
 	FORCEINLINE static header* GetHeader(u32 HeaderIndex, u16 AllocationIndex) {
-		return (header*) (Impl.mAllocations[AllocationIndex - NumPools]) + HeaderIndex;
+		return (header*) (Impl.Allocations[AllocationIndex - NumPools]) + HeaderIndex;
 	}
 
 	~tree_allocator_impl() {
@@ -157,16 +148,16 @@ struct tree_allocator_impl {
 	}
 
 	void Clear() {
-		mFreeHeaders.Clear();
-		for (auto& Allocation : mAllocations) {
+		FreeHeaders.Clear();
+		for (auto& Allocation : Allocations) {
 			MemoryFree(Allocation);
 		}
-		mAllocations.Clear();
-		for (auto& Pool : mPools) {
+		Allocations.Clear();
+		for (auto& Pool : Pools) {
 			Pool.Clear();
 		}
-		//mFreeHeaders.mAllocator.ClearPools();
-		mNumBlocks = 0;
+		// mFreeHeaders.mAllocator.ClearPools();
+		NumBlocks = 0;
 	}
 
 	// Requested size in multiples of 16 bytes
@@ -175,23 +166,23 @@ struct tree_allocator_impl {
 			return nullptr;
 		}
 		if ((RequestedSize - 1) < NumPools) {
-			return mPools[RequestedSize - 1].Allocate(RequestedSize * 16, RequestedSize - 1);
+			return Pools[RequestedSize - 1].Allocate(RequestedSize * 16, RequestedSize - 1);
 		}
 		free_header_data wanted_header;
-		wanted_header.mSize = RequestedSize;
-		free_header_data* FoundData = mFreeHeaders.UpperBound(wanted_header);
+		wanted_header.Size = RequestedSize;
+		free_header_data* FoundData = FreeHeaders.UpperBound(wanted_header);
 		if (FoundData) {
-			header* FoundHeader = FoundData->mHeader;
-			mFreeHeaders.RemoveByPtr(FoundData);
+			header* FoundHeader = FoundData->Header;
+			FreeHeaders.RemoveByPtr(FoundData);
 			header* Leftovers = FoundHeader->Occupy(RequestedSize);
-			FoundHeader->mOccupied = true;
+			FoundHeader->Occupied = true;
 			if (Leftovers) {
-				mFreeHeaders.Add(free_header_data{Leftovers, Leftovers->mSize});
-				mNumBlocks++;
+				FreeHeaders.Add(free_header_data{Leftovers, Leftovers->Size});
+				NumBlocks++;
 			}
 			return FoundHeader->Data();
 		}
-		u64 NewSize = Min(MaxDoublingSize, (u64) BlockSize * (1 << mAllocations.Size()));
+		u64 NewSize = math::Min(MaxDoublingSize, (u64) BlockSize * (1 << Allocations.GetSize()));
 		if (NewSize < (RequestedSize + HeaderSize)) {
 			NewSize = RequestedSize + HeaderSize;
 		}
@@ -199,49 +190,49 @@ struct tree_allocator_impl {
 		if (!NewAllocation) {
 			return nullptr;
 		}
-		mAllocations.Add(NewAllocation);
+		Allocations.Add(NewAllocation);
 		header* NewBlockHeader = (header*) (NewAllocation);
-		NewBlockHeader->mOccupied = true;
-		NewBlockHeader->mPrev = InvalidIndex;
-		NewBlockHeader->mNext = InvalidIndex;
-		NewBlockHeader->mSize = NewSize - HeaderSize;
-		NewBlockHeader->mAllocIndex = NumPools + mAllocations.Size() - 1;
-		mNumBlocks++;
+		NewBlockHeader->Occupied = true;
+		NewBlockHeader->Prev = InvalidIndex;
+		NewBlockHeader->Next = InvalidIndex;
+		NewBlockHeader->Size = NewSize - HeaderSize;
+		NewBlockHeader->AllocIndex = NumPools + Allocations.GetSize() - 1;
+		NumBlocks++;
 		header* Leftovers = NewBlockHeader->Occupy(RequestedSize);
 		if (Leftovers) {
-			mFreeHeaders.Add(free_header_data{Leftovers, Leftovers->mSize});
-			mNumBlocks++;
+			FreeHeaders.Add(free_header_data{Leftovers, Leftovers->Size});
+			NumBlocks++;
 		}
 		return NewBlockHeader->Data();
 	}
 
 	bool Expand(void* Ptr, u32 RequestedSize) {
 		header* Header = header::FromDataPtr(Ptr);
-		if (Header->mAllocIndex < NumPools) {
+		if (Header->AllocIndex < NumPools) {
 			return false;
 		}
-		if (Header->mSize >= RequestedSize) {
+		if (Header->Size >= RequestedSize) {
 			return true;
 		}
-		if (Header->mNext != InvalidIndex) {
-			header* NextHeader = GetHeader(Header->mNext, Header->mAllocIndex);
-			if (!NextHeader->mOccupied) {
-				u32 ExtraSize = RequestedSize - Header->mSize - HeaderSize;
-				if (NextHeader->mSize >= ExtraSize) {
-					mFreeHeaders.Remove(free_header_data{NextHeader, NextHeader->mSize});
+		if (Header->Next != InvalidIndex) {
+			header* NextHeader = GetHeader(Header->Next, Header->AllocIndex);
+			if (!NextHeader->Occupied) {
+				u32 ExtraSize = RequestedSize - Header->Size - HeaderSize;
+				if (NextHeader->Size >= ExtraSize) {
+					FreeHeaders.Remove(free_header_data{NextHeader, NextHeader->Size});
 					header* Leftovers = NextHeader->Occupy(ExtraSize);
-					Header->mSize += NextHeader->mSize + HeaderSize;
-					Header->mNext = NextHeader->mNext;
+					Header->Size += NextHeader->Size + HeaderSize;
+					Header->Next = NextHeader->Next;
 					if (Leftovers) {
 						u32 HeaderIndex = GetIndex(Header);
-						Leftovers->mPrev = HeaderIndex;
-						mFreeHeaders.Add(free_header_data{Leftovers, Leftovers->mSize});
+						Leftovers->Prev = HeaderIndex;
+						FreeHeaders.Add(free_header_data{Leftovers, Leftovers->Size});
 					} else {
-						mNumBlocks--;
-						if (Header->mNext != InvalidIndex) {
-							header* NewNextHeader = GetHeader(Header->mNext, Header->mAllocIndex);
+						NumBlocks--;
+						if (Header->Next != InvalidIndex) {
+							header* NewNextHeader = GetHeader(Header->Next, Header->AllocIndex);
 							u32 HeaderIndex = GetIndex(Header);
-							NewNextHeader->mPrev = HeaderIndex;
+							NewNextHeader->Prev = HeaderIndex;
 						}
 					}
 					return true;
@@ -254,42 +245,42 @@ struct tree_allocator_impl {
 	void Free(void* Ptr) {
 		// NOTE: this might be illegal with pool headers?
 		header* FreedHeader = header::FromDataPtr(Ptr);
-		u16 AllocIndex = FreedHeader->mAllocIndex;
+		u16 AllocIndex = FreedHeader->AllocIndex;
 		if (AllocIndex < NumPools) {
-			mPools[AllocIndex].Free(Ptr);
+			Pools[AllocIndex].Free(Ptr);
 			return;
 		}
-		if (FreedHeader->mNext != InvalidIndex) {
-			header* NextHeader = GetHeader(FreedHeader->mNext, FreedHeader->mAllocIndex);
-			if (!NextHeader->mOccupied) {
-				mFreeHeaders.Remove(free_header_data{NextHeader, NextHeader->mSize});
-				mNumBlocks--;
-				FreedHeader->mSize += NextHeader->mSize + HeaderSize;
-				FreedHeader->mNext = NextHeader->mNext;
-				if (FreedHeader->mNext != InvalidIndex) {
-					header* NewNextHeader = GetHeader(FreedHeader->mNext, FreedHeader->mAllocIndex);
+		if (FreedHeader->Next != InvalidIndex) {
+			header* NextHeader = GetHeader(FreedHeader->Next, FreedHeader->AllocIndex);
+			if (!NextHeader->Occupied) {
+				FreeHeaders.Remove(free_header_data{NextHeader, NextHeader->Size});
+				NumBlocks--;
+				FreedHeader->Size += NextHeader->Size + HeaderSize;
+				FreedHeader->Next = NextHeader->Next;
+				if (FreedHeader->Next != InvalidIndex) {
+					header* NewNextHeader = GetHeader(FreedHeader->Next, FreedHeader->AllocIndex);
 					u32 FreedHeaderIndex = GetIndex(FreedHeader);
-					NewNextHeader->mPrev = FreedHeaderIndex;
+					NewNextHeader->Prev = FreedHeaderIndex;
 				}
 			}
 		}
-		if (FreedHeader->mPrev != InvalidIndex) {
-			header* PrevHeader = GetHeader(FreedHeader->mPrev, FreedHeader->mAllocIndex);
-			if (!PrevHeader->mOccupied) {
-				u32 PrevHeaderIndex = FreedHeader->mPrev;
-				mFreeHeaders.Remove(free_header_data{PrevHeader, PrevHeader->mSize});
-				mNumBlocks--;
-				PrevHeader->mSize += FreedHeader->mSize + HeaderSize;
-				PrevHeader->mNext = FreedHeader->mNext;
-				if (PrevHeader->mNext != InvalidIndex) {
-					header* NextHeader = GetHeader(PrevHeader->mNext, PrevHeader->mAllocIndex);
-					NextHeader->mPrev = PrevHeaderIndex;
+		if (FreedHeader->Prev != InvalidIndex) {
+			header* PrevHeader = GetHeader(FreedHeader->Prev, FreedHeader->AllocIndex);
+			if (!PrevHeader->Occupied) {
+				u32 PrevHeaderIndex = FreedHeader->Prev;
+				FreeHeaders.Remove(free_header_data{PrevHeader, PrevHeader->Size});
+				NumBlocks--;
+				PrevHeader->Size += FreedHeader->Size + HeaderSize;
+				PrevHeader->Next = FreedHeader->Next;
+				if (PrevHeader->Next != InvalidIndex) {
+					header* NextHeader = GetHeader(PrevHeader->Next, PrevHeader->AllocIndex);
+					NextHeader->Prev = PrevHeaderIndex;
 				}
 				FreedHeader = PrevHeader;
 			}
 		}
-		FreedHeader->mOccupied = false;
-		mFreeHeaders.Add(free_header_data{FreedHeader, FreedHeader->mSize});
+		FreedHeader->Occupied = false;
+		FreeHeaders.Add(free_header_data{FreedHeader, FreedHeader->Size});
 	}
 };
 
@@ -311,7 +302,6 @@ bool tree_allocator::StaticExpandImpl(void* Ptr, u64 NewSize) {
 
 static_assert(sizeof(tree_allocator_impl::header) == tree_allocator_impl::Granularity);
 static_assert(
-	sizeof(tree_allocator_impl::header) - offsetof(tree_allocator_impl::header, mAllocIndex) ==
-	sizeof(tree_allocator_impl::pool::pool_header) -
-		offsetof(tree_allocator_impl::pool::pool_header, mAllocIndex));
+	sizeof(tree_allocator_impl::header) - offsetof(tree_allocator_impl::header, AllocIndex) ==
+	sizeof(tree_allocator_impl::pool::pool_header) - offsetof(tree_allocator_impl::pool::pool_header, AllocIndex));
 tree_allocator_impl tree_allocator_impl::Impl{};

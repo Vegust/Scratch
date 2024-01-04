@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 enum class key_state : u8 {
 	released,
@@ -78,6 +78,6 @@ enum class input_key : u32 {
 };
 
 struct mouse_state {
-	vec2 mPos{};
-	vec2 mScroll{};
+	vec2 Pos{};
+	vec2 Scroll{};
 };

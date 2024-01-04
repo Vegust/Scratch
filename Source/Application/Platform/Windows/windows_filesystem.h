@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Containers/str.h"
+#include "Core/String/str.h"
 #include "Application/Platform/filesystem_types.h"
 
 namespace windows_filesystem {

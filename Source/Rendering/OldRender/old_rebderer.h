@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Game/Entities/camera.h"
-#include "core_types.h"
+#include "basic.h"
 #include "vertex_array.h"
 #include "cubemap.h"
 #include "framebuffer.h"

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "core_types.h"
+#include "basic.h"
 
 struct default_less_op {
 	template <typename lhs_type, typename rhs_type>

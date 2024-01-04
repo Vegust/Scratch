@@ -1,6 +1,5 @@
 ﻿#include "../testing_shared.h"
 #include "Memory/memory.h"
-#include "core_utility.h"
 #include <unordered_map>
 #include <random>
 #include <fstream>
@@ -198,21 +197,21 @@ static TestResult PerformanceTests(
 		// printf("Test effectivenes: %.2f %.2f %.2f\n", factorSimple, factorShuffle, factorRandom);
 
 		std::cout << "Simple (" << MinSize << " to " << MaxSize << "), AllocCount " << allocCount << ":" << std::endl;
-		OutTotals.mScore += factorSimple * Min(CalculateScore(
+		OutTotals.mScore += factorSimple * math::Min(CalculateScore(
 											   (float) result["simple"][totalAllocatedSize].first,
 											   result["simple"][totalAllocatedSize].second,
 											   (float) index,
 											   totalAllocatedSizeMb), 100.f);
 		
 		std::cout << "Shuffle (" << MinSize << " to " << MaxSize << "), AllocCount " << allocCount << ":" << std::endl;
-		OutTotals.mScore += factorShuffle * Min(CalculateScore(
+		OutTotals.mScore += factorShuffle * math::Min(CalculateScore(
 												(float) result["shuffle"][totalAllocatedSize].first,
 												result["shuffle"][totalAllocatedSize].second,
 												(float) index,
 												totalAllocatedSizeMb),100.f);
 		
 		std::cout << "Random (" << MinSize << " to " << MaxSize << "), AllocCount " << allocCount << ":" << std::endl;
-		OutTotals.mScore += factorRandom * Min(CalculateScore(
+		OutTotals.mScore += factorRandom * math::Min(CalculateScore(
 											   (float) result["random"][totalAllocatedSize].first,
 											   result["random"][totalAllocatedSize].second,
 											   (float) index,

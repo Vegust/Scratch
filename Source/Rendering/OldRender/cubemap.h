@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core_types.h"
+#include "basic.h"
 #include "Containers/array.h"
-#include "Containers/str.h"
+#include "Core/String/str.h"
 
 struct cubemap {
 	u32 mRendererId{0};

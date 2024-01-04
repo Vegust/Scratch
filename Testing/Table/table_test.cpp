@@ -44,7 +44,7 @@ static bool SanityCheck(s64 Count) {
 		}
 
 		for (const auto& el : container) {
-			if (ideal[el.mKey] != el.mValue) {
+			if (ideal[el.Key] != el.Value) {
 				Valid = false;
 				break;
 			}

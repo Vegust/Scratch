@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "core_types.h"
-#include "hash.h"
+#include "core.h"
+#include "Core/Utility/hash.h"
 
 #include <chrono>
 #include <iostream>
@@ -26,13 +26,14 @@ size_t GetTotalUsedVirtualMemory() {
 }
 #endif
 
-constexpr u64 GarbageLength = 20 * 1024 * 1024;
-static u64 GarbageBytes[GarbageLength]{0xff};
+// NOTE: commented out since not used and increases GCC ocmpilation times by a lot
+//constexpr u64 GarbageLength = 20 * 1024 * 1024;
+//static u64 GarbageBytes[GarbageLength]{0xff};
 
 FORCEINLINE void ClearCache() {
-	for (int i = 0; i < 2000; i++) {
-		GarbageBytes[rand() % GarbageLength] = GarbageBytes[rand() % GarbageLength];
-	}
+//	for (int i = 0; i < 2000; i++) {
+//		GarbageBytes[rand() % GarbageLength] = GarbageBytes[rand() % GarbageLength];
+//	}
 }
 
 struct timer {
@@ -140,6 +141,11 @@ struct std::hash<complex_type_realloc> {
 
 #pragma pack(push, 1)
 
+#if defined(__GNUC__)	 // GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 template <int Size>
 struct bytes_struct {
 	bytes_struct() {
@@ -163,7 +169,9 @@ struct bytes_struct {
 
 	u8 m_test[Size];
 };
-
+#if defined(__GNUC__)	 // GCC
+#pragma GCC diagnostic pop
+#endif
 #pragma pack(pop)
 
 template <typename value_type>
