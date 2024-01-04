@@ -7,7 +7,7 @@
 
 // Number that corresponds to a string (str). Can be created from any str and converted back to str.
 // Optimal for copying and comparison, creation from string is a big table lookup
-struct atom : trait_memcopy_relocatable {
+struct atom {
 	struct atom_pool {
 		struct index_hasher {
 			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(index Index) {
@@ -18,6 +18,8 @@ struct atom : trait_memcopy_relocatable {
 		dyn_array<str> Strings{};
 		hash_set<index, index_hasher> IndexLookupSet{};
 	};
+	
+	static constexpr bool MemcopyRelocatable = true;
 
 	index Index{InvalidIndex};
 	static atom_pool Pool;

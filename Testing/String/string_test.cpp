@@ -15,9 +15,11 @@ static bool SanityCheck(s64 Count) {
 
 	bool Valid = true;
 	
-	std::cout << sizeof(str_view) << std::endl;
-	std::cout << sizeof(str) << std::endl;
-	std::cout << sizeof(dyn_array<u32>) << std::endl;
+//	std::cout << sizeof(str_view) << std::endl;
+//	std::cout << sizeof(str) << std::endl;
+//	std::cout << sizeof(dyn_array<u32>) << std::endl;
+//	std::cout << sizeof(std::vector<u32>) << std::endl;
+//	std::cout << sizeof(std::string) << std::endl;
 	
 	str TestShort{"123"};
 	str TestLong{"123456789101112131415161718192021222324252262728293031323334353637383940"};

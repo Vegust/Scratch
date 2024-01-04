@@ -10,11 +10,14 @@
 
 using str_view = span<char>;
 
-struct str : trait_memcopy_relocatable {
+struct str {
 public:
 	using char_type = char;
 	using value_type = char;
-	constexpr static index StackSize = 14;
+
+	constexpr static index StackSize = 16;
+	static constexpr bool MemcopyRelocatable = true;
+
 	using array_type = dyn_array<char_type, default_allocator, StackSize>;
 	using iter = array_type::iter;
 	using const_iter = array_type::const_iter;
@@ -229,7 +232,7 @@ public:
 	[[nodiscard]] FORCEINLINE const_iter end() const {
 		return Bytes.end() - (GetByteLength() > 0 ? 1 : 0);
 	}
-	
+
 	FORCEINLINE bool Reserve(index TargetCapacity) {
 		return Bytes.Reserve(TargetCapacity);
 	}
@@ -437,7 +440,7 @@ public:
 	FORCEINLINE void Clear(container_clear_type ClearType = container_clear_type::deallocate) {
 		Bytes.Clear(ClearType);
 	}
-	
+
 	FORCEINLINE void OverwriteSize(const index NewSize) {
 		Bytes.OverwriteSize(NewSize);
 	}

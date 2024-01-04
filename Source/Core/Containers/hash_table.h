@@ -59,11 +59,13 @@ template <
 	typename hasher = default_hasher,
 	typename equals_op = default_equals_op,
 	typename allocator_type = default_allocator>
-class hash_set : allocator_instance<allocator_type>, trait_memcopy_relocatable {
+struct hash_set : allocator_instance<allocator_type> {
 public:
 	constexpr static hash::hash_type EmptyHash = std::numeric_limits<hash::hash_type>::max();
 	constexpr static hash::hash_type DeletedHash = std::numeric_limits<hash::hash_type>::max() - 1;
 	constexpr static hash::hash_type LastValidHash = std::numeric_limits<hash::hash_type>::max() - 2;
+	
+	static constexpr bool MemcopyRelocatable = true;
 
 	struct set_elem_container {
 		element_type Value;

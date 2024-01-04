@@ -65,15 +65,11 @@ struct timer {
 	}
 };
 
-template <bool Relocatable>
-struct complex_type_traits {};
-
-template <>
-struct complex_type_traits<true> : trait_memcopy_relocatable {};
-
 template <bool Relocatable = false>
-struct complex_type_template : complex_type_traits<Relocatable> {
+struct complex_type_template {
 	static inline s64 NumInstances = 0;
+	
+	static constexpr bool MemcopyRelocatable = Relocatable;
 
 	complex_type_template() : complex_type_template(0) {
 	}

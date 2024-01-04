@@ -3,20 +3,14 @@
 #include "Core/Utility/hash.h"
 #include "Core/Templates/concepts.h"
 
-// TODO bad
-template <typename key, typename value>
-struct conditionally_memcopy_relocatable {};
-
-template <typename key, typename value>
-	requires(memcopy_relocatable<key> && memcopy_relocatable<value>)
-struct conditionally_memcopy_relocatable<key, value> : trait_memcopy_relocatable {};
-
 // Pair of key and value, where, by default, hashing and less/equals operators are
 // only performed using key, and value is ignored
 template <typename key, typename value>
-struct key_value_pair : conditionally_memcopy_relocatable<key, value> {
+struct key_value_pair {
 	using key_type = key;
 	using value_type = value;
+	
+	static constexpr bool MemcopyRelocatable = memcopy_relocatable<key> && memcopy_relocatable<value>;
 
 	key Key{};
 	value Value{};

@@ -3,7 +3,6 @@
 #include "basic.h"
 #include "Templates/less.h"
 #include "Templates/concepts.h"
-#include "Templates/traits.h"
 #include "Math/math.h"
 #include "Memory/memory.h"
 #include "array_iter.h"
@@ -11,29 +10,27 @@
 #include <initializer_list>
 #include <limits>
 
-template <typename element_type, u64 StackSize>
+template <typename element_type, index InStackSize>
 struct array_storage {
-public:
-	array_storage() {
-	}
-
-protected:
-	NO_UNIQUE_ADDRESS alignas(element_type) u8 StackStorage[StackSize * sizeof(element_type)] = {0};
+	alignas(element_type) u8 Data[InStackSize * sizeof(element_type)];
 };
 
 template <typename element_type>
-class array_storage<element_type, 0> {};
+struct array_storage<element_type, 0> {};
 
 template <typename element_type, typename allocator_type = default_allocator, index InStackSize = 0>
-struct dyn_array : array_storage<element_type, InStackSize>,
-				   trait_memcopy_relocatable,
-				   allocator_instance<allocator_type> {
+struct dyn_array : allocator_instance<allocator_type> {
 private:
-	element_type* Data{nullptr};
 	index Size{0};
-	index Capacity{0};
+	index Capacity{InStackSize};
+	union {
+		element_type* Data{nullptr};
+		array_storage<element_type, InStackSize> StackStorage;
+	};
 
 public:
+	constexpr static bool MemcopyRelocatable = true;
+	
 	using iter = array_iter<dyn_array, iterator_constness::non_constant>;
 	using const_iter = array_iter<dyn_array, iterator_constness::constant>;
 	using value_type = element_type;
@@ -141,7 +138,7 @@ public:
 	FORCEINLINE element_type* GetData() {
 		if constexpr (StackSize > 0) {
 			if (Capacity <= StackSize) {
-				return reinterpret_cast<element_type*>(this->StackStorage);
+				return reinterpret_cast<element_type*>(StackStorage.Data);
 			}
 		}
 		return Data;
@@ -150,7 +147,7 @@ public:
 	FORCEINLINE const element_type* GetData() const {
 		if constexpr (StackSize > 0) {
 			if (Capacity <= StackSize) {
-				return reinterpret_cast<const element_type*>(this->StackStorage);
+				return reinterpret_cast<const element_type*>(StackStorage.Data);
 			}
 		}
 		return Data;
@@ -162,6 +159,10 @@ public:
 
 	FORCEINLINE index GetSize() const {
 		return Size;
+	}
+	
+	FORCEINLINE bool HasAllocation() const {
+		return StackSize < Capacity && Data;
 	}
 
 	FORCEINLINE element_type& operator[](const index Index) {
@@ -247,7 +248,7 @@ public:
 		if (Capacity >= TargetCapacity) {
 			return true;
 		}
-		if (Data && alloc_base::Allocator.Expand(Data, TargetCapacity * sizeof(element_type))) {
+		if (HasAllocation() && alloc_base::Allocator.Expand(Data, TargetCapacity * sizeof(element_type))) {
 			Capacity = TargetCapacity;
 			return true;
 		}
@@ -255,7 +256,9 @@ public:
 		element_type* NewData = (element_type*) alloc_base::Allocator.Allocate(TargetCapacity * sizeof(element_type));
 		if (NewData) {
 			std::memcpy(NewData, OldData, Size * sizeof(element_type));
-			alloc_base::Allocator.Free(Data);
+			if (HasAllocation()) {
+				alloc_base::Allocator.Free(Data);
+			}
 			Data = NewData;
 			Capacity = TargetCapacity;
 			return true;
@@ -270,7 +273,7 @@ public:
 				DestroyElement(i);
 			}
 		}
-		if (Data && ClearType == container_clear_type::deallocate) {
+		if (HasAllocation() && ClearType == container_clear_type::deallocate) {
 			alloc_base::Allocator.Free(Data);
 			Data = nullptr;
 			Capacity = StackSize;
@@ -281,7 +284,7 @@ public:
 	FORCEINLINE iter begin() {
 		if constexpr (StackSize > 0) {
 			if (Capacity <= StackSize) {
-				return iter(reinterpret_cast<element_type*>(this->StackStorage));
+				return iter(reinterpret_cast<element_type*>(StackStorage.Data));
 			}
 		}
 		return iter(Data);
@@ -290,7 +293,7 @@ public:
 	FORCEINLINE iter end() {
 		if constexpr (StackSize > 0) {
 			if (Capacity <= StackSize) {
-				return iter(reinterpret_cast<element_type*>(this->StackStorage) + Size);
+				return iter(reinterpret_cast<element_type*>(StackStorage.Data) + Size);
 			}
 		}
 		return iter(Data + Size);
@@ -299,7 +302,7 @@ public:
 	FORCEINLINE const_iter begin() const {
 		if constexpr (StackSize > 0) {
 			if (Capacity <= StackSize) {
-				return const_iter(reinterpret_cast<const element_type*>(this->StackStorage));
+				return const_iter(reinterpret_cast<const element_type*>(StackStorage.Data));
 			}
 		}
 		return const_iter(Data);
@@ -308,8 +311,8 @@ public:
 	FORCEINLINE const_iter end() const {
 		if constexpr (StackSize > 0) {
 			if (Capacity <= StackSize) {
-				return const_iter(
-					reinterpret_cast<const element_type*>(reinterpret_cast<const element_type*>(this->StackStorage) + Size));
+				return const_iter(reinterpret_cast<const element_type*>(
+					reinterpret_cast<const element_type*>(StackStorage.Data) + Size));
 			}
 		}
 		return const_iter(Data + Size);
@@ -540,8 +543,8 @@ public:
 		if constexpr (StackSize > 0) {
 			if (Other.Capacity <= StackSize) {
 				std::memcpy(
-					reinterpret_cast<element_type*>(this->StackStorage),
-					reinterpret_cast<element_type*>(Other.StackStorage),
+					reinterpret_cast<element_type*>(StackStorage.Data),
+					reinterpret_cast<element_type*>(Other.StackStorage.Data),
 					Other.Size);
 			} else {
 				Data = Other.Data;

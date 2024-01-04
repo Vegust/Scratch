@@ -1,7 +1,6 @@
 #pragma once
 
 #include "basic.h"
-#include "traits.h"
 
 // concepts should if possible be adjectives to distinguish from types
 
@@ -32,4 +31,4 @@ concept pointer = std::is_pointer<type>::value;
 template <typename type>
 concept enumerable = std::is_enum<type>::value;
 template <typename type>
-concept memcopy_relocatable = std::is_base_of<trait_memcopy_relocatable, type>::value || trivially_copyable<type>;
+concept memcopy_relocatable = type::MemcopyRelocatable || trivially_copyable<type>;

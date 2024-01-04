@@ -88,9 +88,11 @@ template <
 	typename less_op = default_less_op,
 	typename equals_op = default_equals_op,
 	typename allocator_type = default_allocator>
-struct rb_set : allocator_instance<allocator_type>, trait_memcopy_relocatable {
+struct rb_set : allocator_instance<allocator_type> {
 	enum class direction : u8 { left, right };
 	enum class color : u8 { black, red };
+	
+	static constexpr bool MemcopyRelocatable = true;
 
 	FORCEINLINE static constexpr direction Opposite(direction Direction) {
 		return Direction == direction::left ? direction::right : direction::left;

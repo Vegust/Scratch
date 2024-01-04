@@ -10,7 +10,7 @@
             <ArrayItems>
                 <Size>Size</Size>
                 <ValuePointer Condition="Size > StackSize">Data</ValuePointer>
-                <ValuePointer>StackStorage</ValuePointer>
+                <ValuePointer>StackStorage.Data</ValuePointer>
             </ArrayItems>
         </Expand>
     </Type>
@@ -36,9 +36,9 @@
     <Type Name="str">
         <DisplayString Condition="Bytes.Size == 0">empty</DisplayString>
         <DisplayString Condition="Bytes.Size > StackSize">{Bytes.Data, su}</DisplayString>
-        <DisplayString>{Bytes.StackStorage, su}</DisplayString>
+        <DisplayString>{Bytes.StackStorage.Data, su}</DisplayString>
         <StringView>Bytes.Data,su</StringView>
-        <StringView>Bytes.StackStorage,su</StringView>
+        <StringView>Bytes.StackStorage.Data,su</StringView>
     </Type>
     <Type Name="rb_set&lt;*&gt;">
         <DisplayString>{{size = {Size}}}</DisplayString>
