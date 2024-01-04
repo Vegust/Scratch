@@ -1,5 +1,6 @@
 ﻿#include "../testing_shared.h"
 #include "Containers/dyn_array.h"
+#include "Containers/algo.h"
 
 struct array_test {
 	s32 Test(const std::span<char*>& Args);
@@ -74,7 +75,7 @@ static bool SanityCheck(s64 Count) {
 	}
 	TEST_CHECK(Compare(ideal, container), "remove swap");
 	std::sort(ideal.begin(), ideal.end());
-	container.Sort();
+	algo::Sort(container);
 	TEST_CHECK(Compare(ideal, container), "sort");
 	container.Clear();
 	ideal.clear();
@@ -136,7 +137,7 @@ static void PerformanceTests(s64 Count, s64 Iters) {
 
 		ClearCache();
 		tVectorSort.Start();
-		container.Sort();
+		algo::Sort(container);
 		tVectorSort.Stop();
 
 		ClearCache();

@@ -6,6 +6,7 @@
 #include "Math/math.h"
 #include "Memory/memory.h"
 #include "array_iter.h"
+#include "span.h"
 
 #include <initializer_list>
 #include <limits>
@@ -23,6 +24,7 @@ struct dyn_array : allocator_instance<allocator_type> {
 private:
 	index Size{0};
 	index Capacity{InStackSize};
+
 	union {
 		element_type* Data{nullptr};
 		array_storage<element_type, InStackSize> StackStorage;
@@ -30,7 +32,7 @@ private:
 
 public:
 	constexpr static bool MemcopyRelocatable = true;
-	
+
 	using iter = array_iter<dyn_array, iterator_constness::non_constant>;
 	using const_iter = array_iter<dyn_array, iterator_constness::constant>;
 	using value_type = element_type;
@@ -160,7 +162,7 @@ public:
 	FORCEINLINE index GetSize() const {
 		return Size;
 	}
-	
+
 	FORCEINLINE bool HasAllocation() const {
 		return StackSize < Capacity && Data;
 	}
@@ -316,156 +318,6 @@ public:
 			}
 		}
 		return const_iter(Data + Size);
-	}
-
-	FORCEINLINE index FindFirst(const element_type& Value) {
-		for (index i = 0; i < Size; ++i) {
-			if (Value == Data[i]) {
-				return i;
-			}
-		}
-		return InvalidIndex;
-	}
-
-	FORCEINLINE index FindLast(const element_type& Value) {
-		for (index i = Size - 1;; --i) {
-			if (Value == Data[i]) {
-				return i;
-			}
-			if (i == 0) {
-				break;
-			}
-		}
-		return InvalidIndex;
-	}
-
-	template <typename predicate_type>
-	FORCEINLINE index FindFirstByPredicate(const predicate_type& Predicate) {
-		for (index i = 0; i < Size; ++i) {
-			if (Predicate(Data[i])) {
-				return i;
-			}
-		}
-		return InvalidIndex;
-	}
-
-	template <typename predicate_type>
-	FORCEINLINE index FindLastByPredicate(const predicate_type& Predicate) {
-		for (index i = Size - 1;; --i) {
-			if (Predicate(Data[i])) {
-				return i;
-			}
-			if (i == 0) {
-				break;
-			}
-		}
-		return InvalidIndex;
-	}
-
-	template <typename less_type = default_less_op>
-	FORCEINLINE void Sort(less_type LessOp = default_less_op{}) {
-		Quicksort(Data, Data + Size, LessOp);
-	}
-
-	template <typename less_type = default_less_op>
-	FORCEINLINE void StableSort(less_type LessOp = default_less_op{}) {
-		MergeSort(Data, Data + Size, LessOp);
-	}
-
-	template <typename less_type>
-	void Quicksort(element_type* Begin, element_type* End, less_type LessOp) {
-		struct sort_partition {
-			element_type* First;
-			element_type* Last;
-		};
-
-		sort_partition Stack[32];
-		// slower but more general variant
-		// index_type MaxDepth = LogOfTwoCeil(mSize) + 1;
-		// auto* Stack = (sort_partition*)alloca(MaxDepth * sizeof(sort_partition));
-
-		Stack[0] = {Begin, End - 1};
-		sort_partition Current;
-		for (sort_partition* StackTop = Stack; StackTop >= Stack; --StackTop) {
-			Current = *StackTop;
-			bool Loop;
-			do {
-				Loop = false;
-				index Count = Current.Last - Current.First + 1;
-				if (Count <= 32) {
-					InsertionSort(Current.First, Current.Last + 1, LessOp);
-					continue;
-				}
-				SwapElements(*(Current.First), (Current.First[Count / 2]));
-				element_type* Left = Current.First;
-				element_type* Right = Current.Last + 1;
-				for (;;) {
-					while (++Left <= Current.Last && !LessOp(*(Current.First), *Left))
-						;
-					while (--Right > Current.First && !LessOp(*Right, *(Current.First)))
-						;
-					if (Left > Right) {
-						break;
-					}
-					SwapElements(*Left, *Right);
-				}
-				SwapElements(*(Current.First), *Right);
-				if (Right - Current.First - 1 >= Current.Last - Left) {
-					if (Current.First + 1 < Right) {
-						StackTop->First = Current.First;
-						StackTop->Last = Right - 1;
-						++StackTop;
-					}
-					if (Current.Last > Left) {
-						Current.First = Left;
-						Loop = true;
-					}
-				} else {
-					if (Current.Last > Left) {
-						StackTop->First = Left;
-						StackTop->Last = Current.Last;
-						++StackTop;
-					}
-					if (Current.First + 1 < Right) {
-						Current.Last = Right - 1;
-						Loop = true;
-					}
-				}
-			} while (Loop);
-		}
-	}
-
-	template <typename less_type>
-	void MergeSort(element_type* Begin, element_type* End, less_type LessOp) {
-		// TODO
-	}
-
-	template <typename less_type>
-	FORCEINLINE void InsertionSort(element_type* Begin, element_type* End, less_type LessOp) {
-		if (Begin == End) {
-			return;
-		}
-		for (element_type* Mid = Begin + 1; Mid != End; ++Mid) {
-			if constexpr (MemcopyRealloc) {
-				element_type* Hole = Mid;
-				alignas(element_type) u8 ValueBuffer[sizeof(element_type)]{};
-				auto* Value = (element_type*) (&ValueBuffer);
-				memcpy(Value, Mid, sizeof(element_type));
-				for (element_type* Prev = Hole - 1; LessOp(*Value, *Prev) && Prev >= Begin; --Prev) {
-					memcpy(Hole, Prev, sizeof(element_type));
-					Hole = Prev;
-				}
-				memcpy(Hole, Value, sizeof(element_type));
-			} else {
-				element_type* Hole = Mid;
-				element_type Value{std::move(*Mid)};
-				for (element_type* Prev = Hole - 1; Prev >= Begin && LessOp(Value, *Prev); --Prev) {
-					*Hole = std::move(*Prev);
-					Hole = Prev;
-				}
-				*Hole = std::move(Value);
-			}
-		}
 	}
 
 	FORCEINLINE void ShrinkToFit() {

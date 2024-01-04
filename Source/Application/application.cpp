@@ -14,22 +14,22 @@ static time_update_result UpdateTime(float LastFrameTime) {
 
 application::application(const application_settings& InSettings)
 	: Settings{InSettings}
-	, mWindow{InSettings.WindowWidth, InSettings.WindowHeight}
-	, mRenderer{InSettings.WindowWidth, InSettings.WindowHeight}
-	, mGame{}
-	, mTime{0.f} {
+	, Window{InSettings.WindowWidth, InSettings.WindowHeight}
+	, Renderer{InSettings.WindowWidth, InSettings.WindowHeight}
+	, Game{}
+	, Time{0.f} {
 }
 
 bool application::RunOneFrame() {
-	const auto [DeltaTime, Time] = UpdateTime(mTime);
-	const auto [Input, WindowMessages, WindowState] = mWindow.ProcessExternalEvents();
-	const auto RenderState = mRenderer.HandleMessages(WindowMessages);
-	const auto [Views, UIData, GameMessages] = mGame.Step(Time, DeltaTime, Input, WindowState, RenderState);
-	const auto MessagesLeft = mWindow.HandleMessages(GameMessages);
-	mRenderer.HandleMessages(MessagesLeft);
-	mRenderer.RenderViews(Views);
-	mRenderer.RenderUI(UIData);
-	mWindow.SwapBuffers();
-	mTime = Time;
-	return !mWindow.ShouldClose();
+	const auto [DeltaTime, NewTime] = UpdateTime(Time);
+	const auto [Input, WindowMessages, WindowState] = Window.ProcessExternalEvents();
+	const auto RenderState = Renderer.HandleMessages(WindowMessages);
+	const auto [Views, UIData, GameMessages] = Game.Step(NewTime, DeltaTime, Input, WindowState, RenderState);
+	const auto MessagesLeft = Window.HandleMessages(GameMessages);
+	Renderer.HandleMessages(MessagesLeft);
+	Renderer.RenderViews(Views);
+	Renderer.RenderUI(UIData);
+	Window.SwapBuffers();
+	Time = NewTime;
+	return !Window.ShouldClose();
 }

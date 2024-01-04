@@ -5,6 +5,7 @@
 #include "Game/Entities/phong_material.h"
 #include "Containers/span.h"
 #include "glm/fwd.hpp"
+#include "String/str_util.h"
 
 class shader {
 public:
@@ -24,7 +25,7 @@ public:
 			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(const uniform_identifier& Identifier) {
 				return Hash(Identifier.FirstName, Identifier.Index, Identifier.SecondName);
 			}
-
+			
 			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(str_view First, const s32 Index, str_view Second) {
 				return hash::HashCombine(hash::HashCombine(hash::Hash(First), hash::Hash(Second)), hash::Hash(Index));
 			}
@@ -134,7 +135,7 @@ public:
 		str FirstString{First};
 		str FullName = FirstString;
 		if (Index != -1) {
-			FullName += '[' + str{Index} + ']';
+			FullName += '[' + str_util::FromInt(Index) + ']';
 		}
 		str SecondString{Second};
 		if (!Second.IsEmpty()) {

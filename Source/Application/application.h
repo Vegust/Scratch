@@ -14,10 +14,10 @@ class application {
 public:
 	application_settings Settings;
 	
-	window mWindow;
-	renderer mRenderer;
-	game mGame;
-	float mTime;
+	window Window;
+	renderer Renderer;
+	game Game;
+	float Time;
 
 	explicit application(const application_settings& InSettings);
 	bool RunOneFrame();

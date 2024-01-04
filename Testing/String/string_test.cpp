@@ -1,4 +1,5 @@
 ﻿#include "../testing_shared.h"
+#include "String/str_util.h"
 
 struct set_test {
 	s32 Test(const std::span<char*>& Args);
@@ -27,7 +28,7 @@ static bool SanityCheck(s64 Count) {
 	for (s32 Index = 0; Index < Count; Index++ ) {
 		const u32 Number = rand();
 		std::string Ideal = std::to_string(Number);
-		str Tested{Number};
+		str Tested = str_util::FromInt(Number);
 		if (Ideal.length() != Tested.GetByteLength()) {
 			Valid = false;
 			break;

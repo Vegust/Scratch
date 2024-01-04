@@ -1,6 +1,7 @@
 #pragma once
 
 #include "basic.h"
+#include "Utility/hash.h"
 #include "array_iter.h"
 #include <cstring>
 
@@ -27,8 +28,7 @@ public:
 	span& operator=(const span&) = default;
 	span& operator=(span&&) = default;
 
-	FORCEINLINE constexpr explicit span(const element_type* InData, const index InSize)
-		: Data{InData}, Size{InSize} {
+	FORCEINLINE constexpr explicit span(const element_type* InData, const index InSize) : Data{InData}, Size{InSize} {
 	}
 
 	FORCEINLINE constexpr explicit span(const element_type* Begin, const element_type* End)
@@ -43,11 +43,7 @@ public:
 
 	// conversion to span can be implicit
 	template <typename container_type>
-		requires(
-			container_type::const_iter::Contiguous &&
-			std::is_same<
-				typename std::remove_const<typename container_type::value_type>::type,
-				typename std::remove_const<value_type>::type>::value)
+		requires(container_type::const_iter::Contiguous)
 	FORCEINLINE constexpr span(const container_type& Container)	   // NOLINT(*-explicit-constructor)
 		: span{Container.begin(), Container.end()} {
 	}
@@ -144,3 +140,7 @@ public:
 		return hash::MurmurHash(GetData(), (s32) GetSize());
 	}
 };
+
+// deduction guide, sadly does not work for implicit conversions
+template <typename container_type>
+span(container_type&) -> span<typename container_type::value_type>;

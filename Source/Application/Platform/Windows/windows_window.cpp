@@ -3,6 +3,7 @@
 #ifdef WIN32
 
 #include "Rendering/rendering_types.h"
+#include "Containers/algo.h"
 #include "glfw_keykodes_table.h"
 #include <GLFW/glfw3.h>
 
@@ -20,7 +21,7 @@ static void OnWindowResize(GLFWwindow* Window, int NewWidth, int NewHeight) {
 	proc_data* Data = GetData(Window);
 	Data->Window.State.Height = NewHeight;
 	Data->Window.State.Width = NewWidth;
-	const auto Index = Data->Result.Messages.FindFirstByPredicate(
+	const auto Index = algo::FindFirstByPredicate(Data->Result.Messages,
 		[](const auto& Message) { return Message.Type == app_message_type::render_resize; });
 	if (Index != InvalidIndex) {
 		Data->Result.Messages[Index].RenderResize.NewWidth = NewWidth;
