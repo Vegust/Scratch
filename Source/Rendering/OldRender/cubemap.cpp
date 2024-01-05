@@ -24,13 +24,13 @@ cubemap& cubemap::operator=(cubemap&& InCubemap) noexcept {
 	return *this;
 }
 
-void cubemap::Load(const str& Directory) {
-	static array<str, 6> FaceNames = {
+void cubemap::Load(str_view Directory) {
+	static array<str_view, 6> FaceNames = {
 		"right.jpg", "left.jpg", "top.jpg", "bottom.jpg", "front.jpg", "back.jpg"};
 	Load(Directory, FaceNames);
 }
 
-void cubemap::Load(const str& Directory, const array<str, 6>& TextureFacePaths) {
+void cubemap::Load(str_view Directory, const array<str_view, 6>& TextureFacePaths) {
 	glGenTextures(1, &mRendererId);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, mRendererId);
 
@@ -41,7 +41,7 @@ void cubemap::Load(const str& Directory, const array<str, 6>& TextureFacePaths) 
 	for (unsigned int i = 0; i < TextureFacePaths.GetSize(); i++) {
 		stbi_set_flip_vertically_on_load(0);
 		LocalBuffer = stbi_load(
-			(Directory + "/" + TextureFacePaths[i]).GetRaw(), &Width, &Height, &NumChannels, 0);
+			(str{Directory} + "/" + TextureFacePaths[i]).GetRaw(), &Width, &Height, &NumChannels, 0);
 		glTexImage2D(
 			GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
 			0,

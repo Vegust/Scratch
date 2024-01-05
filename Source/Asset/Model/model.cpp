@@ -3,6 +3,7 @@
 #include <iostream>
 
 // TODO: remove assimp
+#include "String/str_util.h"
 #include "ThirdParty/assimp/include/assimp/postprocess.h"
 #include "ThirdParty/assimp/include/assimp/scene.h"
 #include "ThirdParty/assimp/include/assimp/Importer.hpp"
@@ -17,16 +18,16 @@ void model::Load(const str& Path) {
 	Assimp::Importer Importer;
 	const aiScene* Scene = Importer.ReadFile(
 		Path.GetRaw(),
-		aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph |
-			aiProcess_FlipUVs | aiProcess_GenNormals);
+		aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph | aiProcess_FlipUVs |
+			aiProcess_GenNormals);
 
 	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode) {
 		std::cout << "ERROR::ASSIMP::" << Importer.GetErrorString() << std::endl;
 		return;
 	}
 
-	index LastBackspace = Path.FindLastOf('/');
-	mDirectory = LastBackspace != InvalidIndex ? Path.Substr(0, LastBackspace) : Path;
+	index LastBackspace = str_util::FindLastOf(Path, '/');
+	mDirectory = LastBackspace != InvalidIndex ? str_util::GetSubstring(Path, 0, LastBackspace) : Path;
 
 	ProcessNode(*this, Scene->mRootNode, Scene);
 }

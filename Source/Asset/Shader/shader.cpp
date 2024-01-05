@@ -13,7 +13,7 @@ shader::shader(shader&& Shader) noexcept {
 	Path = std::move(Shader.Path);
 	UniformsCache = std::move(Shader.UniformsCache);
 	Shader.RendererId = 0;
-	Shader.Path = {};
+	Shader.Path.Clear();
 	Shader.UniformsCache.Clear();
 }
 
@@ -25,12 +25,12 @@ shader& shader::operator=(shader&& Shader) noexcept {
 	Path = std::move(Shader.Path);
 	UniformsCache = std::move(Shader.UniformsCache);
 	Shader.RendererId = 0;
-	Shader.Path = {};
+	Shader.Path.Clear();
 	Shader.UniformsCache.Clear();
 	return *this;
 }
 
-void shader::Compile(const str& InPath) {
+void shader::Compile(const str_view InPath) {
 	if (RendererId == 0) {
 		RendererId = glCreateProgram();
 	}
@@ -83,16 +83,14 @@ void shader::SetUniform(str_view Name, const phong_material& Material) const {
 	MaybeSetUniform(Material.Shininess, Name, "Shininess");
 }
 
-void shader::SetUniform(str_view Name, str_view CountName, span<light> Lights, const glm::mat4& View)
-	const {
+void shader::SetUniform(str_view Name, str_view CountName, span<light> Lights, const glm::mat4& View) const {
 	for (s32 i = 0; i < Lights.GetSize(); ++i) {
 		SetUniform(Name, Lights[i], View, i);
 	}
 	SetUniform(CountName, static_cast<s32>(Lights.GetSize()));
 }
 
-void shader::SetUniform(str_view Name, const class light& Light, const glm::mat4& View, s32 Index)
-	const {
+void shader::SetUniform(str_view Name, const class light& Light, const glm::mat4& View, s32 Index) const {
 	glm::vec3 Position = glm::vec3(View * glm::vec4(Light.mPosition, 1.f));
 	glm::vec3 Direction = glm::vec3(View * glm::vec4(Light.mDirection, 0.f));
 	MaybeSetUniform(static_cast<s32>(Light.mType), Name, Index, "Type");
@@ -137,8 +135,10 @@ static std::ifstream& GetLine(std::ifstream& Stream, str& String) {
 	return Stream;
 }
 
-shader::parsed_shaders shader::ParseShader(const str& Path) {
-	std::ifstream InputFile(Path.GetRaw(), std::ios::in);
+shader::parsed_shaders shader::ParseShader(const str_view Path) {
+	// NOTE: need to convert to string to allocate space for null terminator because garbage std functions
+	// TODO: would be nice to have some way to easily allocate arbitrary length string on the stack
+	std::ifstream InputFile(str{Path}.GetRaw(), std::ios::in);
 	str Line;
 	parsed_shaders Result;
 	index ShaderIndex = InvalidIndex;
@@ -146,15 +146,16 @@ shader::parsed_shaders shader::ParseShader(const str& Path) {
 	bool ReachedEOF = InputFile.eof() || !InputFile.is_open();
 	while (!ReachedEOF) {
 		ReachedEOF = GetLine(InputFile, Line).eof();
-		if (Line.Find("!shader") != InvalidIndex && Line.Find("////") == InvalidIndex) {
-			if (Line.Find("vertex") != InvalidIndex) {
+		if (str_util::FindSubstring(Line, "!shader") != InvalidIndex &&
+			str_util::FindSubstring(Line, "////") == InvalidIndex) {
+			if (str_util::FindSubstring(Line, "vertex") != InvalidIndex) {
 				ShaderIndex = 0;
-			} else if (Line.Find("fragment") != InvalidIndex) {
+			} else if (str_util::FindSubstring(Line, "fragment") != InvalidIndex) {
 				ShaderIndex = 1;
-			} else if (Line.Find("geometry") != InvalidIndex) {
+			} else if (str_util::FindSubstring(Line, "geometry") != InvalidIndex) {
 				bHasGeometryShader = true;
 				ShaderIndex = 2;
-			} else if (Line.Find("shared") != InvalidIndex) {
+			} else if (str_util::FindSubstring(Line, "shared") != InvalidIndex) {
 				ShaderIndex = 3;
 			}
 		} else {
@@ -182,7 +183,7 @@ shader::parsed_shaders shader::ParseShader(const str& Path) {
 	}
 
 	if (!bHasGeometryShader) {
-		Result.GeometryShader = {};
+		Result.GeometryShader.Clear();
 	}
 
 	return Result;

@@ -16,7 +16,7 @@ public:
 	using value_type = char;
 
 	constexpr static index StackSize = 16;
-	static constexpr bool MemcopyRelocatable = true;
+	constexpr static bool MemcopyRelocatable = true;
 
 	using array_type = dyn_array<char_type, default_allocator, StackSize>;
 	using iter = array_type::iter;
@@ -31,11 +31,7 @@ public:
 
 	str() = default;
 
-	str(const char* Characters) {	 // NOLINT(*-explicit-constructor)
-		const index Length = traits::length(Characters);
-		Bytes.EnsureCapacity(Length + 1);
-		std::memcpy(Bytes.GetData(), Characters, Length + 1);
-		Bytes.OverwriteSize(Length + 1);
+	explicit str(const str_view Other) : str(Other.GetData(), Other.GetSize()) {
 	}
 
 	str(const char* Characters, index Length) {
@@ -60,69 +56,6 @@ public:
 		Bytes[0] = Char;
 	}
 
-	template <integral integral_type>
-	integral_type GetNumber() {
-		// TODO
-		return 0;
-	}
-
-	template <fractional float_type>
-	float_type GetNumber() {
-		// TODO
-		return 0.f;
-	}
-
-	FORCEINLINE str_view GetIntegerString(str_view String) {
-		//		str_view Start = EatSpaces(String);
-		//		index NumberLength = 0;
-		//		while (NumberLength < Start.Size() && )
-		return {};
-	}
-
-	str_view EatSpaces(str_view String) {
-		if (String.IsEmpty()) {
-			return {};
-		}
-		const char* NewStart = String.GetData();
-		const char* StringEnd = String.GetData() + String.GetSize();
-		while (IsSpace(*NewStart) && NewStart < StringEnd) {
-			++NewStart;
-		}
-		if (NewStart == StringEnd) {
-			return {};
-		}
-		return str_view{NewStart, StringEnd};
-	}
-
-	FORCEINLINE bool IsSpace(char Character) {
-		return Character == ' ' || Character == '\t' || Character == '\n' || Character == '\r';
-	}
-
-	FORCEINLINE bool IsNumber(char Character) {
-		return '0' <= Character && Character <= '9';
-	}
-
-	str_view GetLine(str_view Previous = {}) {
-		if (IsEmpty()) {
-			return {};
-		}
-		const char* LineStart = GetRaw();
-		if (Previous.GetData() != nullptr) {
-			LineStart = Previous.GetData() + Previous.GetSize();
-			if (*LineStart == '\n') {
-				++LineStart;
-			} else {
-				return {};
-			}
-		}
-		const char* LineEnd = LineStart;
-		const char* StringEnd = GetData() + GetByteLength();
-		while (*LineEnd != '\n' && LineEnd < StringEnd) {
-			++LineEnd;
-		}
-		return str_view{LineStart, LineEnd};
-	}
-
 	FORCEINLINE str& operator=(str&& Other) noexcept {
 		Bytes = std::move(Other.Bytes);
 		return *this;
@@ -133,15 +66,15 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE str& operator=(const char* Characters) {
+	FORCEINLINE str& operator=(const str_view Other) {
 		Bytes.Clear(container_clear_type::dont_deallocate);
-		if (!Characters) {
+		if (Other.IsEmpty()) {
 			return *this;
 		}
-		const index Length = traits::length(Characters);
-		Bytes.EnsureCapacity(Length + 1);
-		std::memcpy(Bytes.GetData(), Characters, Length + 1);
-		Bytes.OverwriteSize(Length + 1);
+		Bytes.EnsureCapacity(Other.GetSize() + 1);
+		std::memcpy(Bytes.GetData(), Other.GetData(), Other.GetSize());
+		Bytes[Other.GetSize()] = 0;
+		Bytes.OverwriteSize(Other.GetSize() + 1);
 		return *this;
 	}
 
@@ -218,21 +151,33 @@ public:
 		}
 		return true;
 	}
-
-	[[nodiscard]] FORCEINLINE bool operator<(const str& Other) const {
-		return Strcmp(GetRaw(), Other.GetRaw()) < 0;
+	
+	[[nodiscard]] FORCEINLINE bool operator==(const str_view Other) const {
+		if (GetByteLength() != Other.GetSize()) {
+			return false;
+		}
+		for (index i = 0; i < GetByteLength(); ++i) {
+			if (Bytes[i] != Other[i]) {
+				return false;
+			}
+		}
+		return true;
 	}
 
-	[[nodiscard]] FORCEINLINE bool operator>(const str& Other) const {
-		return Strcmp(GetRaw(), Other.GetRaw()) > 0;
+	[[nodiscard]] FORCEINLINE bool operator<(const str_view Other) const {
+		return Compare(Other) < 0;
 	}
 
-	[[nodiscard]] FORCEINLINE bool operator<=(const str& Other) const {
-		return Strcmp(GetRaw(), Other.GetRaw()) <= 0;
+	[[nodiscard]] FORCEINLINE bool operator>(const str_view Other) const {
+		return Compare(Other) > 0;
 	}
 
-	[[nodiscard]] FORCEINLINE bool operator>=(const str& Other) const {
-		return Strcmp(GetRaw(), Other.GetRaw()) >= 0;
+	[[nodiscard]] FORCEINLINE bool operator<=(const str_view Other) const {
+		return Compare(Other) <= 0;
+	}
+
+	[[nodiscard]] FORCEINLINE bool operator>=(const str_view Other) const {
+		return Compare(Other) >= 0;
 	}
 
 	FORCEINLINE str operator+(char Char) const& {
@@ -277,24 +222,24 @@ public:
 		return Result;
 	}
 
-	FORCEINLINE str operator+(const char* Characters) const& {
+	FORCEINLINE str operator+(const str_view Other) const& {
 		str Result;
-		Result.Bytes.EnsureCapacity(GetByteLength() + traits::length(Characters) + 1);
+		Result.Bytes.EnsureCapacity(GetByteLength() + Other.GetSize() + 1);
 		Result = *this;
-		Result += Characters;
+		Result += Other;
 		return Result;
 	}
 
-	FORCEINLINE str operator+(const char* Characters) && {
+	FORCEINLINE str operator+(const str_view Other) && {
 		str Result;
-		const index RequiredSize = GetByteLength() + traits::length(Characters) + 1;
+		const index RequiredSize = GetByteLength() + Other.GetSize() + 1;
 		if (Bytes.GetCapacity() >= RequiredSize) {
 			Result = std::move(*this);
 		} else {
 			Result.Bytes.EnsureCapacity(RequiredSize);
 			Result = *this;
 		}
-		Result += Characters;
+		Result += Other;
 		return Result;
 	}
 
@@ -331,80 +276,25 @@ public:
 		return *this;
 	}
 
-	FORCEINLINE str& operator+=(const char* Chars) {
-		if (!Chars || Chars[0] == 0) {
+	FORCEINLINE str& operator+=(const str_view Other) {
+		if (Other.IsEmpty()) {
 			return *this;
 		}
 		const index LhsLen = GetByteLength();
 		if (LhsLen == 0) {
-			*this = Chars;
+			*this = Other;
 			return *this;
 		}
-		const index RhsLen = traits::length(Chars);
+		const index RhsLen = Other.GetSize();
 		Bytes.EnsureCapacity(LhsLen + RhsLen + 1);
-		memcpy(GetRaw() + LhsLen, Chars, RhsLen);
+		memcpy(GetRaw() + LhsLen, Other.GetData(), RhsLen);
 		Bytes[LhsLen + RhsLen] = 0;
 		Bytes.OverwriteSize(LhsLen + RhsLen + 1);
 		return *this;
 	}
 
-	FORCEINLINE str Substr(index Begin, index End) const {
-		return str{GetRaw() + Begin, End - Begin};
-	}
-
-	FORCEINLINE index FindLastOf(char Char) const {
-		index LastIndex = InvalidIndex;
-		for (int i = 0; i < GetByteLength(); ++i) {
-			if (Bytes[i] == Char) {
-				LastIndex = i;
-			}
-		}
-		return LastIndex;
-	}
-
-	FORCEINLINE index Find(const char* Substring, index StartIndex = 0) const {
-		if (!Substring || IsEmpty() || Bytes.GetSize() <= StartIndex) {
-			return InvalidIndex;
-		}
-		const char* RawData = GetRaw() + StartIndex;
-		char Current = *RawData++;
-		const char Start = *Substring;
-		while (Current) {
-			if (Current == Start && !Strcmp<true>(RawData, Substring + 1)) {
-				return RawData - 1 - GetRaw();
-			}
-			Current = *RawData++;
-		}
-		return InvalidIndex;
-	}
-
 	[[nodiscard]] FORCEINLINE hash::hash_type GetHash() const {
 		return hash::MurmurHash(GetData(), (s32) GetByteLength());
-	}
-
-	// NOTE: I don't like this function
-	template <bool SubstringCmp = false>
-	[[nodiscard]] FORCEINLINE s32 Strcmp(const char* Lhs, const char* Rhs) const {
-		for (;;) {
-			u8 LhsChar = static_cast<u8>(*Lhs++);
-			u8 RhsChar = static_cast<u8>(*Rhs++);
-			if (LhsChar == RhsChar) {
-				if (LhsChar) {
-					continue;
-				}
-				return 0;
-			} else if (LhsChar != 0 && RhsChar != 0) {
-				if (s32 Diff = LhsChar - RhsChar) {
-					return Diff;
-				}
-			} else {
-				if constexpr (SubstringCmp) {
-					return 0;
-				} else {
-					return LhsChar - RhsChar;
-				}
-			}
-		}
 	}
 
 	FORCEINLINE void Clear(container_clear_type ClearType = container_clear_type::deallocate) {
@@ -413,6 +303,17 @@ public:
 
 	FORCEINLINE void OverwriteSize(const index NewSize) {
 		Bytes.OverwriteSize(NewSize);
+	}
+
+	// 0 is equality, >=1 is Lhs greater (bigger chars or longer), <=-1 is less
+	FORCEINLINE s32 Compare(str_view Rhs) const {
+		for (s32 Index = 0; Index < GetByteLength() && Index < Rhs.GetSize(); ++Index) {
+			const s32 Difference = static_cast<s32>(Bytes[Index]) - static_cast<s32>(Rhs[Index]);
+			if (Difference) {
+				return Difference;
+			}
+		}
+		return GetByteLength() - Rhs.GetSize();
 	}
 };
 

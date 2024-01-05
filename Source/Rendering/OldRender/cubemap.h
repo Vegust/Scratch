@@ -15,7 +15,7 @@ struct cubemap {
 	cubemap(cubemap&& InCubemap) noexcept;
 	cubemap& operator=(cubemap&& InCubemap) noexcept;
 
-	void Load(const str& Directory);
-	void Load(const str& Directory, const array<str, 6>& TextureFacePaths);
+	void Load(str_view Directory);
+	void Load(str_view Directory, const array<str_view, 6>& TextureFacePaths);
 	void Bind() const;
 };

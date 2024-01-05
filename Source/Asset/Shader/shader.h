@@ -98,7 +98,7 @@ public:
 	shader(shader&& Shader) noexcept;
 	shader& operator=(shader&& Shader) noexcept;
 
-	void Compile(const str& Path);
+	void Compile(const str_view Path);
 	void Bind() const;
 
 	void SetUniform(str_view Name, s32 V1) const;
@@ -162,6 +162,6 @@ private:
 	};
 
 	s32 GetUniformLocation(str_view FullName) const;
-	static parsed_shaders ParseShader(const str& Path);
+	static parsed_shaders ParseShader(const str_view Path);
 	static u32 CompileShader(u32 Type, const str& Source);
 };

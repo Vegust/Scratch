@@ -20,10 +20,10 @@ public:
 
 	void InitTextures(
 		//asset_storage& AssetStorage,
-		const str& DiffusePath = {},
-		const str& SpecularPath = {},
-		const str& EmissionPath = {},
-		const str& NormalPath = {}) {
+		const str_view DiffusePath = {},
+		const str_view SpecularPath = {},
+		const str_view EmissionPath = {},
+		const str_view NormalPath = {}) {
 		if (!DiffusePath.IsEmpty()) {
 			//mDiffuseMap = AssetStorage.Load<texture>(DiffusePath);
 			DiffuseMap.Load(DiffusePath, true);

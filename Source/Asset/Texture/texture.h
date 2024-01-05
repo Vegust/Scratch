@@ -28,6 +28,6 @@ struct texture {
 		return TextureCache;
 	}
 
-	void Load(const str& Path, bool SRGB = false);
+	void Load(const str_view Path, bool SRGB = false);
 	void Bind(u32 Slot = 0) const;
 };

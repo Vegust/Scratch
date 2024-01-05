@@ -21,7 +21,7 @@ texture::texture(texture&& Texture) noexcept {
 	mRendererId = Texture.mRendererId;
 	mPath = std::move(Texture.mPath);
 	Texture.mRendererId = 0;
-	Texture.mPath = {};
+	Texture.mPath.Clear();
 }
 
 texture& texture::operator=(texture&& Texture) noexcept {
@@ -29,26 +29,28 @@ texture& texture::operator=(texture&& Texture) noexcept {
 	mRendererId = Texture.mRendererId;
 	mPath = std::move(Texture.mPath);
 	Texture.mRendererId = 0;
-	Texture.mPath = {};
+	Texture.mPath.Clear();
 	return *this;
 }
 
-void texture::Load(const str& Path, bool SRGB) {
+void texture::Load(const str_view Path, bool SRGB) {
 	ClearTextureHandle(*this);
 	mPath = Path;
 	auto& Cache = GetTextureCache();
-	if (auto Found = Cache.Find(Path)) {
-		Found->mRefCount += 1;
-		mRendererId = Found->mResourceId;
+	// NOTE: would be nice to have whi automatically work for implicitly convertable types... or not?
+	if (auto Found = Cache.FindByPredicate(Path.GetHash(), [Path](auto& Pair) { return Pair.Key == Path; })) {
+		Found->Value.mRefCount += 1;
+		mRendererId = Found->Value.mResourceId;
 	} else {
 		s32 Width{0};
 		s32 Height{0};
 		s32 NumChannels{0};
 		stbi_set_flip_vertically_on_load(1);
-		stbi_uc* mLocalBuffer = stbi_load(Path.GetRaw(), &Width, &Height, &NumChannels, 4);
+		// NOTE: see shader::ParseShader
+		stbi_uc* mLocalBuffer = stbi_load(str{Path}.GetRaw(), &Width, &Height, &NumChannels, 4);
 		if (mLocalBuffer) {
 			glGenTextures(1, &mRendererId);
-			Cache[Path] = texture_record{mRendererId, 1};
+			Cache[mPath] = texture_record{mRendererId, 1};
 			glBindTexture(GL_TEXTURE_2D, mRendererId);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

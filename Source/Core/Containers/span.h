@@ -131,6 +131,19 @@ public:
 	FORCEINLINE constexpr const_iter end() const {
 		return const_iter(Data + Size);
 	}
+	
+	[[nodiscard]] FORCEINLINE constexpr span RemoveFirst() const {
+		span Result{*this};
+		Result.Data += 1;
+		Result.Size -= 1;
+		return Result;
+	}
+	
+	[[nodiscard]] FORCEINLINE constexpr span RemoveLast() const {
+		span Result{*this};
+		Result.Size -= 1;
+		return Result;
+	}
 
 	// hasher for string-like spans, should result in identical hashes to strings with same data
 	// TODO: explicitly make it into one shared function
