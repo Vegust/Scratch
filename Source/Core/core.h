@@ -5,4 +5,5 @@
 #include "String/str.h"
 #include "Utility/hash.h"
 #include "Templates/concepts.h"
+#include "Templates/result.h"
 #include "Math/math.h"

@@ -18,7 +18,7 @@ struct atom {
 		dyn_array<str> Strings{};
 		hash_set<index, index_hasher> IndexLookupSet{};
 	};
-	
+
 	static constexpr bool MemcopyRelocatable = true;
 
 	index Index{InvalidIndex};
@@ -26,6 +26,7 @@ struct atom {
 
 	FORCEINLINE atom() = default;
 	FORCEINLINE atom(const atom& OtherId) = default;
+	FORCEINLINE atom& operator=(const atom& OtherId) = default;
 
 	// TODO: kinda arbitrary requirement, supposed to accept str&&, str&, str_view, const char*, maybe should improve
 	template <typename string_type>
@@ -48,11 +49,6 @@ struct atom {
 
 	[[nodiscard]] FORCEINLINE bool IsEmpty() const {
 		return Index == InvalidIndex;
-	}
-
-	FORCEINLINE atom& operator=(atom OtherId) {
-		Index = OtherId.Index;
-		return *this;
 	}
 
 	FORCEINLINE bool operator==(atom OtherId) const {

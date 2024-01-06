@@ -21,6 +21,8 @@ concept copy_assignable = std::is_copy_assignable<type>::value;
 template <typename type>
 concept integral = std::is_integral<type>::value;
 template <typename type>
+concept signed_integral = integral<type> && std::is_signed<type>::value;
+template <typename type>
 concept fractional = std::is_floating_point<type>::value;
 template <typename type>
 concept numeric = integral<type> || fractional<type>;

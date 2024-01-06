@@ -40,6 +40,22 @@
         <StringView>Bytes.Data,su</StringView>
         <StringView>Bytes.StackStorage.Data,su</StringView>
     </Type>
+    <Type Name="span&lt;char&gt;">
+        <DisplayString Condition="Size == 0">empty</DisplayString>
+        <DisplayString>{Data, [Size]su}</DisplayString>
+        <StringView>Data,[Size]su</StringView>
+    </Type>
+    <Type Name="span&lt;*&gt;">
+        <DisplayString Condition="Size == 0">empty</DisplayString>
+        <DisplayString>size={Size}</DisplayString>
+        <Expand>
+            <Item Name="[size]">Size</Item>
+            <ArrayItems>
+                <Size>Size</Size>
+                <ValuePointer>Data</ValuePointer>
+            </ArrayItems>
+        </Expand>
+    </Type>
     <Type Name="rb_set&lt;*&gt;">
         <DisplayString>{{size = {Size}}}</DisplayString>
         <Expand>

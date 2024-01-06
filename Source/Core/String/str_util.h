@@ -1,6 +1,7 @@
 #pragma once
 
 #include "basic.h"
+#include "Templates/result.h"
 #include "str.h"
 
 namespace str_util {
@@ -9,23 +10,25 @@ FORCEINLINE constexpr static index GetByteLength(str_view String);
 
 FORCEINLINE constexpr bool IsSpace(char Character);
 FORCEINLINE constexpr bool IsNumber(char Character);
+FORCEINLINE constexpr bool IsSign(char Character);
 
 template <integral integral_type>
 static str FromInt(integral_type IntegralNumber);
 template <fractional float_type>
 static str FromFloat(float_type FloatingNumber, index FractionalPrecision = 4);
 
+template <numeric numeric_type>
+constexpr static numeric_type GetNumberChecked(str_view String);
 template <integral integral_type>
-constexpr static integral_type GetNumber(str_view String);
+constexpr static result<integral_type> GetNumber(str_view String);
 template <fractional float_type>
-constexpr static float_type GetNumber(str_view String);
+constexpr static result<float_type> GetNumber(str_view String);
 
 FORCEINLINE constexpr str_view GetSubstring(str_view Source, index Begin, index End);
 
-constexpr str_view GetIntegerString(str_view String);
+constexpr result<str_view> GetIntegerString(str_view String);
 constexpr str_view EatSpaces(str_view String);
 constexpr str_view GetLine(str_view String, str_view Previous = {});
-
 
 FORCEINLINE constexpr bool StartsWith(str_view String, str_view Substring);
 FORCEINLINE constexpr index FindLastOf(str_view String, char Char);
@@ -35,11 +38,22 @@ constexpr index GetByteLength(str_view String) {
 	return String.GetSize();
 }
 
-constexpr str_view GetIntegerString(str_view String) {
-	//		str_view Start = EatSpaces(String);
-	//		index NumberLength = 0;
-	//		while (NumberLength < Start.Size() && )
-	return {};
+constexpr result<str_view> GetIntegerString(str_view String) {
+	str_view Start = EatSpaces(String);
+	index Length = 0;
+	bool Signed = false;
+	if (!Start.IsEmpty() && IsSign(Start[0])) {
+		Signed = true;
+		++Length;
+	}
+	while (Length < Start.GetSize() && IsNumber(Start[Length])) {
+		++Length;
+	}
+	if (Length == static_cast<index>(Signed)) {
+		return common_errors::invalid_input;
+	} else {
+		return str_view{Start.GetData(), Length};
+	}
 }
 
 constexpr bool IsSpace(char Character) {
@@ -50,19 +64,16 @@ constexpr bool IsNumber(char Character) {
 	return '0' <= Character && Character <= '9';
 }
 
+constexpr bool IsSign(char Character) {
+	return Character == '-' || Character == '+';
+}
+
 constexpr str_view EatSpaces(str_view String) {
-	if (String.IsEmpty()) {
-		return {};
+	str_view Result = String;
+	while (!Result.IsEmpty() && IsSpace(Result[0])) {
+		Result = Result.RemoveFirst();
 	}
-	const char* NewStart = String.GetData();
-	const char* StringEnd = String.GetData() + String.GetSize();
-	while (IsSpace(*NewStart) && NewStart < StringEnd) {
-		++NewStart;
-	}
-	if (NewStart == StringEnd) {
-		return {};
-	}
-	return str_view{NewStart, StringEnd};
+	return Result;
 }
 
 constexpr str_view GetLine(str_view String, str_view Previous) {
@@ -124,16 +135,45 @@ constexpr index FindSubstring(str_view String, str_view Substring, index StartIn
 	return InvalidIndex;
 }
 
-template <fractional float_type>
-constexpr float_type GetNumber(str_view String) {
-	// TODO
-	return 0.f;
+template <numeric numeric_type>
+constexpr numeric_type GetNumberChecked(str_view String) {
+	return GetNumber<numeric_type>(String).GetValue();
 }
 
 template <integral integral_type>
-constexpr integral_type GetNumber(str_view String) {
+constexpr result<integral_type> GetNumber(str_view String) {
+	if (auto Result = GetIntegerString(String)) {
+		str_view IntegerString = Result.GetValue();
+		integral_type Sign = 1;
+		if (IsSign(IntegerString[0])) {
+			if constexpr (signed_integral<integral_type>) {
+				Sign = IntegerString[0] == '-' ? -1 : 1;
+			} else {
+				if (IntegerString[0] == '-') {
+					return common_errors::invalid_sign;
+				}
+			}
+			IntegerString = IntegerString.RemoveFirst();
+		}
+		integral_type Number{0};
+		while (!IntegerString.IsEmpty()) {
+			const integral_type Digit = IntegerString[0] - '0';
+			constexpr s32 MaxSafe = std::numeric_limits<integral_type>::max();
+			if (Number > ((MaxSafe - Digit) / 10)) {
+				return common_errors::input_too_big;
+			}
+			Number = Number * 10 + Digit;
+			IntegerString = IntegerString.RemoveFirst();
+		}
+		return Number * Sign;
+	}
+	return common_errors::invalid_input;
+}
+
+template <fractional float_type>
+constexpr result<float_type> GetNumber(str_view String) {
 	// TODO
-	return 0;
+	return 0.f;
 }
 
 template <fractional float_type>
