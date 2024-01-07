@@ -70,14 +70,59 @@ FORCEINLINE constexpr numeric_type Abs(numeric_type Value) {
 	return (Value > 0) ? Value : -Value;
 }
 
+// includes sign
 template <integral integral_type>
 FORCEINLINE constexpr index GetNumDigits(integral_type Value) {
-	index Num = 0;
-	do {
-		Value /= 10;
-		++Num;
-	} while (Value);
-	return Num;
+	const bool MinusSign = Value < 0;
+	Value = math::Abs(Value);
+	constexpr static u8 BsrToLog10[] = {1,	1,	1,	2,	2,	2,	3,	3,	3,	4,	4,	4,	4,	5,	5,	5,
+										6,	6,	6,	7,	7,	7,	7,	8,	8,	8,	9,	9,	9,	10, 10, 10,
+										10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
+										15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20};
+	unsigned long Bsr;
+	BIT_SCAN_REVERSE_64(&Bsr, Value);
+	u8 Log10 = BsrToLog10[Bsr];
+	constexpr static u64 Pow10[] = {
+		0,
+		0,
+		10U,
+		100U,
+		1000U,
+		10000U,
+		100000U,
+		1000000U,
+		10000000U,
+		100000000U,
+		1000000000U,
+		10000000000ULL,
+		100000000000ULL,
+		1000000000000ULL,
+		10000000000000ULL,
+		100000000000000ULL,
+		1000000000000000ULL,
+		10000000000000000ULL,
+		100000000000000000ULL,
+		1000000000000000000ULL,
+		10000000000000000000ULL};
+	return MinusSign + Log10 - (Value < Pow10[Log10]);
+}
+
+// includes all symbols for scientific notation
+// NOTE: this is not very good because length calc very dependent on str_conversions::WriteFloat logic
+FORCEINLINE constexpr index GetNumDigits(const decimal_parts& Parts) {
+	if (Parts.IsNaN) {
+		return 3;
+	}
+	if (Parts.IsInfinity) {
+		return Parts.IsNegative ? 4 : 3;
+	}
+	if (Parts.Significand == 0) {
+		return 1;
+	}
+	const s32 NumSignificandDigits = math::GetNumDigits(Parts.Significand);
+	s32 ExponentValue = Parts.Exponent + NumSignificandDigits - 1;
+	const bool HasDot = NumSignificandDigits > 1;
+	return Parts.IsNegative + HasDot + 1 /* 'e' */ + GetNumDigits(ExponentValue) + NumSignificandDigits;
 }
 
 template <integral integral_type>

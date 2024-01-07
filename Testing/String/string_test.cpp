@@ -85,6 +85,9 @@ static bool SanityCheck(s64 Count) {
 	TEST_CHECK(Valid, "str to integer");
 
 	{
+		float Problem{-1};
+		auto ProblemResult = strings::FromFloat<float>(Problem);
+		
 		float TestCase1{INFINITY};
 		Valid = "inf" == strings::FromFloat<float>(TestCase1);
 		CHECK(Valid);

@@ -17,6 +17,10 @@ static str FromInt(integral_type IntegralNumber);
 template <fractional float_type>
 static str FromFloat(float_type FloatingNumber);
 
+template <integral integral_type>
+static void WriteInt(char* Destination, index NumberLength, integral_type IntegralNumber);
+static void WriteFloat(char* Destination, index NumberLength, const math::decimal_parts& Parts);
+
 template <numeric numeric_type>
 constexpr static numeric_type GetNumberChecked(str_view String);
 template <numeric numeric_type>
@@ -185,67 +189,76 @@ result<integral_type> GetInteger(str_view String) {
 
 template <integral integral_type>
 str FromInt(integral_type IntegralNumber) {
-	constexpr array<char, 10> LookupTable = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-	array<char, 20> Buffer{};	 // Should be enough for negative 64 bit int
-	char* NumberStart = Buffer.end();
+	const index NumberLength = math::GetNumDigits(IntegralNumber);
+	str Result;
+	Result.Reserve(NumberLength + 1);
+	WriteInt(Result.GetData(), NumberLength, IntegralNumber);
+	Result[NumberLength] = 0;
+	Result.OverwriteSize(NumberLength + 1);
+	return Result;
+}
+
+template <integral integral_type>
+void WriteInt(char* Destination, index NumberLength, integral_type IntegralNumber) {
+	const bool MinusSign = IntegralNumber < 0;
+	char* NumberStart = Destination + NumberLength;
 	integral_type Value = math::Abs(IntegralNumber);
-	index NumChars = 0;
 	do {
-		*--NumberStart = LookupTable[Value % 10];
-		++NumChars;
+		*--NumberStart = '0' + (Value % 10);
 		Value /= 10;
 	} while (Value);
-	if (IntegralNumber < 0) {
+	if (MinusSign) {
 		*--NumberStart = '-';
-		++NumChars;
 	}
-	return str{NumberStart, NumChars};
 }
 
 template <fractional float_type>
 str FromFloat(float_type FloatingNumber) {
 	const math::decimal_parts Parts = math::FloatToDecimal(FloatingNumber);
+	const index NumberLength = math::GetNumDigits(Parts);
+	str Result;
+	Result.Reserve(NumberLength + 1);
+	WriteFloat(Result.GetData(), NumberLength, Parts);
+	Result[NumberLength] = 0;
+	Result.OverwriteSize(NumberLength + 1);
+	return Result;
+}
+
+void WriteFloat(char* Destination, index NumberLength, const math::decimal_parts& Parts) {
 	if (Parts.IsNaN) {
-		return str{"NaN"};
+		std::memcpy(Destination, "NaN", 3);
+		return;
 	}
 	if (Parts.IsInfinity) {
-		return str{Parts.IsNegative ? "-inf" : "inf"};
+		std::memcpy(Destination, Parts.IsNegative ? "-inf" : "inf", Parts.IsNegative ? 4 : 3);
+		return;
 	}
 	if (Parts.Significand == 0) {
-		return str("0");
+		std::memcpy(Destination, "0", 1);
+		return;
 	}
-	constexpr array<char, 10> LookupTable = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-	array<char, 23> Buffer{};	 // '-' + 17 digits significand + E + '-' + 3 digits exponent
-	char* NumberStart = Buffer.end();
+	char* NumberStart = Destination + NumberLength;
 	const s32 NumSignificandDigits = math::GetNumDigits(Parts.Significand);
 	s32 ExponentValue = math::Abs(Parts.Exponent + NumSignificandDigits - 1);
-	index NumChars = 0;
 	do {
-		*--NumberStart = LookupTable[ExponentValue % 10];
+		*--NumberStart = '0' + (ExponentValue % 10);
 		ExponentValue /= 10;
-		++NumChars;
 	} while (ExponentValue);
 	if ((Parts.Exponent + NumSignificandDigits - 1) < 0) {
 		*--NumberStart = '-';
-		++NumChars;
 	}
 	*--NumberStart = 'e';
-	++NumChars;
 	s32 SignificandValue = math::Abs(Parts.Significand);
 	do {
-		*--NumberStart = LookupTable[SignificandValue % 10];
-		++NumChars;
+		*--NumberStart = '0' + (SignificandValue % 10);
 		SignificandValue /= 10;
 		if (SignificandValue && SignificandValue < 10) {
 			*--NumberStart = '.';
-			++NumChars;
 		}
 	} while (SignificandValue);
 	if (Parts.IsNegative) {
 		*--NumberStart = '-';
-		++NumChars;
 	}
-	return str{NumberStart, NumChars};
 }
 
-}	 // namespace str_util
+}	 // namespace strings
