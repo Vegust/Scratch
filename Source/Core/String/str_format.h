@@ -1,5 +1,8 @@
 #pragma once
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "google-explicit-constructor"
+
 #include "str.h"
 #include "str_conversions.h"
 
@@ -85,3 +88,5 @@ str Format(str_view String, const format_argument_array<NumArguments>& Arguments
 }
 
 }	 // namespace strings
+
+#pragma clang diagnostic pop

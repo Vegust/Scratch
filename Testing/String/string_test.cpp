@@ -131,6 +131,9 @@ static bool SanityCheck(s64 Count) {
 	TEST_CHECK(Valid, "float to str and str to float");
 	
 	str Test = strings::Format("Testing formatting: {} {} {} {}", 1, "test1", -0.1f);
+	
+	str Pointer1 = strings::FromPointer(nullptr);
+	str Pointer2 = strings::FromPointer(&Test);
 
 	return true;
 }

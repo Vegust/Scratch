@@ -16,10 +16,12 @@ template <integral integral_type>
 static str FromInt(integral_type IntegralNumber);
 template <fractional float_type>
 static str FromFloat(float_type FloatingNumber);
+static str FromPointer(void* Pointer);
 
 template <integral integral_type>
 static void WriteInt(char* Destination, index NumberLength, integral_type IntegralNumber);
 static void WriteFloat(char* Destination, index NumberLength, const math::decimal_parts& Parts);
+static void WritePointer(char* Destination, index Length, void* Pointer);
 
 template <numeric numeric_type>
 constexpr static numeric_type GetNumberChecked(str_view String);
@@ -210,6 +212,33 @@ void WriteInt(char* Destination, index NumberLength, integral_type IntegralNumbe
 	if (MinusSign) {
 		*--NumberStart = '-';
 	}
+}
+
+str FromPointer(void* Pointer) {
+	const index Length = Pointer ? 18 : 4;
+	str Result;
+	Result.Reserve(Length + 1);
+	WritePointer(Result.GetData(), Length, Pointer);
+	Result[Length] = 0;
+	Result.OverwriteSize(Length + 1);
+	return Result;
+}
+
+void WritePointer(char* Destination, index Length, void* Pointer) {
+	if (!Pointer) {
+		std::memcpy(Destination, "null", 4);
+		return;
+	}
+	constexpr str_view Table{"0123456789abcdef"};
+	char* NumberStart = Destination + Length;
+	u64 Value = std::bit_cast<u64>(Pointer);
+	for (s32 Index = 0; Index < 16; ++Index) {
+		u8 Digit = static_cast<u8>(Value & ((1 << 4) - 1));
+		*--NumberStart = Table[Digit];
+		Value >>= 4;
+	}
+	*--NumberStart = 'x';
+	*--NumberStart = '0';
 }
 
 template <fractional float_type>
