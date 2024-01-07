@@ -17,22 +17,49 @@ struct format_argument {
 		void* Pointer;
 	};
 
-	FORCEINLINE constexpr format_argument(str_view Val) : String{Val} {
+	FORCEINLINE constexpr format_argument(const str& Val) : String{Val}, Type{type::string_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(str_view Val) : String{Val}, Type{type::string_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(const char* Val) : String{Val}, Type{type::string_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(bool Val) : UInt{Val}, Type{type::uint_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(u8 Val) : UInt{Val}, Type{type::uint_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(s8 Val) : Int{Val}, Type{type::int_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(u64 Val) : UInt{Val} {
+	FORCEINLINE constexpr format_argument(u16 Val) : UInt{Val}, Type{type::uint_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(s64 Val) : Int{Val} {
+	FORCEINLINE constexpr format_argument(s16 Val) : Int{Val}, Type{type::int_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(u32 Val) : UInt{Val}, Type{type::uint_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(s32 Val) : Int{Val}, Type{type::int_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(u64 Val) : UInt{Val}, Type{type::uint_arg} {
+	}
+	
+	FORCEINLINE constexpr format_argument(s64 Val) : Int{Val}, Type{type::int_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(float Val) : Float{Val} {
+	FORCEINLINE constexpr format_argument(float Val) : Float{Val}, Type{type::float_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(double Val) : Double{Val} {
+	FORCEINLINE constexpr format_argument(double Val) : Double{Val}, Type{type::double_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(void* Val) : Pointer{Val} {
+	FORCEINLINE constexpr format_argument(void* Val) : Pointer{Val}, Type{type::pointer_arg} {
 	}
 };
 
