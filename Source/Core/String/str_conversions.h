@@ -4,7 +4,7 @@
 #include "Templates/result.h"
 #include "str.h"
 
-namespace str_util {
+namespace strings {
 
 FORCEINLINE constexpr static index GetByteLength(str_view String);
 
@@ -19,10 +19,12 @@ static str FromFloat(float_type FloatingNumber);
 
 template <numeric numeric_type>
 constexpr static numeric_type GetNumberChecked(str_view String);
+template <numeric numeric_type>
+constexpr static result<numeric_type> GetNumber(str_view String);
 template <integral integral_type>
-constexpr static result<integral_type> GetNumber(str_view String);
-template <fractional float_type>
-constexpr static result<float_type> GetNumber(str_view String);
+result<integral_type> GetInteger(str_view String);
+result<float> GetFloat(str_view String);
+result<double> GetDouble(str_view String);
 
 FORCEINLINE constexpr str_view GetSubstring(str_view Source, index Begin, index End);
 
@@ -140,8 +142,19 @@ constexpr numeric_type GetNumberChecked(str_view String) {
 	return GetNumber<numeric_type>(String).GetValue();
 }
 
+template <numeric numeric_type>
+constexpr result<numeric_type> GetNumber(str_view String) {
+	if constexpr (integral<numeric_type>) {
+		return GetInteger<numeric_type>(String);
+	} else if constexpr (sizeof(numeric_type) == 4) {
+		return GetFloat(String);
+	} else {
+		return GetDouble(String);
+	}
+}
+
 template <integral integral_type>
-constexpr result<integral_type> GetNumber(str_view String) {
+result<integral_type> GetInteger(str_view String) {
 	if (auto Result = GetIntegerString(String)) {
 		str_view IntegerString = Result.GetValue();
 		integral_type Sign = 1;
@@ -168,12 +181,6 @@ constexpr result<integral_type> GetNumber(str_view String) {
 		return Number * Sign;
 	}
 	return common_errors::invalid_input;
-}
-
-template <fractional float_type>
-constexpr result<float_type> GetNumber(str_view String) {
-	// TODO
-	return 0.f;
 }
 
 template <integral integral_type>

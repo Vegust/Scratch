@@ -146,16 +146,16 @@ shader::parsed_shaders shader::ParseShader(const str_view Path) {
 	bool ReachedEOF = InputFile.eof() || !InputFile.is_open();
 	while (!ReachedEOF) {
 		ReachedEOF = GetLine(InputFile, Line).eof();
-		if (str_util::FindSubstring(Line, "!shader") != InvalidIndex &&
-			str_util::FindSubstring(Line, "////") == InvalidIndex) {
-			if (str_util::FindSubstring(Line, "vertex") != InvalidIndex) {
+		if (strings::FindSubstring(Line, "!shader") != InvalidIndex &&
+			strings::FindSubstring(Line, "////") == InvalidIndex) {
+			if (strings::FindSubstring(Line, "vertex") != InvalidIndex) {
 				ShaderIndex = 0;
-			} else if (str_util::FindSubstring(Line, "fragment") != InvalidIndex) {
+			} else if (strings::FindSubstring(Line, "fragment") != InvalidIndex) {
 				ShaderIndex = 1;
-			} else if (str_util::FindSubstring(Line, "geometry") != InvalidIndex) {
+			} else if (strings::FindSubstring(Line, "geometry") != InvalidIndex) {
 				bHasGeometryShader = true;
 				ShaderIndex = 2;
-			} else if (str_util::FindSubstring(Line, "shared") != InvalidIndex) {
+			} else if (strings::FindSubstring(Line, "shared") != InvalidIndex) {
 				ShaderIndex = 3;
 			}
 		} else {

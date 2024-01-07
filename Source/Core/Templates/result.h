@@ -1,6 +1,6 @@
 #pragma once
 
-enum class common_errors : u8 { out_of_memory, invalid_input, invalid_sign, input_too_big };
+enum class common_errors : u8 { out_of_memory, invalid_input, invalid_sign, input_too_big, who_knows };
 
 template <typename value_type, typename error_type = common_errors>
 struct result {

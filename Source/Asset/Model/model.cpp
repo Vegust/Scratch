@@ -3,7 +3,7 @@
 #include <iostream>
 
 // TODO: remove assimp
-#include "String/str_util.h"
+#include "String/str_conversions.h"
 #include "ThirdParty/assimp/include/assimp/postprocess.h"
 #include "ThirdParty/assimp/include/assimp/scene.h"
 #include "ThirdParty/assimp/include/assimp/Importer.hpp"
@@ -26,8 +26,8 @@ void model::Load(const str& Path) {
 		return;
 	}
 
-	index LastBackspace = str_util::FindLastOf(Path, '/');
-	mDirectory = LastBackspace != InvalidIndex ? str_util::GetSubstring(Path, 0, LastBackspace) : Path;
+	index LastBackspace = strings::FindLastOf(Path, '/');
+	mDirectory = LastBackspace != InvalidIndex ? strings::GetSubstring(Path, 0, LastBackspace) : Path;
 
 	ProcessNode(*this, Scene->mRootNode, Scene);
 }

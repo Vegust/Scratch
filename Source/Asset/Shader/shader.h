@@ -5,7 +5,7 @@
 #include "Game/Entities/phong_material.h"
 #include "Containers/span.h"
 #include "glm/fwd.hpp"
-#include "String/str_util.h"
+#include "String/str_conversions.h"
 
 class shader {
 public:
@@ -135,7 +135,7 @@ public:
 		str FirstString{First};
 		str FullName = FirstString;
 		if (Index != -1) {
-			FullName += '[' + str_util::FromInt(Index) + ']';
+			FullName += '[' + strings::FromInt(Index) + ']';
 		}
 		str SecondString{Second};
 		if (!Second.IsEmpty()) {
