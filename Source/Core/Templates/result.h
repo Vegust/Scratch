@@ -12,48 +12,23 @@ private:
 
 	bool Success{false};
 
-	static constexpr bool CopyableValue = sizeof(value_type) <= 16 && trivially_copyable<value_type>;
-	static constexpr bool CopyableError = sizeof(error_type) <= 16 && trivially_copyable<error_type>;
-
 public:
-	FORCEINLINE constexpr result(const value_type InValue)
-		requires CopyableValue
-	{
+	FORCEINLINE constexpr result(const value_type& InValue) {
 		Value = InValue;
 		Success = true;
 	}
 
-	FORCEINLINE constexpr result(const error_type InError)
-		requires CopyableError
-	{
+	FORCEINLINE constexpr result(const error_type& InError) {
 		Error = InError;
 		Success = false;
 	}
 
-	FORCEINLINE constexpr result(const value_type& InValue)
-		requires(!CopyableValue)
-	{
-		Value = InValue;
-		Success = true;
-	}
-
-	FORCEINLINE constexpr result(const error_type& InError)
-		requires(!CopyableError)
-	{
-		Error = InError;
-		Success = false;
-	}
-
-	FORCEINLINE constexpr result(value_type&& InValue)
-		requires(!CopyableValue)
-	{
+	FORCEINLINE constexpr result(value_type&& InValue) {
 		Value = std::move(InValue);
 		Success = true;
 	}
 
-	FORCEINLINE constexpr result(error_type&& InError)
-		requires(!CopyableValue)
-	{
+	FORCEINLINE constexpr result(error_type&& InError) {
 		Error = std::move(InError);
 		Success = false;
 	}

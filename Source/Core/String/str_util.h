@@ -15,7 +15,7 @@ FORCEINLINE constexpr bool IsSign(char Character);
 template <integral integral_type>
 static str FromInt(integral_type IntegralNumber);
 template <fractional float_type>
-static str FromFloat(float_type FloatingNumber, index FractionalPrecision = 4);
+static str FromFloat(float_type FloatingNumber);
 
 template <numeric numeric_type>
 constexpr static numeric_type GetNumberChecked(str_view String);
@@ -176,31 +176,68 @@ constexpr result<float_type> GetNumber(str_view String) {
 	return 0.f;
 }
 
-template <fractional float_type>
-str FromFloat(float_type FloatingNumber, index FractionalPrecision) {
-	return {};	  // TODO
-}
-
 template <integral integral_type>
 str FromInt(integral_type IntegralNumber) {
-	// clang-format off
-	constexpr array<char, 19> LookupTable =
-		{'9','8','7','6','5','4','3','2','1','0','1','2','3','4','5','6','7','8','9'};
-	constexpr index ZeroIndex = 9;
-	array<char, 20> Buffer{}; // Should be enough for negative 64 bit int
-	// clang-format on
+	constexpr array<char, 10> LookupTable = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+	array<char, 20> Buffer{};	 // Should be enough for negative 64 bit int
 	char* NumberStart = Buffer.end();
-	bool Signed = IntegralNumber < 0;
-	index NumChars = Signed ? 1 : 0;
+	integral_type Value = math::Abs(IntegralNumber);
+	index NumChars = 0;
 	do {
-		*--NumberStart = LookupTable[ZeroIndex + (IntegralNumber % 10)];
-		IntegralNumber /= 10;
+		*--NumberStart = LookupTable[Value % 10];
 		++NumChars;
-	} while (IntegralNumber);
-	if (Signed) {
+		Value /= 10;
+	} while (Value);
+	if (IntegralNumber < 0) {
 		*--NumberStart = '-';
+		++NumChars;
 	}
+	return str{NumberStart, NumChars};
+}
 
+template <fractional float_type>
+str FromFloat(float_type FloatingNumber) {
+	const math::decimal_parts Parts = math::FloatToDecimal(FloatingNumber);
+	if (Parts.IsNaN) {
+		return str{"NaN"};
+	}
+	if (Parts.IsInfinity) {
+		return str{Parts.IsNegative ? "-inf" : "inf"};
+	}
+	if (Parts.Significand == 0) {
+		return str("0");
+	}
+	constexpr array<char, 10> LookupTable = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+	array<char, 23> Buffer{};	 // '-' + 17 digits significand + E + '-' + 3 digits exponent
+	char* NumberStart = Buffer.end();
+	const s32 NumSignificandDigits = math::GetNumDigits(Parts.Significand);
+	s32 ExponentValue = math::Abs(Parts.Exponent + NumSignificandDigits - 1);
+	index NumChars = 0;
+	do {
+		*--NumberStart = LookupTable[ExponentValue % 10];
+		ExponentValue /= 10;
+		++NumChars;
+	} while (ExponentValue);
+	if ((Parts.Exponent + NumSignificandDigits - 1) < 0) {
+		*--NumberStart = '-';
+		++NumChars;
+	}
+	*--NumberStart = 'e';
+	++NumChars;
+	s32 SignificandValue = math::Abs(Parts.Significand);
+	do {
+		*--NumberStart = LookupTable[SignificandValue % 10];
+		++NumChars;
+		SignificandValue /= 10;
+		if (SignificandValue && SignificandValue < 10) {
+			*--NumberStart = '.';
+			++NumChars;
+		}
+	} while (SignificandValue);
+	if (Parts.IsNegative) {
+		*--NumberStart = '-';
+		++NumChars;
+	}
 	return str{NumberStart, NumChars};
 }
 

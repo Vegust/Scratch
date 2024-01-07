@@ -80,6 +80,11 @@ static bool SanityCheck(s64 Count) {
 		}
 	}
 	TEST_CHECK(Valid, "str to integer");
+	
+	float TestCaseFloat1{-0.000000112345};
+	str TestCaseResult1 = str_util::FromFloat(TestCaseFloat1);
+	
+	TEST_CHECK(Valid, "float to str to float");
 
 	return true;
 }

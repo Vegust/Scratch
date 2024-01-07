@@ -56,6 +56,11 @@ target_link_libraries(Scratch stb)
 include_directories(Source/ThirdParty/glm)
 # --------------------------------
 
+# --------- dragonbox ------------
+# https://github.com/jk-jeon/dragonbox/tree/master
+include_directories(Source/ThirdParty/dragonbox)
+# --------------------------------
+
 # --------- dear imgui -----------
 include_directories(Source/ThirdParty/imgui)
 add_library(imgui STATIC

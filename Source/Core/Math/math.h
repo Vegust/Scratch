@@ -21,6 +21,7 @@ static FORCEINLINE unsigned char BitScanReverseGNUC_64(unsigned long* Index, uns
 	*Index = 63 - *Index;
 	return true;
 }
+
 static FORCEINLINE unsigned char BitScanReverseGNUC_32(unsigned long* Index, unsigned long Mask) {
 	*Index = __builtin_clzl(Mask);
 	bool Zero = *Index == 32;
@@ -31,6 +32,7 @@ static FORCEINLINE unsigned char BitScanReverseGNUC_32(unsigned long* Index, uns
 	*Index = 31 - *Index;
 	return true;
 }
+
 #define BIT_SCAN_REVERSE_64(BIT_SCAN_REVERSE_Index, BIT_SCAN_REVERSE_Value) \
 	BitScanReverseGNUC_64((BIT_SCAN_REVERSE_Index), (BIT_SCAN_REVERSE_Value))
 #define BIT_SCAN_REVERSE_32(BIT_SCAN_REVERSE_Index, BIT_SCAN_REVERSE_Value) \
@@ -39,6 +41,17 @@ static FORCEINLINE unsigned char BitScanReverseGNUC_32(unsigned long* Index, uns
 
 namespace math {
 constexpr float DefaultEqualityTolerance = 0.001f;
+
+struct decimal_parts {
+	s64 Exponent{0};
+	u64 Significand{0};
+	bool IsNegative{false};
+	bool IsNaN{false};
+	bool IsInfinity{false};
+};
+
+decimal_parts FloatToDecimal(float Number);
+decimal_parts FloatToDecimal(double Number);
 
 template <typename lhs, typename rhs>
 	requires(sizeof(lhs) <= 16 && sizeof(rhs) <= 16)
@@ -50,6 +63,21 @@ template <typename lhs, typename rhs>
 	requires(sizeof(lhs) <= 16 && sizeof(rhs) <= 16)
 constexpr FORCEINLINE std::common_type<lhs, rhs>::type Min(lhs a, rhs b) {
 	return ((a) < (b) ? (a) : (b));
+}
+
+template <numeric numeric_type>
+FORCEINLINE constexpr numeric_type Abs(numeric_type Value) {
+	return (Value > 0) ? Value : -Value;
+}
+
+template <integral integral_type>
+FORCEINLINE constexpr index GetNumDigits(integral_type Value) {
+	index Num = 0;
+	do {
+		Value /= 10;
+		++Num;
+	} while (Value);
+	return Num;
 }
 
 template <integral integral_type>
