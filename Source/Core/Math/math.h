@@ -107,24 +107,6 @@ FORCEINLINE constexpr index GetNumDigits(integral_type Value) {
 	return MinusSign + Log10 - (Value < Pow10[Log10]);
 }
 
-// includes all symbols for scientific notation
-// NOTE: this is not very good because length calc very dependent on str_conversions::WriteFloat logic
-FORCEINLINE constexpr index GetNumDigits(const decimal_parts& Parts) {
-	if (Parts.IsNaN) {
-		return 3;
-	}
-	if (Parts.IsInfinity) {
-		return Parts.IsNegative ? 4 : 3;
-	}
-	if (Parts.Significand == 0) {
-		return 1;
-	}
-	const s32 NumSignificandDigits = math::GetNumDigits(Parts.Significand);
-	s32 ExponentValue = Parts.Exponent + NumSignificandDigits - 1;
-	const bool HasDot = NumSignificandDigits > 1;
-	return Parts.IsNegative + HasDot + 1 /* 'e' */ + GetNumDigits(ExponentValue) + NumSignificandDigits;
-}
-
 template <integral integral_type>
 constexpr FORCEINLINE integral_type LogOfTwoCeil(integral_type Value) {
 	unsigned long Index;

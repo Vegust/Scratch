@@ -27,7 +27,7 @@ static bool SanityCheck(s64 Count) {
 		for (s32 Index = 0; Index < Count; Index++) {
 			const s32 Number = (rand() % 10000000) - 5000000;
 			std::string Ideal = std::to_string(Number);
-			str Tested = strings::FromInt(Number);
+			str Tested = strings::ToString(Number);
 			if (Ideal.length() != Tested.GetByteLength()) {
 				Valid = false;
 				CHECK(Valid);
@@ -74,7 +74,7 @@ static bool SanityCheck(s64 Count) {
 
 		for (s32 Index = 0; Index < Count; Index++) {
 			const s32 Number = (rand() % 10000000) - 5000000;
-			const s32 RoundTrip = strings::GetNumberChecked<s32>(strings::FromInt(Number));
+			const s32 RoundTrip = strings::GetNumberChecked<s32>(strings::ToString(Number));
 			if (Number != RoundTrip) {
 				Valid = false;
 				CHECK(Valid);
@@ -86,18 +86,18 @@ static bool SanityCheck(s64 Count) {
 
 	{
 		float Problem{-1};
-		auto ProblemResult = strings::FromFloat<float>(Problem);
+		auto ProblemResult = strings::ToString(Problem);
 		
 		float TestCase1{INFINITY};
-		Valid = "inf" == strings::FromFloat<float>(TestCase1);
+		Valid = "inf" == strings::ToString(TestCase1);
 		CHECK(Valid);
 		
 		float TestCase2{-INFINITY};
-		Valid = Valid && ("-inf" == strings::FromFloat<float>(TestCase2));
+		Valid = Valid && ("-inf" == strings::ToString(TestCase2));
 		CHECK(Valid);
 		
 		float TestCase3{NAN};
-		Valid = Valid && ("NaN" == strings::FromFloat<float>(TestCase3));
+		Valid = Valid && ("NaN" == strings::ToString(TestCase3));
 		CHECK(Valid);
 		
 		str TestCase4{"10 10 10 10 10"};
@@ -120,7 +120,7 @@ static bool SanityCheck(s64 Count) {
 		for (s32 Index = 0; Index < Count; Index++) {
 			const s32 Sign = (rand() % 2) ? (1) : (-1);
 			const float Number = Sign * ((float)rand() / (float)rand());
-			const float RoundTrip = strings::GetNumberChecked<float>(strings::FromFloat(Number));
+			const float RoundTrip = strings::GetNumberChecked<float>(strings::ToString(Number));
 			if (Number != RoundTrip) {
 				Valid = false;
 				CHECK(Valid);
@@ -132,8 +132,8 @@ static bool SanityCheck(s64 Count) {
 	
 	str Test = strings::Format("Testing formatting: {} {} {} {}", 1, "test1", -0.1f);
 	
-	str Pointer1 = strings::FromPointer(nullptr);
-	str Pointer2 = strings::FromPointer(&Test);
+	str Pointer1 = strings::ToString(nullptr);
+	str Pointer2 = strings::ToString(&Test);
 
 	return true;
 }

@@ -6,22 +6,52 @@
 
 namespace strings {
 
+template <typename type>
+concept convertible_to_string = numeric<type> || pointer<type>;
+
+template <integral integral_type>
+struct default_int_format {
+	static index GetCharSize(integral_type Value) {
+		return math::GetNumDigits(Value);
+	}
+
+	static void Write(char* Destination, index Length, integral_type IntegralNumber) {
+		const bool MinusSign = IntegralNumber < 0;
+		char* NumberStart = Destination + Length;
+		integral_type Value = math::Abs(IntegralNumber);
+		do {
+			*--NumberStart = '0' + (Value % 10);
+			Value /= 10;
+		} while (Value);
+		if (MinusSign) {
+			*--NumberStart = '-';
+		}
+	}
+};
+
+struct default_float_format {
+	static index GetCharSize(const math::decimal_parts& Parts);
+	static void Write(char* Destination, index Length, const math::decimal_parts& Parts);
+};
+
+struct default_pointer_format {
+	static index GetCharSize(void* Value);
+	static void Write(char* Destination, index Length, void* Value);
+};
+
+struct default_bool_format {
+	static index GetCharSize(bool Value);
+	static void Write(char* Destination, index Length, bool Value);
+};
+
 FORCEINLINE constexpr static index GetByteLength(str_view String);
 
 FORCEINLINE constexpr bool IsSpace(char Character);
-FORCEINLINE constexpr bool IsNumber(char Character);
+FORCEINLINE constexpr bool IsDigit(char Character);
 FORCEINLINE constexpr bool IsSign(char Character);
 
-template <integral integral_type>
-static str FromInt(integral_type IntegralNumber);
-template <fractional float_type>
-static str FromFloat(float_type FloatingNumber);
-static str FromPointer(void* Pointer);
-
-template <integral integral_type>
-static void WriteInt(char* Destination, index NumberLength, integral_type IntegralNumber);
-static void WriteFloat(char* Destination, index NumberLength, const math::decimal_parts& Parts);
-static void WritePointer(char* Destination, index Length, void* Pointer);
+template <convertible_to_string convertible_type>
+static str ToString(const convertible_type& Value);
 
 template <numeric numeric_type>
 constexpr static numeric_type GetNumberChecked(str_view String);
@@ -54,7 +84,7 @@ constexpr result<str_view> GetIntegerString(str_view String) {
 		Signed = true;
 		++Length;
 	}
-	while (Length < Start.GetSize() && IsNumber(Start[Length])) {
+	while (Length < Start.GetSize() && IsDigit(Start[Length])) {
 		++Length;
 	}
 	if (Length == static_cast<index>(Signed)) {
@@ -68,7 +98,7 @@ constexpr bool IsSpace(char Character) {
 	return Character == ' ' || Character == '\t' || Character == '\n' || Character == '\r';
 }
 
-constexpr bool IsNumber(char Character) {
+constexpr bool IsDigit(char Character) {
 	return '0' <= Character && Character <= '9';
 }
 
@@ -143,6 +173,33 @@ constexpr index FindSubstring(str_view String, str_view Substring, index StartIn
 	return InvalidIndex;
 }
 
+template <convertible_to_string convertible_type>
+str ToString(const convertible_type& Value) {
+	str Result;
+	index Length{0};
+	if constexpr (std::is_same_v<convertible_type, bool>) {
+		Length = default_bool_format::GetCharSize(Value);
+		Result.Reserve(Length + 1);
+		default_bool_format::Write(Result.GetData(), Length, Value);
+	} else if constexpr (integral<convertible_type>) {
+		Length = default_int_format<convertible_type>::GetCharSize(Value);
+		Result.Reserve(Length + 1);
+		default_int_format<convertible_type>::Write(Result.GetData(), Length, Value);
+	} else if constexpr (fractional<convertible_type>) {
+		auto Parts = math::FloatToDecimal(Value);
+		Length = default_float_format::GetCharSize(Parts);
+		Result.Reserve(Length + 1);
+		default_float_format::Write(Result.GetData(), Length, Parts);
+	} else if constexpr (pointer<convertible_type>) {
+		Length = default_pointer_format::GetCharSize(Value);
+		Result.Reserve(Length + 1);
+		default_pointer_format::Write(Result.GetData(), Length, Value);
+	}
+	Result[Length] = 0;
+	Result.OverwriteSize(Length + 1);
+	return Result;
+}
+
 template <numeric numeric_type>
 constexpr numeric_type GetNumberChecked(str_view String) {
 	return GetNumber<numeric_type>(String).GetValue();
@@ -187,107 +244,6 @@ result<integral_type> GetInteger(str_view String) {
 		return Number * Sign;
 	}
 	return common_errors::invalid_input;
-}
-
-template <integral integral_type>
-str FromInt(integral_type IntegralNumber) {
-	const index NumberLength = math::GetNumDigits(IntegralNumber);
-	str Result;
-	Result.Reserve(NumberLength + 1);
-	WriteInt(Result.GetData(), NumberLength, IntegralNumber);
-	Result[NumberLength] = 0;
-	Result.OverwriteSize(NumberLength + 1);
-	return Result;
-}
-
-template <integral integral_type>
-void WriteInt(char* Destination, index NumberLength, integral_type IntegralNumber) {
-	const bool MinusSign = IntegralNumber < 0;
-	char* NumberStart = Destination + NumberLength;
-	integral_type Value = math::Abs(IntegralNumber);
-	do {
-		*--NumberStart = '0' + (Value % 10);
-		Value /= 10;
-	} while (Value);
-	if (MinusSign) {
-		*--NumberStart = '-';
-	}
-}
-
-str FromPointer(void* Pointer) {
-	const index Length = Pointer ? 18 : 4;
-	str Result;
-	Result.Reserve(Length + 1);
-	WritePointer(Result.GetData(), Length, Pointer);
-	Result[Length] = 0;
-	Result.OverwriteSize(Length + 1);
-	return Result;
-}
-
-void WritePointer(char* Destination, index Length, void* Pointer) {
-	if (!Pointer) {
-		std::memcpy(Destination, "null", 4);
-		return;
-	}
-	constexpr str_view Table{"0123456789abcdef"};
-	char* NumberStart = Destination + Length;
-	u64 Value = std::bit_cast<u64>(Pointer);
-	for (s32 Index = 0; Index < 16; ++Index) {
-		u8 Digit = static_cast<u8>(Value & ((1 << 4) - 1));
-		*--NumberStart = Table[Digit];
-		Value >>= 4;
-	}
-	*--NumberStart = 'x';
-	*--NumberStart = '0';
-}
-
-template <fractional float_type>
-str FromFloat(float_type FloatingNumber) {
-	const math::decimal_parts Parts = math::FloatToDecimal(FloatingNumber);
-	const index NumberLength = math::GetNumDigits(Parts);
-	str Result;
-	Result.Reserve(NumberLength + 1);
-	WriteFloat(Result.GetData(), NumberLength, Parts);
-	Result[NumberLength] = 0;
-	Result.OverwriteSize(NumberLength + 1);
-	return Result;
-}
-
-void WriteFloat(char* Destination, index NumberLength, const math::decimal_parts& Parts) {
-	if (Parts.IsNaN) {
-		std::memcpy(Destination, "NaN", 3);
-		return;
-	}
-	if (Parts.IsInfinity) {
-		std::memcpy(Destination, Parts.IsNegative ? "-inf" : "inf", Parts.IsNegative ? 4 : 3);
-		return;
-	}
-	if (Parts.Significand == 0) {
-		std::memcpy(Destination, "0", 1);
-		return;
-	}
-	char* NumberStart = Destination + NumberLength;
-	const s32 NumSignificandDigits = math::GetNumDigits(Parts.Significand);
-	s32 ExponentValue = math::Abs(Parts.Exponent + NumSignificandDigits - 1);
-	do {
-		*--NumberStart = '0' + (ExponentValue % 10);
-		ExponentValue /= 10;
-	} while (ExponentValue);
-	if ((Parts.Exponent + NumSignificandDigits - 1) < 0) {
-		*--NumberStart = '-';
-	}
-	*--NumberStart = 'e';
-	s32 SignificandValue = math::Abs(Parts.Significand);
-	do {
-		*--NumberStart = '0' + (SignificandValue % 10);
-		SignificandValue /= 10;
-		if (SignificandValue && SignificandValue < 10) {
-			*--NumberStart = '.';
-		}
-	} while (SignificandValue);
-	if (Parts.IsNegative) {
-		*--NumberStart = '-';
-	}
 }
 
 }	 // namespace strings

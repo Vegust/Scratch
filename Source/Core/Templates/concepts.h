@@ -29,7 +29,7 @@ concept numeric = integral<type> || fractional<type>;
 template<typename lhs_type, typename rhs_type>
 concept iso_precise = (integral<lhs_type> && integral<rhs_type>) || (fractional<lhs_type> && fractional<rhs_type>);
 template <typename type>
-concept pointer = std::is_pointer<type>::value;
+concept pointer = std::is_pointer<type>::value || std::is_same_v<type, std::nullptr_t>;
 template <typename type>
 concept enumerable = std::is_enum<type>::value;
 template <typename type>

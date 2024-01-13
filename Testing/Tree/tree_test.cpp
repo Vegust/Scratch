@@ -23,7 +23,7 @@ static void PerformanceTests(s64 Count, s64 Iters) {
 	for (s32 iter = 0; iter < Iters; ++iter) {
 		rb_set<test_type> container;
 		std::set<test_type> ideal;
-
+		
 		std::vector<test_type> Values;
 
 		srand(0);

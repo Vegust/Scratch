@@ -1,20 +1,39 @@
 #pragma once
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "google-explicit-constructor"
-
 #include "str.h"
 #include "str_conversions.h"
+#include "atom.h"
 
 namespace strings {
 
 struct format_argument {
-	enum class type { string_arg, uint_arg, int_arg, float_arg, double_arg, pointer_arg } Type;
+	enum class type {
+		string_arg,
+		bool_arg,
+		u8_arg,
+		u16_arg,
+		u32_arg,
+		u64_arg,
+		s8_arg,
+		s16_arg,
+		s32_arg,
+		s64_arg,
+		float_arg,
+		double_arg,
+		pointer_arg
+	} Type;
 
 	union {
 		str_view String;
-		u64 UInt;
-		s64 Int;
+		bool Bool;
+		u8 U8;
+		u16 U16;
+		u32 U32;
+		u64 U64;
+		s8 S8;
+		s16 S16;
+		s32 S32;
+		s64 S64;
 		float Float;
 		double Double;
 		void* Pointer;
@@ -22,38 +41,41 @@ struct format_argument {
 
 	FORCEINLINE constexpr format_argument(const str& Val) : String{Val}, Type{type::string_arg} {
 	}
-	
+
 	FORCEINLINE constexpr format_argument(str_view Val) : String{Val}, Type{type::string_arg} {
 	}
-	
+
 	FORCEINLINE constexpr format_argument(const char* Val) : String{Val}, Type{type::string_arg} {
 	}
-	
-	FORCEINLINE constexpr format_argument(bool Val) : UInt{Val}, Type{type::uint_arg} {
-	}
-	
-	FORCEINLINE constexpr format_argument(u8 Val) : UInt{Val}, Type{type::uint_arg} {
-	}
-	
-	FORCEINLINE constexpr format_argument(s8 Val) : Int{Val}, Type{type::int_arg} {
+
+	FORCEINLINE constexpr format_argument(atom Val) : String{Val.ToStr()}, Type{type::string_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(u16 Val) : UInt{Val}, Type{type::uint_arg} {
+	FORCEINLINE constexpr format_argument(bool Val) : Bool{Val}, Type{type::bool_arg} {
 	}
 
-	FORCEINLINE constexpr format_argument(s16 Val) : Int{Val}, Type{type::int_arg} {
+	FORCEINLINE constexpr format_argument(u8 Val) : U8{Val}, Type{type::u8_arg} {
 	}
-	
-	FORCEINLINE constexpr format_argument(u32 Val) : UInt{Val}, Type{type::uint_arg} {
+
+	FORCEINLINE constexpr format_argument(u16 Val) : U16{Val}, Type{type::u16_arg} {
 	}
-	
-	FORCEINLINE constexpr format_argument(s32 Val) : Int{Val}, Type{type::int_arg} {
+
+	FORCEINLINE constexpr format_argument(u32 Val) : U32{Val}, Type{type::u32_arg} {
 	}
-	
-	FORCEINLINE constexpr format_argument(u64 Val) : UInt{Val}, Type{type::uint_arg} {
+
+	FORCEINLINE constexpr format_argument(u64 Val) : U64{Val}, Type{type::u64_arg} {
 	}
-	
-	FORCEINLINE constexpr format_argument(s64 Val) : Int{Val}, Type{type::int_arg} {
+
+	FORCEINLINE constexpr format_argument(s8 Val) : S8{Val}, Type{type::s8_arg} {
+	}
+
+	FORCEINLINE constexpr format_argument(s16 Val) : S16{Val}, Type{type::s16_arg} {
+	}
+
+	FORCEINLINE constexpr format_argument(s32 Val) : S32{Val}, Type{type::s32_arg} {
+	}
+
+	FORCEINLINE constexpr format_argument(s64 Val) : S64{Val}, Type{type::s64_arg} {
 	}
 
 	FORCEINLINE constexpr format_argument(float Val) : Float{Val}, Type{type::float_arg} {
@@ -88,5 +110,3 @@ str Format(str_view String, const format_argument_array<NumArguments>& Arguments
 }
 
 }	 // namespace strings
-
-#pragma clang diagnostic pop

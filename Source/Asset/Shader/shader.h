@@ -135,7 +135,7 @@ public:
 		str FirstString{First};
 		str FullName = FirstString;
 		if (Index != -1) {
-			FullName += '[' + strings::FromInt(Index) + ']';
+			FullName += '[' + strings::ToString(Index) + ']';
 		}
 		str SecondString{Second};
 		if (!Second.IsEmpty()) {
