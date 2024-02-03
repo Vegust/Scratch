@@ -92,23 +92,6 @@ public:
 	constexpr static bool FastDestruct = trivially_destructible<element_type>;
 	constexpr static bool MemcopyRealloc = memcopy_relocatable<element_type>;
 
-	constexpr static bool DebugMode = false;
-	static inline int NumCollisions = 0;
-	static inline int NumQueries = 0;
-	static inline int CurrentProbe = 0;
-	static inline int LongestProbe = 0;
-	static inline int ProbeHistogram[64]{0};
-
-	static void PrintDebugInfo() {
-		//		std::cout << "Collision/Query = " << (float) NumCollisions / NumQueries
-		//				  << ". Longest probe = " << LongestProbe << std::endl;
-		//		for (int i = 0; i < 64; ++i) {
-		//			std::cout << i << " collisions: " << ProbeHistogram[i] << " ("
-		//					  << 100 * ((float) ProbeHistogram[i] / NumQueries) << "%)" <<
-		// std::endl;
-		//		}
-	}
-
 	struct prober {
 		set_elem_container* Data = nullptr;
 		index HashMask = 0;
@@ -118,41 +101,17 @@ public:
 
 		FORCEINLINE prober(const hash_set& InSet, hash::hash_type InHash)
 			: Data(InSet.Data), HashMask(InSet.GetCapacity()), Hash(InHash) {
-			if constexpr (DebugMode) {
-				++NumQueries;
-				if (CurrentProbe < 64) {
-					ProbeHistogram[CurrentProbe] += 1;
-				}
-				LongestProbe = math::Max(LongestProbe, CurrentProbe);
-				CurrentProbe = 0;
-			}
 			HashMask = (1 << math::LogOfTwoCeil(InSet.GetCapacity())) - 1;
 			SetElem = Data + (Hash & HashMask);
 		}
 
 		FORCEINLINE prober(set_elem_container* InData, index InCapacity, hash::hash_type InHash)
 			: Data(InData), Hash(InHash) {
-			if constexpr (DebugMode) {
-				++NumQueries;
-				if (CurrentProbe < 64) {
-					ProbeHistogram[CurrentProbe] += 1;
-				}
-				LongestProbe = math::Max(LongestProbe, CurrentProbe);
-				CurrentProbe = 0;
-			}
 			HashMask = (1 << math::LogOfTwoCeil(InCapacity)) - 1;
 			SetElem = Data + (Hash & HashMask);
 		}
 
 		[[nodiscard]] FORCEINLINE bool NotEmpty() const {
-			if constexpr (DebugMode) {
-				const bool Collision = SetElem->Hash != EmptyHash;
-				if (Collision) {
-					++NumCollisions;
-					++CurrentProbe;
-				}
-				return Collision;
-			}
 			return SetElem->Hash != EmptyHash;
 		}
 
@@ -161,8 +120,8 @@ public:
 			return *this;
 		}
 
-		FORCEINLINE index TriangleNumber(const index Iteration) {
-			return (Iteration * (Iteration + 1)) >> 1;
+		FORCEINLINE static index TriangleNumber(const index InIteration) {
+			return (InIteration * (InIteration + 1)) >> 1;
 		}
 	};
 
@@ -308,9 +267,6 @@ public:
 		return Capacity;
 	}
 
-	// Unlike array, hash_set does not have maximum allocation size that it cannot exceed when
-	// doubling size, because hash_set relies on capacity being a power of two (masking, triangle
-	// numbers for probing)
 	FORCEINLINE bool EnsureCapacity(const index NewExpectedSize) {
 		if (NewExpectedSize + Deleted > MaxSize) {
 			const index DesiredSize =
@@ -421,7 +377,6 @@ class hash_table : public hash_set<key_value_pair<table_key_type, table_value_ty
 public:
 	using table_pair = key_value_pair<table_key_type, table_value_type>;
 	using super = hash_set<table_pair, hasher, equals_op, allocator>;
-	using prober = typename super::prober;
 
 	FORCEINLINE explicit hash_table() = default;
 

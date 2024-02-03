@@ -1,6 +1,6 @@
 ﻿#include "../testing_shared.h"
 #include "String/str_conversions.h"
-#include "String/atom.h"
+#include "Logger/logger.h"
 
 struct set_test {
 	s32 Test(const std::span<char*>& Args);
@@ -130,7 +130,14 @@ static bool SanityCheck(s64 Count) {
 	}
 	TEST_CHECK(Valid, "float to str and str to float");
 	
-	str Test = strings::Format("Testing formatting: {} {} {} {}", 1, "test1", -0.1f);
+	str Test = strings::Format("Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	
+	atom TestCategory{"Test Log Category"};
+	
+	logs::Log<logs::verbosity::info>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Log<logs::verbosity::warning>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Log<logs::verbosity::debug>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Log<logs::verbosity::error>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 	
 	str Pointer1 = strings::ToString(nullptr);
 	str Pointer2 = strings::ToString(&Test);

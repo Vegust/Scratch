@@ -41,9 +41,6 @@ public:
 	constexpr static bool FastCopy = trivially_copyable<element_type>;
 	constexpr static bool FastDestruct = trivially_destructible<element_type>;
 	constexpr static bool MemcopyRealloc = memcopy_relocatable<element_type>;
-	// 10 MB, completely arbitrary for now TODO: this number should be backed by something I guess
-	constexpr static index MaxSingleByteSizeIncrease = 1024 * 1024 * 10;
-	constexpr static index MaxSingleCapacityIncrease = math::Max(1, MaxSingleByteSizeIncrease / sizeof(element_type));
 
 	dyn_array() = default;
 
@@ -334,10 +331,9 @@ public:
 				Capacity = TargetCapacity;
 			}
 			return Data;
-
 		} else if (Capacity < NewCapacity) {
 			const index DoubledCapacity = 1 << (math::LogOfTwoCeil(Capacity) + 1);
-			return Reserve(math::Min(MaxSingleCapacityIncrease + Capacity, math::Max(DoubledCapacity, NewCapacity)));
+			return Reserve(math::Max(DoubledCapacity, NewCapacity));
 		}
 		return true;
 	}

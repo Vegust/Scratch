@@ -28,15 +28,12 @@ struct atom {
 	FORCEINLINE atom(const atom& OtherId) = default;
 	FORCEINLINE atom& operator=(const atom& OtherId) = default;
 
-	// TODO: kinda arbitrary requirement, supposed to accept str&&, str&, str_view, const char*, maybe should improve
-	template <typename string_type>
-		requires(!std::is_same_v<atom, string_type> && std::is_constructible_v<string_type, const char*>)
-	FORCEINLINE explicit atom(string_type&& Str) {
+	FORCEINLINE explicit atom(str_view Str) {
 		if (auto* ExistingIndex = Pool.IndexLookupSet.FindByPredicate(
-				hash::Hash(Str), [&Str](auto& Index) { return Pool.Strings[Index] == Str; })) {
+				hash::Hash(Str), [Str](auto& Index) { return Pool.Strings[Index] == Str; })) {
 			Index = *ExistingIndex;
 		} else {
-			Index = Pool.Strings.Add(std::forward(Str));
+			Index = Pool.Strings.Emplace(Str);
 			Pool.IndexLookupSet.Add(Index);
 		}
 	}

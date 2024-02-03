@@ -12,11 +12,11 @@ file(GLOB_RECURSE SCRATCH_ASSET_SOURCES "Source/Rendering/*.cpp")
 file(GLOB_RECURSE SCRATCH_UI_SOURCES "Source/UI/*.cpp")
 file(GLOB_RECURSE SCRATCH_RESOURCE_SOURCES "Source/Asset/*.cpp")
 
-set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
-add_compile_definitions(NOMINMAX)
-add_compile_definitions(WIN32_LEAN_AND_MEAN)
+add_executable(Scratch)
 
-add_executable(Scratch
+target_compile_definitions(Scratch PRIVATE NOMINMAX)
+target_compile_definitions(Scratch PRIVATE WIN32_LEAN_AND_MEAN)
+target_sources(Scratch PRIVATE
 		Source/main.cpp
 		${SCRATCH_CORE_SOURCES}
 		${SCRATCH_APPLICATION_SOURCES}

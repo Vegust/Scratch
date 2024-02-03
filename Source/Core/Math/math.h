@@ -12,23 +12,23 @@
 
 #if defined(__GNUC__)	 // GCC
 static FORCEINLINE unsigned char BitScanReverseGNUC_64(unsigned long* Index, unsigned long long Mask) {
-	*Index = __builtin_clzll(Mask);
-	bool Zero = *Index == 64;
+	const bool Zero = Mask == 0;
 	if (Zero) {
 		*Index = 0;
 		return false;
 	}
+	*Index = __builtin_clzll(Mask);
 	*Index = 63 - *Index;
 	return true;
 }
 
 static FORCEINLINE unsigned char BitScanReverseGNUC_32(unsigned long* Index, unsigned long Mask) {
-	*Index = __builtin_clzl(Mask);
-	bool Zero = *Index == 32;
+	const bool Zero = Mask == 0;
 	if (Zero) {
 		*Index = 0;
 		return false;
 	}
+	*Index = __builtin_clzl(Mask);
 	*Index = 31 - *Index;
 	return true;
 }
@@ -79,8 +79,8 @@ FORCEINLINE constexpr index GetNumDigits(integral_type Value) {
 										6,	6,	6,	7,	7,	7,	7,	8,	8,	8,	9,	9,	9,	10, 10, 10,
 										10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
 										15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20};
-	unsigned long Bsr;
-	BIT_SCAN_REVERSE_64(&Bsr, Value);
+	volatile unsigned long Bsr = 0;
+	BIT_SCAN_REVERSE_64(&(unsigned long&)Bsr, Value);
 	u8 Log10 = BsrToLog10[Bsr];
 	constexpr static u64 Pow10[] = {
 		0,

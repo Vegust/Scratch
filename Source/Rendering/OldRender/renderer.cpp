@@ -6,7 +6,6 @@
 #include "Asset/Shader/shader.h"
 #include "vertex_array.h"
 #include "vertex_buffer_layout.h"
-#include "Logger/logger.h"
 #include "vertex.h"
 
 void GlClearError() {
@@ -16,7 +15,7 @@ void GlClearError() {
 
 bool GlLogCall(const char* FunctionName, const char* FileName, int LineNumber) {
 	if (GLenum Error = glGetError()) {
-		logger::Log("OpenGL Error (%s): %s:%s:%s", Error, FileName, LineNumber, FunctionName);
+		//logger::Log("OpenGL Error (%s): %s:%s:%s", Error, FileName, LineNumber, FunctionName);
 		CHECK(false);
 		return false;
 	}

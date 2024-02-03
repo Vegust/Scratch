@@ -1,14 +1,13 @@
 ﻿#pragma once
 
 #include "basic.h"
-#include "Logger/logger.h"
 
 #include <iostream>
 
 template <typename allocator_type>
 struct allocator_instance {
 	NO_UNIQUE_ADDRESS allocator_type Allocator{};
-	
+
 	void SetAllocator(allocator_type& Allocator) {
 		Allocator = Allocator;
 	}
@@ -32,7 +31,8 @@ struct allocator_base {
 			std::cout << Ptr << " alloc   " << Size << " bytes" << std::endl;
 			return Ptr;
 		} else {
-			auto* Ptr = static_cast<sub_type*>(this)->AllocateImpl(Size, Alignment);;
+			auto* Ptr = static_cast<sub_type*>(this)->AllocateImpl(Size, Alignment);
+			;
 			CHECK(Ptr)
 			return Ptr;
 		}
@@ -43,7 +43,7 @@ struct allocator_base {
 			return;
 		}
 		if constexpr (Debug) {
-			logger::Log("%d dealloc", (u64)Ptr);
+			//logger::Log("%d dealloc", (u64)Ptr);
 		}
 		static_cast<sub_type*>(this)->FreeImpl(Ptr);
 	}
@@ -58,7 +58,8 @@ struct allocator_base {
 			std::cout << Ptr << " alloc   " << Size << " bytes" << std::endl;
 			return Ptr;
 		} else {
-			auto* Ptr = sub_type::StaticAllocateImpl(Size, Alignment);;
+			auto* Ptr = sub_type::StaticAllocateImpl(Size, Alignment);
+			;
 			CHECK(Ptr)
 			return Ptr;
 		}
@@ -69,7 +70,7 @@ struct allocator_base {
 			return;
 		}
 		if constexpr (Debug) {
-			logger::Log("%d dealloc", (u64)Ptr);
+			//logger::Log("%d dealloc", (u64) Ptr);
 		}
 		sub_type::StaticFreeImpl(Ptr);
 	}

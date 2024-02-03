@@ -75,14 +75,14 @@ void default_float_format::Write(char* Destination, index Length, const math::de
 
 index default_pointer_format::GetCharSize(void* Value) {
 	if (!Value) {
-		return 4;
+		return 7;
 	}
 	return 18;
 }
 
 void default_pointer_format::Write(char* Destination, index Length, void* Pointer) {
 	if (!Pointer) {
-		std::memcpy(Destination, "null", 4);
+		std::memcpy(Destination, "nullptr", 7);
 		return;
 	}
 	constexpr str_view Table{"0123456789abcdef"};

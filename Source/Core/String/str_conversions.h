@@ -69,6 +69,7 @@ constexpr str_view EatSpaces(str_view String);
 constexpr str_view GetLine(str_view String, str_view Previous = {});
 
 FORCEINLINE constexpr bool StartsWith(str_view String, str_view Substring);
+FORCEINLINE constexpr index FindFirstOf(str_view String, char Char);
 FORCEINLINE constexpr index FindLastOf(str_view String, char Char);
 FORCEINLINE constexpr index FindSubstring(str_view String, str_view Substring, index StartIndex = 0);
 
@@ -150,8 +151,17 @@ constexpr bool StartsWith(str_view String, str_view Substring) {
 	return true;
 }
 
+constexpr index FindFirstOf(str_view String, char Char) {
+	for (index Index = 0; Index < GetByteLength(String); ++Index) {
+		if (String[Index] == Char) {
+			return Index;
+		}
+	}
+	return InvalidIndex;
+}
+
 constexpr index FindLastOf(str_view String, char Char) {
-	for (s32 Index = GetByteLength(String); Index >= 0; --Index) {
+	for (s32 Index = GetByteLength(String) - 1; Index >= 0; --Index) {
 		if (String[Index] == Char) {
 			return Index;
 		}

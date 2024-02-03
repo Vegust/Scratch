@@ -5,5 +5,6 @@ int main() {
 	application App{Settings};
 	while (App.RunOneFrame()) {
 	}
+	
 	return 0;
 }
