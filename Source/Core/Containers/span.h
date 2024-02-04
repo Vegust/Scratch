@@ -43,7 +43,11 @@ public:
 
 	// conversion to span can be implicit
 	template <typename container_type>
-		requires(container_type::const_iter::Contiguous)
+		requires(
+			container_type::const_iter::Contiguous &&
+			std::is_same<
+				typename std::remove_const<typename container_type::value_type>::type,
+				typename std::remove_const<value_type>::type>::value)
 	FORCEINLINE constexpr span(const container_type& Container)	   // NOLINT(*-explicit-constructor)
 		: span{Container.begin(), Container.end()} {
 	}
@@ -131,14 +135,14 @@ public:
 	FORCEINLINE constexpr const_iter end() const {
 		return const_iter(Data + Size);
 	}
-	
+
 	[[nodiscard]] FORCEINLINE constexpr span RemoveFirst() const {
 		span Result{*this};
 		Result.Data += 1;
 		Result.Size -= 1;
 		return Result;
 	}
-	
+
 	[[nodiscard]] FORCEINLINE constexpr span RemoveLast() const {
 		span Result{*this};
 		Result.Size -= 1;

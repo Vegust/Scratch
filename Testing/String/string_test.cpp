@@ -1,6 +1,6 @@
 ﻿#include "../testing_shared.h"
 #include "String/str_conversions.h"
-#include "Logger/logger.h"
+#include "Logs/logs.h"
 
 struct set_test {
 	s32 Test(const std::span<char*>& Args);
