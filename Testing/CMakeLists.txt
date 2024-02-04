@@ -8,10 +8,6 @@
 	ENDFOREACH ()
 	set(${result} ${dirlist})
 ENDMACRO()
-# this is stupid
-include_directories(../Source/ThirdParty/glm)
-include_directories(../Source/ThirdParty/dragonbox)
-include_directories(../Source/ThirdParty/fast_float)
 SUBDIRLIST(SUBDIRS ${CMAKE_CURRENT_SOURCE_DIR})
 FOREACH (subdir ${SUBDIRS})
 	add_subdirectory(${subdir})

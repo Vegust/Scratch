@@ -1,5 +1,6 @@
 #include "application.h"
 #include "Application/Platform/platform.h"
+#include "Logs/logs.h"
 
 struct time_update_result {
 	float DeltaTime{0.f};

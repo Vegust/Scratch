@@ -1,3 +1,4 @@
-﻿add_executable(allocator_test_exec allocator_test.cpp ${SCRATCH_CORE_SOURCES})
+﻿add_executable(allocator_test_exec allocator_test.cpp)
+target_link_libraries(allocator_test_exec ScratchLib)
 add_test(NAME allocator_test COMMAND allocator_test_exec)
 add_test(NAME allocator_benchmark COMMAND allocator_test_exec --benchmark)

@@ -7,6 +7,7 @@
 #include "ThirdParty/assimp/include/assimp/postprocess.h"
 #include "ThirdParty/assimp/include/assimp/scene.h"
 #include "ThirdParty/assimp/include/assimp/Importer.hpp"
+#include "Logs/logs.h"
 
 static void ProcessNode(model& Model, aiNode* Node, const aiScene* Scene);
 static mesh ProcessMesh(model& Model, aiMesh* MeshData, const aiScene* Scene);
@@ -22,9 +23,12 @@ void model::Load(const str& Path) {
 			aiProcess_GenNormals);
 
 	if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode) {
-		std::cout << "ERROR::ASSIMP::" << Importer.GetErrorString() << std::endl;
+		logs::Log<logs::verbosity::error>("Can't load model using path {}", Path);
+		CHECK(false);
 		return;
 	}
+	
+	logs::Log<logs::verbosity::debug>("Loaded model using path {}", Path);
 
 	index LastBackspace = strings::FindLastOf(Path, '/');
 	mDirectory = LastBackspace != InvalidIndex ? strings::GetSubstring(Path, 0, LastBackspace) : Path;

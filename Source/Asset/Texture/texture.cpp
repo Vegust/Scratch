@@ -2,6 +2,7 @@
 #include "basic.h"
 #include "glad/glad.h"
 #include "stb_image.h"
+#include "Logs/logs.h"
 
 static void ClearTextureHandle(texture& Texture) {
 	if (Texture.mRendererId != 0) {
@@ -73,8 +74,13 @@ void texture::Load(const str_view Path, bool SRGB) {
 			glGenerateMipmap(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, 0);
 			stbi_image_free(mLocalBuffer);
+		} else {
+			logs::Log<logs::verbosity::error>("Can't open texture file using path {}", Path);
+			CHECK(false);
+			return;
 		}
 	}
+	logs::Log<logs::verbosity::debug>("Loaded texture using path {}", Path);
 }
 
 texture::~texture() {

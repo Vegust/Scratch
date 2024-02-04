@@ -4,30 +4,28 @@
 
 #include <windows.h>
 #include "Rendering/rendering_types.h"
-//#include "GLFW/glfw3.h"
+#include "GLFW/glfw3.h"
 
 float windows_platform::GetTime() {
-	return 0.f;
-	//return static_cast<float>(glfwGetTime());
+	return static_cast<float>(glfwGetTime());
 }
 
-//void windows_platform::InitUi(ui& UI, window& Window, rendering_api Api) {
-//	//	switch (Api) {
-//	//		case rendering_api::opengl:
-//	//			ImGui_ImplGlfw_InitForOpenGL(Window.GetGLFWWindow(), true);
-//	//			break;
-//	//	}
-//}
-//
-//void windows_platform::UpdateUi(ui& UI, window& Window) {
-//	//	ImGui_ImplGlfw_NewFrame();
-//}
+void windows_platform::InitUi(ui& UI, window& Window, rendering_api Api) {
+	//	switch (Api) {
+	//		case rendering_api::opengl:
+	//			ImGui_ImplGlfw_InitForOpenGL(Window.GetGLFWWindow(), true);
+	//			break;
+	//	}
+}
+
+void windows_platform::UpdateUi(ui& UI, window& Window) {
+	//ImGui_ImplGlfw_NewFrame();
+}
 
 void* windows_platform::GetApiLoadingFunction(rendering_api Api) {
 	switch (Api) {
 		case rendering_api::opengl:
-			//return (void*) (glfwGetProcAddress);
-			break;
+			return (void*) (glfwGetProcAddress);
 	}
 	return nullptr;
 }

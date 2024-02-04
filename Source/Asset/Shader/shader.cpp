@@ -4,8 +4,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "Containers/span.h"
+#include "Logs/logs.h"
 
 #include <fstream>
+
 
 shader::shader(shader&& Shader) noexcept {
 	RendererId = Shader.RendererId;
@@ -184,7 +186,15 @@ shader::parsed_shaders shader::ParseShader(const str_view Path) {
 	if (!bHasGeometryShader) {
 		Result.GeometryShader.Clear();
 	}
-
+	
+	if (Result.VertexShader.IsEmpty()) {
+		logs::Log<logs::verbosity::error>("Can't load shader using path {}", Path);
+		CHECK(false);
+		return Result;
+	}
+	
+	logs::Log<logs::verbosity::debug>("Loaded shader using path {}", Path);
+	
 	return Result;
 }
 
@@ -201,7 +211,7 @@ u32 shader::CompileShader(u32 Type, const str& Source) {
 		glGetShaderiv(Index, GL_INFO_LOG_LENGTH, &Length);
 		char* Message = static_cast<char*>(alloca(static_cast<u64>(Length) * sizeof(char)));
 		glGetShaderInfoLog(Index, Length, &Length, Message);
-		//logger::Log("%s", Message);
+		logs::Log<logs::verbosity::error>("Error loading shader: {}", Message);
 		glDeleteShader(Index);
 		CHECK(false)
 		return 0;
