@@ -7,7 +7,7 @@ static ui_data UpdateUi() {
 }
 
 game::game() {
-	mWorlds.Emplace();
+	Worlds.Emplace();
 }
 
 game_update_result game::Step(
@@ -17,7 +17,7 @@ game_update_result game::Step(
 	const window_state& WindowState,
 	const render_state& RenderState) {
 	game_update_result Result;
-	Result.mUIData = UpdateUi();
+	Result.UIData = UpdateUi();
 	return Result;
 }
 

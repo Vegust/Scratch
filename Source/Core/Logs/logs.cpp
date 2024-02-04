@@ -1,4 +1,5 @@
 #include "logs.h"
+#include "Time/timestamp.h"
 
 void logs::Log(
 	logs::color Color,
@@ -8,12 +9,13 @@ void logs::Log(
 	span<strings::format_argument> ArgumentArray) {
 	const index CategoryLength = Category.ToStr().GetByteLength();
 	const index InputLength = strings::GetFormatLength(FormatString, ArgumentArray);
-	const str_view TimeString{"03.02.2024 16:30:59.1005"};	  // TODO real time
-	const index TotalLength =
-		TimeString.GetSize() + 3 + VerbosityString.GetSize() + 3 + CategoryLength + 3 + InputLength;
+	const timestamp CurrentTime = timestamp::GetCurrent();
+	const index TimeLength = strings::default_timestamp_format::GetCharSize(CurrentTime);
+	const index TotalLength = TimeLength + 3 + VerbosityString.GetSize() + 3 + CategoryLength + 3 + InputLength;
 	str LogString;
 	LogString.Reserve(TotalLength + 1);
-	LogString += TimeString;
+	strings::default_timestamp_format::Write(LogString.GetData(), TimeLength, CurrentTime);
+	LogString.OverwriteSize(TimeLength + 1);
 	LogString += " | ";
 	LogString += VerbosityString;
 	LogString += " | ";

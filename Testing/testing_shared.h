@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "core.h"
-#include "Core/Utility/hash.h"
+#include "Core/Hash/hash.h"
 
 #include <chrono>
 #include <iostream>

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Core/Utility/hash.h"
+#include "Core/Hash/hash.h"
 #include "Core/Templates/concepts.h"
 
 // Pair of key and value, where, by default, hashing and less/equals operators are

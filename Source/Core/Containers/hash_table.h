@@ -4,7 +4,7 @@
 #include "Core/Math/math.h"
 #include "Templates/equals.h"
 #include "Templates/key_value_pair.h"
-#include "Core/Utility/hash.h"
+#include "Core/Hash/hash.h"
 #include "Memory/memory.h"
 
 template <typename set_type, iterator_constness Constness>

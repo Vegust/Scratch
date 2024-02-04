@@ -10,14 +10,14 @@ struct window_state;
 struct render_state;
 
 struct game_update_result {
-	dyn_array<view> mViews;
-	ui_data mUIData;
-	dyn_array<app_message> mMessages;
+	dyn_array<view> Views;
+	ui_data UIData;
+	dyn_array<app_message> Messages;
 };
 
 class game {
 public:
-	dyn_array<world> mWorlds{};
+	dyn_array<world> Worlds{};
 
 	game();
 	game_update_result Step(

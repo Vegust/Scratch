@@ -1,7 +1,7 @@
 #pragma once
 
 #include "basic.h"
-#include "Utility/hash.h"
+#include "Hash/hash.h"
 #include "array_iter.h"
 #include <cstring>
 

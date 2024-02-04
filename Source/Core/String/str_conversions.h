@@ -3,6 +3,7 @@
 #include "basic.h"
 #include "Templates/result.h"
 #include "str.h"
+#include "Time/timestamp.h"
 
 namespace strings {
 
@@ -42,6 +43,11 @@ struct default_pointer_format {
 struct default_bool_format {
 	static index GetCharSize(bool Value);
 	static void Write(char* Destination, index Length, bool Value);
+};
+
+struct default_timestamp_format {
+	static index GetCharSize(timestamp Value);
+	static void Write(char* Destination, index Length, timestamp Value);
 };
 
 FORCEINLINE constexpr static index GetByteLength(str_view String);

@@ -1,6 +1,7 @@
 ﻿#include "../testing_shared.h"
 #include "String/str_conversions.h"
 #include "Logs/logs.h"
+#include "Time/timestamp.h"
 
 struct set_test {
 	s32 Test(const std::span<char*>& Args);
@@ -87,19 +88,19 @@ static bool SanityCheck(s64 Count) {
 	{
 		float Problem{-1};
 		auto ProblemResult = strings::ToString(Problem);
-		
+
 		float TestCase1{INFINITY};
 		Valid = "inf" == strings::ToString(TestCase1);
 		CHECK(Valid);
-		
+
 		float TestCase2{-INFINITY};
 		Valid = Valid && ("-inf" == strings::ToString(TestCase2));
 		CHECK(Valid);
-		
+
 		float TestCase3{NAN};
 		Valid = Valid && ("NaN" == strings::ToString(TestCase3));
 		CHECK(Valid);
-		
+
 		str TestCase4{"10 10 10 10 10"};
 		if (auto Result = strings::GetNumber<double>(TestCase4)) {
 			Valid = Valid && (Result.GetValue() == 10);
@@ -108,7 +109,7 @@ static bool SanityCheck(s64 Count) {
 			Valid = false;
 			CHECK(Valid);
 		}
-		
+
 		str TestCase5{"fgdghjdfhgjdhfjghfj"};
 		if (auto Result = strings::GetNumber<double>(TestCase5)) {
 			Valid = false;
@@ -116,10 +117,10 @@ static bool SanityCheck(s64 Count) {
 		} else {
 			CHECK(Valid);
 		}
-		
+
 		for (s32 Index = 0; Index < Count; Index++) {
 			const s32 Sign = (rand() % 2) ? (1) : (-1);
-			const float Number = Sign * ((float)rand() / (float)rand());
+			const float Number = Sign * ((float) rand() / (float) rand());
 			const float RoundTrip = strings::GetNumberChecked<float>(strings::ToString(Number));
 			if (Number != RoundTrip) {
 				Valid = false;
@@ -129,18 +130,28 @@ static bool SanityCheck(s64 Count) {
 		}
 	}
 	TEST_CHECK(Valid, "float to str and str to float");
-	
+
 	str Test = strings::Format("Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
-	
+
 	atom TestCategory{"Test Log Category"};
-	
+
 	logs::Log<logs::verbosity::info>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 	logs::Log<logs::verbosity::warning>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 	logs::Log<logs::verbosity::debug>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 	logs::Log<logs::verbosity::error>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
-	
+
 	str Pointer1 = strings::ToString(nullptr);
 	str Pointer2 = strings::ToString(&Test);
+
+	timestamp TimeTest = timestamp::GetCurrent();
+	logs::Log(
+		"Year: {}, Month: {}, Day {}, Hour {}, Minute {}, Second {}",
+		TimeTest.GetYear(),
+		TimeTest.GetMonth(),
+		TimeTest.GetDay(),
+		TimeTest.GetHour(),
+		TimeTest.GetMinute(),
+		TimeTest.GetSecond());
 
 	return true;
 }

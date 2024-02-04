@@ -3,7 +3,7 @@
 #include "Core/basic.h"
 #include "Core/String/str.h"
 #include "Core/Containers/hash_table.h"
-#include "Utility/hash.h"
+#include "Hash/hash.h"
 
 // Number that corresponds to a string (str). Can be created from any str and converted back to str.
 // Optimal for copying and comparison, creation from string is a big table lookup

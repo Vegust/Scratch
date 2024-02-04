@@ -4,18 +4,18 @@
 namespace strings {
 result<float> GetFloat(str_view String) {
 	float Result;
-	auto Answer = fast_float::from_chars(String.GetData(),String.GetData() + String.GetSize(), Result);
+	auto Answer = fast_float::from_chars(String.GetData(), String.GetData() + String.GetSize(), Result);
 	if (static_cast<s32>(Answer.ec)) {
-		return common_errors::who_knows; // TODO: actually look at error
+		return common_errors::who_knows;	// TODO: actually look at error
 	}
 	return result<float>(Result);
 }
 
 result<double> GetDouble(str_view String) {
 	double Result;
-	auto Answer = fast_float::from_chars(String.GetData(),String.GetData() + String.GetSize(), Result);
+	auto Answer = fast_float::from_chars(String.GetData(), String.GetData() + String.GetSize(), Result);
 	if (static_cast<s32>(Answer.ec)) {
-		return common_errors::who_knows; // TODO: actually look at error
+		return common_errors::who_knows;	// TODO: actually look at error
 	}
 	return result<double>(Result);
 }
@@ -104,4 +104,49 @@ index default_bool_format::GetCharSize(bool Value) {
 void default_bool_format::Write(char* Destination, index Length, bool Value) {
 	std::memcpy(Destination, Value ? "true" : "false", 4);
 }
+
+index default_timestamp_format::GetCharSize(timestamp Value) {
+	// DD-MM-YYYY hh:mm:ss.msm always
+	return 23;
 }
+
+void default_timestamp_format::Write(char* Destination, index Length, timestamp Value) {
+	using format = default_int_format<s64>;
+	char* WritePosition = Destination;
+	std::memset(Destination, '0', 23);
+	timestamp::year_month_day YMD = Value.GetYearMonthDay();
+	CHECK(format::GetCharSize(YMD.Year) <= 4);
+	CHECK(format::GetCharSize(YMD.Month) <= 2);
+	CHECK(format::GetCharSize(YMD.Day) <= 2);
+	CHECK(format::GetCharSize(Value.GetHour()) <= 2);
+	CHECK(format::GetCharSize(Value.GetMinute()) <= 2);
+	CHECK(format::GetCharSize(Value.GetSecond()) <= 2);
+	CHECK(format::GetCharSize(Value.GetMillisecond()) <= 3);
+	format::Write(WritePosition, 2, YMD.Day);
+	WritePosition += 2;
+	*WritePosition = '-';
+	++WritePosition;
+	format::Write(WritePosition, 2, YMD.Month);
+	WritePosition += 2;
+	*WritePosition = '-';
+	++WritePosition;
+	format::Write(WritePosition, 4, YMD.Year);
+	WritePosition += 4;
+	*WritePosition = ' ';
+	++WritePosition;
+	format::Write(WritePosition, 2, Value.GetHour());
+	WritePosition += 2;
+	*WritePosition = ':';
+	++WritePosition;
+	format::Write(WritePosition, 2, Value.GetMinute());
+	WritePosition += 2;
+	*WritePosition = ':';
+	++WritePosition;
+	format::Write(WritePosition, 2, Value.GetSecond());
+	WritePosition += 2;
+	*WritePosition = '.';
+	++WritePosition;
+	format::Write(WritePosition, 3, Value.GetMillisecond());
+}
+
+}	 // namespace strings

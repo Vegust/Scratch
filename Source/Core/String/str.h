@@ -3,7 +3,7 @@
 #include "basic.h"
 #include "Containers/array.h"
 #include "Containers/dyn_array.h"
-#include "Core/Utility/hash.h"
+#include "Core/Hash/hash.h"
 #include "Core/Containers/span.h"
 
 #include <iostream>
