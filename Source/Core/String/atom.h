@@ -15,6 +15,10 @@ struct atom {
 			}
 		};
 
+		// NOTE: This is redundant but Clang wants it really bad 
+		atom_pool() : Strings{}, IndexLookupSet{} {
+		}
+
 		dyn_array<str> Strings{};
 		hash_set<index, index_hasher> IndexLookupSet{};
 	};
@@ -22,7 +26,7 @@ struct atom {
 	static constexpr bool MemcopyRelocatable = true;
 
 	index Index{InvalidIndex};
-	static atom_pool Pool;
+	inline static atom_pool Pool{};
 
 	FORCEINLINE atom() = default;
 	FORCEINLINE atom(const atom& OtherId) = default;

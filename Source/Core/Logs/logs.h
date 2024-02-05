@@ -5,6 +5,9 @@
 #include "String/str_format.h"
 
 namespace logs {
+namespace atoms {
+inline const atom GlobalCategory{"Global Category"};
+}
 enum class verbosity : u8 { error = 1, warning = 2, info = 3, debug = 4 };
 enum class color : u8 { white, yellow, red };
 constexpr verbosity EnabledVerbosity = verbosity::debug;
@@ -55,8 +58,7 @@ inline void Log(atom Category, str_view FormatString, const argument_types&... A
 template <verbosity Verbosity = verbosity::info, typename... argument_types>
 inline void Log(str_view FormatString, const argument_types&... Arguments) {
 	if constexpr (static_cast<u8>(EnabledVerbosity) >= static_cast<u8>(Verbosity)) {
-		static atom Global{"Global"};
-		Log<Verbosity>(Global, FormatString, Arguments...);
+		Log<Verbosity>(atoms::GlobalCategory, FormatString, Arguments...);
 	}
 }
 

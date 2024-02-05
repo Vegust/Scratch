@@ -2,49 +2,8 @@
 #include "Application/Platform/platform.h"
 #include "Containers/array.h"
 
-constexpr array<s64, 13> DaysPerMonth = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-constexpr array<s64, 13> DaysToMonth = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
-
-constexpr bool IsLeapYear(s64 Year) {
-	if ((Year % 4) == 0) {
-		return (((Year % 100) != 0) || ((Year % 400) == 0));
-	}
-	return false;
-}
-
-constexpr s64 DateTimeToTicks(
-	s64 Year,
-	s64 Month,
-	s64 Day,
-	s64 Hour = 0,
-	s64 Minute = 0,
-	s64 Second = 0,
-	s64 Millisecond = 0) {
-	s64 TotalDays = 0;
-	if ((Month > 2) && IsLeapYear(Year)) {
-		++TotalDays;
-	}
-	// Year, Month and Day counted before they actually finish
-	--Year;
-	--Month;
-	--Day;
-	TotalDays += Year * 365;
-	TotalDays += Year / 4;
-	TotalDays -= Year / 100;
-	TotalDays += Year / 400;
-	TotalDays += DaysToMonth[Month];
-	TotalDays += Day;
-	return TotalDays * timestamp::TicksPerDay + Hour * timestamp::TicksPerHour + Minute * timestamp::TicksPerMinute +
-		   Second * timestamp::TicksPerSecond + Millisecond * timestamp::TicksPerMillisecond;
-}
-
-timestamp timestamp::GetCurrent() {
-	timestamp Current;
-	s64 UTCTicks = platform::GetUTC();
-	// January 1, 1601 (UTC).
-	constexpr s64 InitialTicks = DateTimeToTicks(1601, 1, 1);
-	Current.Ticks = UTCTicks + InitialTicks;
-	return Current;
+timestamp timestamp::GetCurrentUTC() {
+	return platform::GetUTC();
 }
 
 s64 timestamp::GetYear() const {

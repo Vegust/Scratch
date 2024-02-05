@@ -1,6 +1,7 @@
 #include "Rendering/renderer.h"
 #include "Rendering/Backend/dynamic_rhi.h"
 #include "glm/ext/matrix_clip_space.hpp"
+#include "Logs/logs.h"
 
 static void SetupCubeTransforms(dyn_array<glm::mat4>& StaticCubes, dyn_array<glm::mat4>& DynamicCubes) {
 	// Static
@@ -72,8 +73,9 @@ static void SetupCubeTransforms(dyn_array<glm::mat4>& StaticCubes, dyn_array<glm
 renderer::renderer(u32 WindowWidth, u32 WindowHeight) {
 	mRHI = CreateRHI(mState.mApi);
 	mRHI->Init();
+	logs::Log("RHI created");
 	mOldRenderer.Init(WindowWidth, WindowHeight);
-
+	logs::Log("Old renderer initialized");
 	// from testmap, TODO refactor
 	auto& SceneLights = mOldRenderer.mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];

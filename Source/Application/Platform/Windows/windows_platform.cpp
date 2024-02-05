@@ -19,7 +19,7 @@ void windows_platform::InitUi(ui& UI, window& Window, rendering_api Api) {
 }
 
 void windows_platform::UpdateUi(ui& UI, window& Window) {
-	//ImGui_ImplGlfw_NewFrame();
+	// ImGui_ImplGlfw_NewFrame();
 }
 
 void* windows_platform::GetApiLoadingFunction(rendering_api Api) {
@@ -30,10 +30,19 @@ void* windows_platform::GetApiLoadingFunction(rendering_api Api) {
 	return nullptr;
 }
 
-s64 windows_platform::GetUTC() {
+timestamp windows_platform::GetUTC() {
 	FILETIME Time;
 	GetSystemTimePreciseAsFileTime(&Time);
-	return (((s64) Time.dwHighDateTime) << 32) + (s64) Time.dwLowDateTime;
+	// January 1, 1601 (UTC).
+	s64 SystemTicks = (((s64) Time.dwHighDateTime) << 32) + (s64) Time.dwLowDateTime;
+	constexpr s64 InitialTicks = timestamp::DateTimeToTicks(1601, 1, 1);
+	return timestamp{InitialTicks + SystemTicks};
+}
+
+timezone windows_platform::GetTimezone() {
+	TIME_ZONE_INFORMATION TimezoneInfo;
+	GetTimeZoneInformation(&TimezoneInfo);
+	return timezone{TimezoneInfo.Bias * timestamp::TicksPerMinute};
 }
 
 #endif

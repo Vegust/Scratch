@@ -3,6 +3,7 @@
 #ifdef WIN32
 
 #include "basic.h"
+#include "Time/timestamp.h"
 
 class windows_window;
 using window = windows_window;
@@ -10,11 +11,10 @@ struct ui;
 enum class rendering_api : u8;
 
 namespace windows_platform {
+
 float GetTime();
-
-// 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC).
-s64 GetUTC();
-
+timestamp GetUTC();
+timezone GetTimezone();
 void* GetApiLoadingFunction(rendering_api Api);
 
 // TODO this is ugly:

@@ -143,7 +143,7 @@ static bool SanityCheck(s64 Count) {
 	str Pointer1 = strings::ToString(nullptr);
 	str Pointer2 = strings::ToString(&Test);
 
-	timestamp TimeTest = timestamp::GetCurrent();
+	timestamp TimeTest = timestamp::GetCurrentUTC();
 	logs::Log(
 		"Year: {}, Month: {}, Day {}, Hour {}, Minute {}, Second {}",
 		TimeTest.GetYear(),

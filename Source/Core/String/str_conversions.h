@@ -6,6 +6,13 @@
 #include "Time/timestamp.h"
 
 namespace strings {
+namespace errors {
+inline const atom ThereIsNoNumbersToParse{"There is no numbers to parse."};
+inline const atom ReadingSignedIntegralToUnsignedType{"Reading signed integral to unsigned type."};
+inline const atom InputStringContainsNumberBiggerThatTypeCanHold{
+	"Input string contains number bigger that type can hold"};
+inline const atom CouldNotParseFloatFromString{"Could not parse float from string"};
+}	 // namespace errors
 
 template <typename type>
 concept convertible_to_string = numeric<type> || pointer<type>;
@@ -95,7 +102,7 @@ constexpr result<str_view> GetIntegerString(str_view String) {
 		++Length;
 	}
 	if (Length == static_cast<index>(Signed)) {
-		return common_errors::invalid_input;
+		return errors::ThereIsNoNumbersToParse;
 	} else {
 		return str_view{Start.GetData(), Length};
 	}
@@ -234,7 +241,8 @@ constexpr result<numeric_type> GetNumber(str_view String) {
 
 template <integral integral_type>
 result<integral_type> GetInteger(str_view String) {
-	if (auto Result = GetIntegerString(String)) {
+	auto Result = GetIntegerString(String);
+	if (Result) {
 		str_view IntegerString = Result.GetValue();
 		integral_type Sign = 1;
 		if (IsSign(IntegerString[0])) {
@@ -242,7 +250,7 @@ result<integral_type> GetInteger(str_view String) {
 				Sign = IntegerString[0] == '-' ? -1 : 1;
 			} else {
 				if (IntegerString[0] == '-') {
-					return common_errors::invalid_sign;
+					return errors::ReadingSignedIntegralToUnsignedType;
 				}
 			}
 			IntegerString = IntegerString.RemoveFirst();
@@ -252,14 +260,14 @@ result<integral_type> GetInteger(str_view String) {
 			const integral_type Digit = IntegerString[0] - '0';
 			constexpr s32 MaxSafe = std::numeric_limits<integral_type>::max();
 			if (Number > ((MaxSafe - Digit) / 10)) {
-				return common_errors::input_too_big;
+				return errors::InputStringContainsNumberBiggerThatTypeCanHold;
 			}
 			Number = Number * 10 + Digit;
 			IntegerString = IntegerString.RemoveFirst();
 		}
 		return Number * Sign;
 	}
-	return common_errors::invalid_input;
+	return Result.GetError();
 }
 
 }	 // namespace strings

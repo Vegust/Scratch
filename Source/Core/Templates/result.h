@@ -1,8 +1,8 @@
 #pragma once
 
-enum class common_errors : u8 { out_of_memory, invalid_input, invalid_sign, input_too_big, who_knows };
+#include "String/atom.h"
 
-template <typename value_type, typename error_type = common_errors>
+template <typename value_type, typename error_type = atom>
 struct result {
 private:
 	union {
@@ -13,22 +13,22 @@ private:
 	bool Success{false};
 
 public:
-	FORCEINLINE constexpr result(const value_type& InValue) {
+	FORCEINLINE constexpr result(const value_type& InValue) { // NOLINT(*-explicit-constructor)
 		Value = InValue;
 		Success = true;
 	}
 
-	FORCEINLINE constexpr result(const error_type& InError) {
+	FORCEINLINE constexpr result(const error_type& InError) { // NOLINT(*-explicit-constructor)
 		Error = InError;
 		Success = false;
 	}
 
-	FORCEINLINE constexpr result(value_type&& InValue) {
+	FORCEINLINE constexpr result(value_type&& InValue) { // NOLINT(*-explicit-constructor)
 		Value = std::move(InValue);
 		Success = true;
 	}
 
-	FORCEINLINE constexpr result(error_type&& InError) {
+	FORCEINLINE constexpr result(error_type&& InError) { // NOLINT(*-explicit-constructor)
 		Error = std::move(InError);
 		Success = false;
 	}

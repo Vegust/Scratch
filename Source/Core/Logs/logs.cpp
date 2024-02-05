@@ -1,5 +1,6 @@
 #include "logs.h"
 #include "Time/timestamp.h"
+#include "Application/Platform/platform.h"
 
 void logs::Log(
 	logs::color Color,
@@ -9,7 +10,8 @@ void logs::Log(
 	span<strings::format_argument> ArgumentArray) {
 	const index CategoryLength = Category.ToStr().GetByteLength();
 	const index InputLength = strings::GetFormatLength(FormatString, ArgumentArray);
-	const timestamp CurrentTime = timestamp::GetCurrent();
+	const timestamp CurrentTimeUTC = timestamp::GetCurrentUTC();
+	const timestamp CurrentTime = platform::GetTimezone().Apply(CurrentTimeUTC);
 	const index TimeLength = strings::default_timestamp_format::GetCharSize(CurrentTime);
 	const index TotalLength = TimeLength + 3 + VerbosityString.GetSize() + 3 + CategoryLength + 3 + InputLength;
 	str LogString;
