@@ -1,8 +1,9 @@
 ﻿#pragma once
 
-#include "Core/basic.h"
-#include "Core/String/str.h"
-#include "Core/Containers/hash_table.h"
+#include "basic.h"
+#include "String/str.h"
+#include "Containers/array.h"
+#include "Containers/hash_table.h"
 #include "Hash/hash.h"
 
 // Number that corresponds to a string (str). Can be created from any str and converted back to str.
@@ -10,12 +11,10 @@
 struct atom {
 	struct atom_pool {
 		struct index_hasher {
-			[[nodiscard]] FORCEINLINE static hash::hash_type Hash(index Index) {
-				return hash::Hash(Pool.Strings[Index]);
-			}
+			static hash::hash_type Hash(index Index);
 		};
 
-		// NOTE: This is redundant but Clang wants it really bad 
+		// NOTE: This is redundant but Clang wants it really bad
 		atom_pool() : Strings{}, IndexLookupSet{} {
 		}
 
@@ -25,16 +24,18 @@ struct atom {
 
 	static constexpr bool MemcopyRelocatable = true;
 
+	static atom_pool& GetAtomPool();
+
 	index Index{InvalidIndex};
-	inline static atom_pool Pool{};
 
 	FORCEINLINE atom() = default;
 	FORCEINLINE atom(const atom& OtherId) = default;
 	FORCEINLINE atom& operator=(const atom& OtherId) = default;
 
 	FORCEINLINE explicit atom(str_view Str) {
+		auto& Pool = GetAtomPool();
 		if (auto* ExistingIndex = Pool.IndexLookupSet.FindByPredicate(
-				hash::Hash(Str), [Str](auto& Index) { return Pool.Strings[Index] == Str; })) {
+				hash::Hash(Str), [&Pool, Str](auto& Index) { return Pool.Strings[Index] == Str; })) {
 			Index = *ExistingIndex;
 		} else {
 			Index = Pool.Strings.Emplace(Str);
@@ -43,7 +44,7 @@ struct atom {
 	}
 
 	[[nodiscard]] FORCEINLINE const str& ToStr() const {
-		auto& Strings = Pool.Strings;
+		auto& Strings = GetAtomPool().Strings;
 		CHECK(Strings.GetSize() > Index)
 		return Strings[Index];
 	}

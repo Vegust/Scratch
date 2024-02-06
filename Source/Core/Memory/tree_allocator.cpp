@@ -115,7 +115,6 @@ struct tree_allocator_impl {
 		}
 	};
 
-	static tree_allocator_impl Impl;
 	static constexpr index Granularity = 16;
 	constexpr static u32 NumPools = 4;
 	// all sizes in this file are in multiples of 16 (Granularity)
@@ -135,13 +134,9 @@ struct tree_allocator_impl {
 		return Size > 0 ? (Size >> 4) + 1 : 0;
 	}
 
-	FORCEINLINE static u32 GetIndex(const header* Header) {
-		return Header - (header*) (Impl.Allocations[Header->AllocIndex - NumPools]);
-	}
+	FORCEINLINE static u32 GetIndex(const header* Header);
 
-	FORCEINLINE static header* GetHeader(u32 HeaderIndex, u16 AllocationIndex) {
-		return (header*) (Impl.Allocations[AllocationIndex - NumPools]) + HeaderIndex;
-	}
+	FORCEINLINE static header* GetHeader(u32 HeaderIndex, u16 AllocationIndex);
 
 	~tree_allocator_impl() {
 		Clear();
@@ -282,26 +277,49 @@ struct tree_allocator_impl {
 		FreedHeader->Occupied = false;
 		FreeHeaders.Add(free_header_data{FreedHeader, FreedHeader->Size});
 	}
+
+	static tree_allocator_impl& GetImpl();
 };
 
+static bool TreeAllocatorInitialized;
+alignas(tree_allocator_impl) static array<u8, sizeof(tree_allocator_impl)> TreeAllocatorImplBytes;
+
+tree_allocator_impl& tree_allocator_impl::GetImpl() {
+	if (TreeAllocatorInitialized) {
+		return *(tree_allocator_impl*) (&TreeAllocatorImplBytes);
+	}
+	tree_allocator_impl* Singleton = new (&TreeAllocatorImplBytes) tree_allocator_impl{};
+	TreeAllocatorInitialized = true;
+	return *Singleton;
+}
+
+tree_allocator_impl::header* tree_allocator_impl::GetHeader(u32 HeaderIndex, u16 AllocationIndex) {
+	return (header*) ((*(tree_allocator_impl*) (&TreeAllocatorImplBytes)).Allocations[AllocationIndex - NumPools]) +
+		   HeaderIndex;
+}
+
+u32 tree_allocator_impl::GetIndex(const tree_allocator_impl::header* Header) {
+	return Header -
+		   (header*) ((*(tree_allocator_impl*) (&TreeAllocatorImplBytes)).Allocations[Header->AllocIndex - NumPools]);
+}
+
 void tree_allocator::ClearStaticImpl() {
-	tree_allocator_impl::Impl.Clear();
+	tree_allocator_impl::GetImpl().Clear();
 }
 
 void* tree_allocator::StaticAllocateImpl(u64 Size, u8 Alignment) {
-	return tree_allocator_impl::Impl.Allocate(tree_allocator_impl::GranularSize(Size));
+	return tree_allocator_impl::GetImpl().Allocate(tree_allocator_impl::GranularSize(Size));
 }
 
 void tree_allocator::StaticFreeImpl(void* Ptr) {
-	tree_allocator_impl::Impl.Free(Ptr);
+	tree_allocator_impl::GetImpl().Free(Ptr);
 }
 
 bool tree_allocator::StaticExpandImpl(void* Ptr, u64 NewSize) {
-	return tree_allocator_impl::Impl.Expand(Ptr, tree_allocator_impl::GranularSize(NewSize));
+	return tree_allocator_impl::GetImpl().Expand(Ptr, tree_allocator_impl::GranularSize(NewSize));
 }
 
 static_assert(sizeof(tree_allocator_impl::header) == tree_allocator_impl::Granularity);
 static_assert(
 	sizeof(tree_allocator_impl::header) - offsetof(tree_allocator_impl::header, AllocIndex) ==
 	sizeof(tree_allocator_impl::pool::pool_header) - offsetof(tree_allocator_impl::pool::pool_header, AllocIndex));
-tree_allocator_impl tree_allocator_impl::Impl{};
