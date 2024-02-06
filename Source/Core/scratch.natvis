@@ -68,7 +68,7 @@
         </Expand>
     </Type>
     <Type Name="atom">
-        <DisplayString Condition="Index == EmptyIndex">empty</DisplayString>
-        <DisplayString>{atom::Pool.Strings[Index]}</DisplayString>
+        <DisplayString Condition="Index == InvalidIndex">empty</DisplayString>
+        <DisplayString>{(*(atom_pool*) (&amp;PoolBytes)).Strings[Index]}</DisplayString>
     </Type>
 </AutoVisualizer>

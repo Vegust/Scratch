@@ -142,6 +142,8 @@ static bool SanityCheck(s64 Count) {
 
 	str Pointer1 = strings::ToString(nullptr);
 	str Pointer2 = strings::ToString(&Test);
+	
+	atom TestNatvis{"BlabLaBal"};
 
 	timestamp TimeTest = timestamp::GetCurrentUTC();
 	logs::Log(
