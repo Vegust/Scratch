@@ -102,12 +102,27 @@ public:
 		Size = Size + Other.Size;
 		return *this;
 	}
+	
+	FORCEINLINE mutable_span<element_type> AppendUninitialized(const index AppendSize) {
+		EnsureCapacity(Size + AppendSize);
+		const index OldSize = Size;
+		Size = Size + AppendSize;
+		return mutable_span<element_type>{GetData() + OldSize, AppendSize};
+	}
 
 	FORCEINLINE dyn_array& operator=(std::initializer_list<element_type> InitList) {
-		Clear(false);
+		Clear(container_clear_type::dont_deallocate);
 		EnsureCapacity(InitList.size());
 		CopyConstructElements(GetData(), InitList.begin(), InitList.size());
 		Size = InitList.size();
+		return *this;
+	}
+	
+	FORCEINLINE dyn_array& operator=(span<element_type> Span) {
+		Clear(container_clear_type::dont_deallocate);
+		EnsureCapacity(Span.GetSize());
+		CopyConstructElements(GetData(), Span.GetData(), Span.GetSize());
+		Size = Span.GetSize();
 		return *this;
 	}
 
@@ -117,7 +132,6 @@ public:
 		}
 		Clear(container_clear_type::dont_deallocate);
 		GrabFromOther(std::move(Other));
-
 		return *this;
 	}
 
@@ -405,10 +419,5 @@ public:
 		Other.Data = nullptr;
 		Other.Size = 0;
 		Other.Capacity = StackSize;
-	}
-
-	// NOTE: ugly
-	FORCEINLINE void OverwriteSize(const index NewSize) {
-		Size = NewSize;
 	}
 };

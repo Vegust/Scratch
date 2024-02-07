@@ -9,9 +9,7 @@ dyn_array<u8> windows_filesystem::LoadRawFile(str_view Filepath) {
 		const std::streamsize Size = File.tellg();
 		CHECK(Size < InvalidIndex && Size > 0)
 		File.seekg(0, std::ios::beg);
-		Result.Reserve(Size);
-		File.read((char*) Result.GetData(), Size);
-		Result.OverwriteSize(Size);
+		File.read((char*) Result.AppendUninitialized(Size).GetData(), Size);
 	}
 	return Result;
 }
@@ -24,13 +22,7 @@ str windows_filesystem::LoadTextFile(str_view Filepath) {
 		const std::streamsize Size = File.tellg();
 		CHECK(Size < InvalidIndex && Size > 0)
 		File.seekg(0, std::ios::beg);
-		Result.Reserve(Size + 1);
-		File.read(Result.GetRaw(), Size);
-		Result.OverwriteSize(Size);
-		if (Result.GetAt(Size - 1) != 0) {
-			Result.GetAt(Size) = 0;
-			Result.OverwriteSize(Size + 1);
-		}
+		File.read(Result.AppendUninitialized(Size).GetData(), Size);
 	}
 	return Result;
 }

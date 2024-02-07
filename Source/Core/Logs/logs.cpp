@@ -15,17 +15,14 @@ void logs::Log(
 	const index TimeLength = strings::default_timestamp_format::GetCharSize(CurrentTime);
 	const index TotalLength = TimeLength + 3 + VerbosityString.GetSize() + 3 + CategoryLength + 3 + InputLength;
 	str LogString;
-	LogString.Reserve(TotalLength + 1);
-	strings::default_timestamp_format::Write(LogString.GetData(), TimeLength, CurrentTime);
-	LogString.OverwriteSize(TimeLength + 1);
+	LogString.Reserve(TotalLength);
+	strings::default_timestamp_format::Write(LogString.AppendUninitialized(TimeLength), CurrentTime);
 	LogString += " | ";
 	LogString += VerbosityString;
 	LogString += " | ";
 	LogString += Category.ToStr();
 	LogString += " | ";
-	strings::WriteFormat(LogString.GetData() + LogString.GetByteLength(), FormatString, ArgumentArray);
-	LogString.OverwriteSize(TotalLength + 1);
-	LogString[TotalLength] = 0;
+	strings::WriteFormat(LogString.AppendUninitialized(InputLength), FormatString, ArgumentArray);
 	switch (Color) {
 		case color::white:
 			break;

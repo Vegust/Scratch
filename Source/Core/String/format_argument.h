@@ -108,6 +108,6 @@ struct format_argument {
 	}
 
 	index GetCharSize() const;
-	void Write(char* Destination) const;
+	void Write(mutable_str_view Destination) const;
 };
 }	 // namespace strings

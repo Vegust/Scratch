@@ -12,13 +12,12 @@ struct table_test {
 template <typename key_type, typename test_type>
 static bool SanityCheck(s64 Count) {
 	std::cout << "------------------------------------------" << std::endl;
-	const std::string InfoString1 = std::string("Testing with key ") + typeid(key_type).name() + ", " +
-								   std::to_string(sizeof(key_type)) + " bytes";
+	const std::string InfoString1 =
+		std::string("Testing with key ") + typeid(key_type).name() + ", " + std::to_string(sizeof(key_type)) + " bytes";
 	const std::string InfoString2 = std::string("Testing with value ") + typeid(test_type).name() + ", " +
-								   std::to_string(sizeof(test_type)) + " bytes";
+									std::to_string(sizeof(test_type)) + " bytes";
 	std::cout << InfoString1 << std::endl << InfoString2 << std::endl;
-	
-	
+
 	if constexpr (requires { test_type::NumInstances; }) {
 		test_type::NumInstances = 0;
 	}
@@ -58,6 +57,7 @@ static bool SanityCheck(s64 Count) {
 	if constexpr (requires { test_type::NumInstances; }) {
 		TEST_CHECK(test_type::NumInstances == 0, "object construction/destruction");
 	}
+
 	return true;
 }
 
@@ -65,9 +65,9 @@ template <typename TKeyType, typename TValueType>
 class TestCase_MapPerfromance {
 public:
 	static void RunTests(u64 Size, u64 Iterations, bool DoColdCache) {
-		const std::string tMapClassName =
-			std::string("Testing with key=(") + typeid(TKeyType).name() + "), value=(" +
-			typeid(TValueType).name() + "), " + std::to_string(sizeof(TValueType)) + " bytes";
+		const std::string tMapClassName = std::string("Testing with key=(") + typeid(TKeyType).name() + "), value=(" +
+										  typeid(TValueType).name() + "), " + std::to_string(sizeof(TValueType)) +
+										  " bytes";
 		printf("%s\n", tMapClassName.c_str());
 		PerformanceTests(Size, Iterations, DoColdCache);
 		printf("\n");
@@ -258,8 +258,7 @@ public:
 									ClearCache();
 									CacheOffset.Stop();
 									const size_t value = i % 2 ? g() : g() % Size;
-									if (standard.find(MakeKey(value, Size, seed)) ==
-										standard.end()) {
+									if (standard.find(MakeKey(value, Size, seed)) == standard.end()) {
 										misses = misses + 1;
 									}
 								}
@@ -307,8 +306,7 @@ public:
 									ClearCache();
 									CacheOffset.Stop();
 									const size_t value = g() % Size;
-									if (standard.find(MakeKey(value, Size, seed)) ==
-										standard.end()) {
+									if (standard.find(MakeKey(value, Size, seed)) == standard.end()) {
 										misses = misses + 1;
 									}
 								}
@@ -369,15 +367,12 @@ public:
 		}
 
 		std::cout << "Performance test operator[]:\n\t" << TimerResults(Timers[0]);
-		std::cout << "Performance test operator[] with reserved space:\n\t"
-				  << TimerResults(Timers[1]);
+		std::cout << "Performance test operator[] with reserved space:\n\t" << TimerResults(Timers[1]);
 		std::cout << "Performance test ContainsKey (50% misses):\n\t" << TimerResults(Timers[2]);
 		std::cout << "Performance test ContainsKey (0% misses):\n\t" << TimerResults(Timers[3]);
 		if (DoColdCache) {
-			std::cout << "Performance test ContainsKey with cold cache (50% misses):\n\t"
-					  << TimerResults(Timers[4]);
-			std::cout << "Performance test ContainsKey with cold cache (0% misses):\n\t"
-					  << TimerResults(Timers[5]);
+			std::cout << "Performance test ContainsKey with cold cache (50% misses):\n\t" << TimerResults(Timers[4]);
+			std::cout << "Performance test ContainsKey with cold cache (0% misses):\n\t" << TimerResults(Timers[5]);
 		}
 		std::cout << "Performance test Remove:\n\t" << TimerResults(Timers[6]);
 	}
@@ -386,7 +381,7 @@ public:
 s32 table_test::Test(const std::span<char*>& Args) {
 	TEST_PRINT_LINE();
 	bool Passed = true;
-	Passed = Passed && SanityCheck<complex_type,complex_type>(10000);
+	Passed = Passed && SanityCheck<complex_type, complex_type>(10000);
 	Passed = Passed && SanityCheck<complex_type_realloc, complex_type_realloc>(10000);
 	return Passed ? 0 : 1;
 }

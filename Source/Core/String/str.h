@@ -3,11 +3,12 @@
 #include "basic.h"
 #include "Containers/array.h"
 #include "Containers/dyn_array.h"
-#include "Core/Hash/hash.h"
-#include "Core/Containers/span.h"
+#include "Containers/span.h"
+#include "Hash/hash.h"
 
 #include <iostream>
 
+using mutable_str_view = mutable_span<char>;
 using str_view = span<char>;
 
 struct str {
@@ -35,10 +36,7 @@ public:
 	}
 
 	str(const char* Characters, index Length) {
-		Bytes.EnsureCapacity(Length + 1);
-		std::memcpy(Bytes.GetData(), Characters, Length);
-		Bytes[Length] = 0;
-		Bytes.OverwriteSize(Length + 1);
+		std::memcpy(AppendUninitialized(Length).GetData(), Characters, Length);
 	}
 
 	str(const str& Other) : Bytes(Other.Bytes) {
@@ -48,11 +46,8 @@ public:
 	}
 
 	str(char Char, const str& String) {
-		const index RequiredSize = String.GetByteLength() + 2;
-		Bytes.EnsureCapacity(RequiredSize);
-		Bytes.OverwriteSize(String.Bytes.GetSize() + 1);
-		std::memcpy(GetRaw() + 1, String.GetRaw(), String.GetByteLength());
-		Bytes[String.GetByteLength() + 1] = 0;
+		const index RequiredSize = String.GetByteLength() + 1;
+		std::memcpy(AppendUninitialized(RequiredSize).GetData() + 1, String.GetData(), RequiredSize);
 		Bytes[0] = Char;
 	}
 
@@ -68,13 +63,7 @@ public:
 
 	FORCEINLINE str& operator=(const str_view Other) {
 		Bytes.Clear(container_clear_type::dont_deallocate);
-		if (Other.IsEmpty()) {
-			return *this;
-		}
-		Bytes.EnsureCapacity(Other.GetSize() + 1);
-		std::memcpy(Bytes.GetData(), Other.GetData(), Other.GetSize());
-		Bytes[Other.GetSize()] = 0;
-		Bytes.OverwriteSize(Other.GetSize() + 1);
+		std::memcpy(AppendUninitialized(Other.GetSize()).GetData(), Other.GetData(), Other.GetSize());
 		return *this;
 	}
 
@@ -151,7 +140,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	[[nodiscard]] FORCEINLINE bool operator==(const str_view Other) const {
 		if (GetByteLength() != Other.GetSize()) {
 			return false;
@@ -244,52 +233,19 @@ public:
 	}
 
 	FORCEINLINE str& operator+=(char Char) {
-		const index LhsLen = GetByteLength();
-		if (LhsLen == 0) {
-			Bytes.EnsureCapacity(2);
-			Bytes[0] = Char;
-			Bytes[1] = 0;
-			Bytes.OverwriteSize(2);
-			return *this;
-		}
-		Bytes.EnsureCapacity(LhsLen + 2);
-		Bytes[LhsLen] = Char;
-		Bytes[LhsLen + 1] = 0;
-		Bytes.OverwriteSize(LhsLen + 2);
+		auto CharSpot = AppendUninitialized(1);
+		CharSpot[0] = Char;
 		return *this;
 	}
 
 	FORCEINLINE str& operator+=(const str& Other) {
-		const index LhsLen = GetByteLength();
-		if (LhsLen == 0) {
-			*this = Other;
-			return *this;
-		}
-		const index RhsLen = Other.GetByteLength();
-		if (RhsLen == 0) {
-			return *this;
-		}
-		Bytes.EnsureCapacity(LhsLen + RhsLen + 1);
-		memcpy(GetRaw() + LhsLen, Other.GetRaw(), RhsLen);
-		Bytes[LhsLen + RhsLen] = 0;
-		Bytes.OverwriteSize(LhsLen + RhsLen + 1);
+		const index OtherLength = Other.GetByteLength();
+		std::memcpy(AppendUninitialized(OtherLength).GetData(), Other.GetData(), OtherLength);
 		return *this;
 	}
 
 	FORCEINLINE str& operator+=(const str_view Other) {
-		if (Other.IsEmpty()) {
-			return *this;
-		}
-		const index LhsLen = GetByteLength();
-		if (LhsLen == 0) {
-			*this = Other;
-			return *this;
-		}
-		const index RhsLen = Other.GetSize();
-		Bytes.EnsureCapacity(LhsLen + RhsLen + 1);
-		memcpy(GetRaw() + LhsLen, Other.GetData(), RhsLen);
-		Bytes[LhsLen + RhsLen] = 0;
-		Bytes.OverwriteSize(LhsLen + RhsLen + 1);
+		std::memcpy(AppendUninitialized(Other.GetSize()).GetData(), Other.GetData(), Other.GetSize());
 		return *this;
 	}
 
@@ -301,10 +257,6 @@ public:
 		Bytes.Clear(ClearType);
 	}
 
-	FORCEINLINE void OverwriteSize(const index NewSize) {
-		Bytes.OverwriteSize(NewSize);
-	}
-
 	// 0 is equality, >=1 is Lhs greater (bigger chars or longer), <=-1 is less
 	FORCEINLINE s32 Compare(str_view Rhs) const {
 		for (s32 Index = 0; Index < GetByteLength() && Index < Rhs.GetSize(); ++Index) {
@@ -314,6 +266,21 @@ public:
 			}
 		}
 		return GetByteLength() - Rhs.GetSize();
+	}
+
+	FORCEINLINE mutable_str_view AppendUninitialized(index AppendSize) {
+		if (!AppendSize) {
+			return mutable_str_view{};
+		}
+		const bool HadZeroTerminator = Bytes.GetSize() > 0;
+		auto Span = Bytes.AppendUninitialized(AppendSize + !HadZeroTerminator);
+		Span[Span.GetSize() - 1] = 0;
+		if (!HadZeroTerminator) {
+			Span.SliceBack();
+		} else {
+			Span.ShiftBackward();
+		}
+		return Span;
 	}
 };
 

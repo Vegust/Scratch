@@ -23,8 +23,8 @@ index GetFormatLength(str_view String, span<format_argument> Arguments) {
 	return Length;
 }
 
-index WriteFormat(char* Destination, str_view String, span<format_argument> Arguments) {
-	char* WritePosition = Destination;
+index WriteFormat(mutable_str_view Destination, str_view String, span<format_argument> Arguments) {
+	char* WritePosition = Destination.GetData();
 	str_view StringTail{String};
 	index PlacedArguments{0};
 	index Length{0};
@@ -45,8 +45,10 @@ index WriteFormat(char* Destination, str_view String, span<format_argument> Argu
 		++PlacedArguments;
 		StringTail = strings::GetSubstring(StringTail, OpeningIndex + 1 + ClosingIndex + 1, StringTail.GetSize());
 		OpeningIndex = FindFirstOf(StringTail, '{');
+		CHECK(Destination.GetSize() >= Length);
 	}
 	Length += strings::GetByteLength(StringTail);
+	CHECK(Destination.GetSize() >= Length);
 	std::memcpy(WritePosition, StringTail.GetData(), StringTail.GetSize());
 	return Length;
 }
@@ -54,9 +56,7 @@ index WriteFormat(char* Destination, str_view String, span<format_argument> Argu
 str Format(str_view String, span<format_argument> Arguments) {
 	index FormatLength = GetFormatLength(String, Arguments);
 	str Result{};
-	Result.Reserve(FormatLength + 1);
-	Result.OverwriteSize(FormatLength + 1);
-	WriteFormat(Result.GetData(), String, Arguments);
+	WriteFormat(Result.AppendUninitialized(FormatLength), String, Arguments);
 	Result[FormatLength] = 0;
 	return Result;
 }

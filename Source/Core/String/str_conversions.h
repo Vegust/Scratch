@@ -23,9 +23,9 @@ struct default_int_format {
 		return math::GetNumDigits(Value);
 	}
 
-	static void Write(char* Destination, index Length, integral_type IntegralNumber) {
+	static void Write(mutable_str_view Destination, integral_type IntegralNumber) {
 		const bool MinusSign = IntegralNumber < 0;
-		char* NumberStart = Destination + Length;
+		char* NumberStart = Destination.GetData() + Destination.GetSize();
 		integral_type Value = math::Abs(IntegralNumber);
 		do {
 			*--NumberStart = '0' + (Value % 10);
@@ -39,22 +39,22 @@ struct default_int_format {
 
 struct default_float_format {
 	static index GetCharSize(const math::decimal_parts& Parts);
-	static void Write(char* Destination, index Length, const math::decimal_parts& Parts);
+	static void Write(mutable_str_view Destination, const math::decimal_parts& Parts);
 };
 
 struct default_pointer_format {
 	static index GetCharSize(void* Value);
-	static void Write(char* Destination, index Length, void* Value);
+	static void Write(mutable_str_view Destination, void* Value);
 };
 
 struct default_bool_format {
 	static index GetCharSize(bool Value);
-	static void Write(char* Destination, index Length, bool Value);
+	static void Write(mutable_str_view Destination, bool Value);
 };
 
 struct default_timestamp_format {
 	static index GetCharSize(timestamp Value);
-	static void Write(char* Destination, index Length, timestamp Value);
+	static void Write(mutable_str_view Destination, timestamp Value);
 };
 
 FORCEINLINE constexpr static index GetByteLength(str_view String);
@@ -123,7 +123,7 @@ constexpr bool IsSign(char Character) {
 constexpr str_view EatSpaces(str_view String) {
 	str_view Result = String;
 	while (!Result.IsEmpty() && IsSpace(Result[0])) {
-		Result = Result.RemoveFirst();
+		Result.SliceFront();
 	}
 	return Result;
 }
@@ -191,7 +191,7 @@ constexpr index FindSubstring(str_view String, str_view Substring, index StartIn
 		if (StartsWith(Tail, Substring)) {
 			return String.GetSize() - Tail.GetSize();
 		}
-		Tail = Tail.RemoveFirst();
+		Tail.SliceFront();
 	}
 	return InvalidIndex;
 }
@@ -202,24 +202,18 @@ str ToString(const convertible_type& Value) {
 	index Length{0};
 	if constexpr (std::is_same_v<convertible_type, bool>) {
 		Length = default_bool_format::GetCharSize(Value);
-		Result.Reserve(Length + 1);
-		default_bool_format::Write(Result.GetData(), Length, Value);
+		default_bool_format::Write(Result.AppendUninitialized(Length), Value);
 	} else if constexpr (integral<convertible_type>) {
 		Length = default_int_format<convertible_type>::GetCharSize(Value);
-		Result.Reserve(Length + 1);
-		default_int_format<convertible_type>::Write(Result.GetData(), Length, Value);
+		default_int_format<convertible_type>::Write(Result.AppendUninitialized(Length), Value);
 	} else if constexpr (fractional<convertible_type>) {
 		auto Parts = math::FloatToDecimal(Value);
 		Length = default_float_format::GetCharSize(Parts);
-		Result.Reserve(Length + 1);
-		default_float_format::Write(Result.GetData(), Length, Parts);
+		default_float_format::Write(Result.AppendUninitialized(Length), Parts);
 	} else if constexpr (pointer<convertible_type>) {
 		Length = default_pointer_format::GetCharSize(Value);
-		Result.Reserve(Length + 1);
-		default_pointer_format::Write(Result.GetData(), Length, Value);
+		default_pointer_format::Write(Result.AppendUninitialized(Length), Value);
 	}
-	Result[Length] = 0;
-	Result.OverwriteSize(Length + 1);
 	return Result;
 }
 
@@ -253,7 +247,7 @@ result<integral_type> GetInteger(str_view String) {
 					return errors::ReadingSignedIntegralToUnsignedType;
 				}
 			}
-			IntegerString = IntegerString.RemoveFirst();
+			IntegerString.SliceFront();
 		}
 		integral_type Number{0};
 		while (!IntegerString.IsEmpty()) {
@@ -263,7 +257,7 @@ result<integral_type> GetInteger(str_view String) {
 				return errors::InputStringContainsNumberBiggerThatTypeCanHold;
 			}
 			Number = Number * 10 + Digit;
-			IntegerString = IntegerString.RemoveFirst();
+			IntegerString.SliceFront();
 		}
 		return Number * Sign;
 	}
