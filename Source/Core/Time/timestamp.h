@@ -15,31 +15,11 @@ struct timestamp {
 	constexpr explicit timestamp(s64 InTicks) : Ticks{InTicks} {
 	}
 
-	// UTC
-	static timestamp GetCurrentUTC();
-	// truncated to latest whole day
-	timestamp GetDate() const;
-	// from 0 to TicksPerDay - 1
-	timestamp GetTime() const;
-
 	struct year_month_day {
 		s64 Year;
 		s64 Month;
 		s64 Day;
 	};
-
-	year_month_day GetYearMonthDay() const;
-
-	double GetJulianDay() const;
-	s64 GetYear() const;
-	s64 GetMonth() const;
-	s64 GetDay() const;
-	s64 GetHour() const;
-	s64 GetMinute() const;
-	s64 GetSecond() const;
-	s64 GetMillisecond() const;
-	s64 GetMicrosecond() const;
-	s64 GetNanosecond() const;
 
 	constexpr static s64 NanosecondsPerTick = 100;
 	constexpr static s64 TicksPerMicrosecond = 10;
@@ -50,6 +30,84 @@ struct timestamp {
 	constexpr static s64 TicksPerDay = 864000000000;
 	constexpr static s64 TicksPerWeek = 6048000000000;
 	constexpr static s64 TicksPerYear = 365 * TicksPerDay;
+
+	// UTC
+	static timestamp GetCurrentUTC();
+
+	constexpr s64 GetYear() const {
+		return GetYearMonthDay().Year;
+	}
+
+	constexpr s64 GetMonth() const {
+		return GetYearMonthDay().Month;
+	}
+
+	constexpr s64 GetDay() const {
+		return GetYearMonthDay().Day;
+	}
+
+	constexpr s64 GetHour() const {
+		return GetTime().Ticks / TicksPerHour;
+	}
+
+	constexpr s64 GetMinute() const {
+		return (Ticks % TicksPerHour) / TicksPerMinute;
+	}
+
+	constexpr s64 GetSecond() const {
+		return (Ticks % TicksPerMinute) / TicksPerSecond;
+	}
+
+	constexpr s64 GetMillisecond() const {
+		return (Ticks % TicksPerSecond) / TicksPerMillisecond;
+	}
+
+	constexpr s64 GetMicrosecond() const {
+		return (Ticks % TicksPerMillisecond) / TicksPerMicrosecond;
+	}
+
+	constexpr s64 GetNanosecond() const {
+		return (Ticks % TicksPerMicrosecond) * NanosecondsPerTick;
+	}
+
+	// truncated to latest whole day
+	constexpr timestamp GetDate() const {
+		return timestamp{Ticks - (Ticks % TicksPerDay)};
+	}
+
+	// from 0 to TicksPerDay - 1
+	constexpr timestamp GetTime() const {
+		return timestamp(Ticks % TicksPerDay);
+	}
+
+	constexpr timestamp::year_month_day GetYearMonthDay() const {
+		// Based on FORTRAN code in:
+		// Fliegel, H. F. and van Flandern, T. C.,
+		// Communications of the ACM, Vol. 11, No. 10 (October 1968).
+
+		s32 i, j, k, l, n;
+
+		l = (s32) (GetDate().GetJulianDay() + 0.5) + 68569;
+		n = 4 * l / 146097;
+		l = l - (146097 * n + 3) / 4;
+		i = 4000 * (l + 1) / 1461001;
+		l = l - 1461 * i / 4 + 31;
+		j = 80 * l / 2447;
+		k = l - 2447 * j / 80;
+		l = j / 11;
+		j = j + 2 - 12 * l;
+		i = 100 * (n - 49) + i + l;
+
+		year_month_day Result;
+		Result.Year = i;
+		Result.Month = j;
+		Result.Day = k;
+		return Result;
+	}
+
+	constexpr double GetJulianDay() const {
+		return 1721425.5 + (double) (Ticks / TicksPerDay) + ((double) (Ticks % TicksPerDay) / TicksPerDay);
+	}
 
 	static constexpr s64 DateTimeToTicks(
 		s64 Year,

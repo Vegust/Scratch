@@ -139,6 +139,9 @@ static bool SanityCheck(s64 Count) {
 	logs::Warning(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 	logs::Debug(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 	logs::Error(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	
+	index Length = strings::GetFormatLength("Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	constexpr index ConstexprLength = strings::GetFormatLength("Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 
 	str Pointer1 = strings::ToString(nullptr);
 	str Pointer2 = strings::ToString(&Test);

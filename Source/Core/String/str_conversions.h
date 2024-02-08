@@ -4,6 +4,7 @@
 #include "Templates/result.h"
 #include "str.h"
 #include "Time/timestamp.h"
+#include "fast_float.h"
 
 namespace strings {
 namespace errors {
@@ -14,16 +15,35 @@ inline const atom InputStringContainsNumberBiggerThatTypeCanHold{
 inline const atom CouldNotParseFloatFromString{"Could not parse float from string"};
 }	 // namespace errors
 
-template <typename type>
-concept convertible_to_string = numeric<type> || pointer<type>;
+FORCEINLINE constexpr void CopyChars(char* Destination, const char* Source, index Length) {
+	if (!std::is_constant_evaluated()) {
+		std::memcpy(Destination, Source, Length);
+	} else {
+		char* End = Destination + Length;
+		while (Destination != End) {
+			*Destination++ = *Source++;
+		}
+	}
+}
+
+FORCEINLINE constexpr void SetChars(char* Destination, char Value, index Length) {
+	if (!std::is_constant_evaluated()) {
+		std::memset(Destination, Value, Length);
+	} else {
+		char* End = Destination + Length;
+		while (Destination != End) {
+			*Destination++ = Value;
+		}
+	}
+}
 
 template <integral integral_type>
 struct default_int_format {
-	static index GetCharSize(integral_type Value) {
+	static constexpr index GetCharSize(integral_type Value) {
 		return math::GetNumDigits(Value);
 	}
 
-	static void Write(mutable_str_view Destination, integral_type IntegralNumber) {
+	static constexpr void Write(mutable_str_view Destination, integral_type IntegralNumber) {
 		const bool MinusSign = IntegralNumber < 0;
 		char* NumberStart = Destination.GetData() + Destination.GetSize();
 		integral_type Value = math::Abs(IntegralNumber);
@@ -38,23 +58,123 @@ struct default_int_format {
 };
 
 struct default_float_format {
-	static index GetCharSize(const math::decimal_parts& Parts);
-	static void Write(mutable_str_view Destination, const math::decimal_parts& Parts);
+	static constexpr index GetCharSize(const math::decimal_parts& Parts) {
+		const index NanLength = 3 * Parts.IsNaN;
+		const index InfinityLength = (3 + Parts.IsNegative) * Parts.IsInfinity;
+		const index ZeroLength = 1 * (Parts.Significand == 0) * !Parts.IsInfinity * !Parts.IsNaN;
+		const index NumSignificandDigits = math::GetNumDigits(Parts.Significand);
+		const s32 ExponentValue = Parts.Exponent + NumSignificandDigits - 1;
+		const index NumExponentDigits = math::GetNumDigits(ExponentValue);
+		const index SpecialLength = NanLength + InfinityLength + ZeroLength;
+		const bool HasDot = NumSignificandDigits > 1;
+		const index MaxLength = Parts.IsNegative + HasDot + 1 + NumExponentDigits + NumSignificandDigits;
+		return MaxLength * (SpecialLength == 0) + SpecialLength;
+	}
+
+	static constexpr void Write(mutable_str_view Destination, const math::decimal_parts& Parts) {
+		if (Parts.IsNaN) {
+			CopyChars(Destination.GetData(), "NaN", 3);
+			return;
+		}
+		if (Parts.IsInfinity) {
+			CopyChars(Destination.GetData(), Parts.IsNegative ? "-inf" : "inf", Parts.IsNegative ? 4 : 3);
+			return;
+		}
+		if (Parts.Significand == 0) {
+			CopyChars(Destination.GetData(), "0", 1);
+			return;
+		}
+		char* NumberStart = Destination.GetData() + Destination.GetSize();
+		const s32 NumSignificandDigits = math::GetNumDigits(Parts.Significand);
+		s32 ExponentValue = math::Abs(Parts.Exponent + NumSignificandDigits - 1);
+		do {
+			*--NumberStart = '0' + (ExponentValue % 10);
+			ExponentValue /= 10;
+		} while (ExponentValue);
+		if ((Parts.Exponent + NumSignificandDigits - 1) < 0) {
+			*--NumberStart = '-';
+		}
+		*--NumberStart = 'e';
+		s32 SignificandValue = math::Abs(Parts.Significand);
+		do {
+			*--NumberStart = '0' + (SignificandValue % 10);
+			SignificandValue /= 10;
+			if (SignificandValue && SignificandValue < 10) {
+				*--NumberStart = '.';
+			}
+		} while (SignificandValue);
+		if (Parts.IsNegative) {
+			*--NumberStart = '-';
+		}
+	}
 };
 
 struct default_pointer_format {
-	static index GetCharSize(void* Value);
-	static void Write(mutable_str_view Destination, void* Value);
+	static constexpr index GetCharSize(void* Value) {
+		return (11 * (!!Value)) + 7;
+	}
+
+	static constexpr void Write(mutable_str_view Destination, void* Pointer) {
+		if (!Pointer) {
+			CopyChars(Destination.GetData(), "nullptr", 7);
+			return;
+		}
+		constexpr str_view Table{"0123456789abcdef"};
+		char* NumberStart = Destination.GetData() + Destination.GetSize();
+		u64 Value = std::bit_cast<u64>(Pointer);
+		for (s32 Index = 0; Index < 16; ++Index) {
+			u8 Digit = static_cast<u8>(Value & ((1 << 4) - 1));
+			*--NumberStart = Table[Digit];
+			Value >>= 4;
+		}
+		*--NumberStart = 'x';
+		*--NumberStart = '0';
+	}
 };
 
 struct default_bool_format {
-	static index GetCharSize(bool Value);
-	static void Write(mutable_str_view Destination, bool Value);
+	static constexpr index GetCharSize(bool Value) {
+		return 5 - Value;
+	}
+
+	static constexpr void Write(mutable_str_view Destination, bool Value) {
+		CHECK(Destination.GetSize() >= (5 - Value));
+		CopyChars(Destination.GetData(), Value ? "true" : "false", 5 - Value);
+	}
 };
 
 struct default_timestamp_format {
-	static index GetCharSize(timestamp Value);
-	static void Write(mutable_str_view Destination, timestamp Value);
+	static constexpr index GetCharSize(timestamp Value) {
+		// "DD-MM-YYYY hh:mm:ss.msm" = 23
+		return 23;
+	}
+
+	static constexpr void Write(mutable_str_view Destination, timestamp Value) {
+		using format = default_int_format<s64>;
+		CHECK(Destination.GetSize() >= 23)
+		SetChars(Destination.GetData(), '0', 23);
+		timestamp::year_month_day YMD = Value.GetYearMonthDay();
+		CHECK(format::GetCharSize(YMD.Year) <= 4);
+		CHECK(format::GetCharSize(YMD.Month) <= 2);
+		CHECK(format::GetCharSize(YMD.Day) <= 2);
+		CHECK(format::GetCharSize(Value.GetHour()) <= 2);
+		CHECK(format::GetCharSize(Value.GetMinute()) <= 2);
+		CHECK(format::GetCharSize(Value.GetSecond()) <= 2);
+		CHECK(format::GetCharSize(Value.GetMillisecond()) <= 3);
+		format::Write(Destination.SliceFront(2), YMD.Day);
+		Destination.SliceFront()[0] = '-';
+		format::Write(Destination.SliceFront(2), YMD.Month);
+		Destination.SliceFront()[0] = '-';
+		format::Write(Destination.SliceFront(4), YMD.Year);
+		Destination.SliceFront()[0] = ' ';
+		format::Write(Destination.SliceFront(2), Value.GetHour());
+		Destination.SliceFront()[0] = ':';
+		format::Write(Destination.SliceFront(2), Value.GetMinute());
+		Destination.SliceFront()[0] = ':';
+		format::Write(Destination.SliceFront(2), Value.GetSecond());
+		Destination.SliceFront()[0] = '.';
+		format::Write(Destination.SliceFront(3), Value.GetMillisecond());
+	}
 };
 
 FORCEINLINE constexpr static index GetByteLength(str_view String);
@@ -63,17 +183,35 @@ FORCEINLINE constexpr bool IsSpace(char Character);
 FORCEINLINE constexpr bool IsDigit(char Character);
 FORCEINLINE constexpr bool IsSign(char Character);
 
+template <typename type>
+concept convertible_to_string = numeric<type> || pointer<type>;
 template <convertible_to_string convertible_type>
-static str ToString(const convertible_type& Value);
+str ToString(const convertible_type& Value);
 
 template <numeric numeric_type>
-constexpr static numeric_type GetNumberChecked(str_view String);
+constexpr numeric_type GetNumberChecked(str_view String);
 template <numeric numeric_type>
-constexpr static result<numeric_type> GetNumber(str_view String);
+constexpr result<numeric_type> GetNumber(str_view String);
 template <integral integral_type>
-result<integral_type> GetInteger(str_view String);
-result<float> GetFloat(str_view String);
-result<double> GetDouble(str_view String);
+constexpr result<integral_type> GetInteger(str_view String);
+
+constexpr result<float> GetFloat(str_view String) {
+	float Result;
+	auto Answer = fast_float::from_chars(String.GetData(), String.GetData() + String.GetSize(), Result);
+	if (static_cast<s32>(Answer.ec)) {
+		return errors::CouldNotParseFloatFromString;	// TODO: actually look at error
+	}
+	return result<float>(Result);
+}
+
+constexpr result<double> GetDouble(str_view String) {
+	double Result;
+	auto Answer = fast_float::from_chars(String.GetData(), String.GetData() + String.GetSize(), Result);
+	if (static_cast<s32>(Answer.ec)) {
+		return errors::CouldNotParseFloatFromString;	// TODO: actually look at error
+	}
+	return result<double>(Result);
+}
 
 FORCEINLINE constexpr str_view GetSubstring(str_view Source, index Begin, index End);
 
@@ -234,7 +372,7 @@ constexpr result<numeric_type> GetNumber(str_view String) {
 }
 
 template <integral integral_type>
-result<integral_type> GetInteger(str_view String) {
+constexpr result<integral_type> GetInteger(str_view String) {
 	auto Result = GetIntegerString(String);
 	if (Result) {
 		str_view IntegerString = Result.GetValue();
