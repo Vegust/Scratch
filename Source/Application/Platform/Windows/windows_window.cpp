@@ -75,9 +75,9 @@ windows_window::windows_window(u32 WindowWidth, u32 WindowHeight) {
 	glfwInit();
 	Window = glfwCreateWindow((s32) WindowWidth, (s32) WindowHeight, "Scratch", nullptr, nullptr);
 	CHECK(Window)
-	logs::Log("Window created with height {} and width {}", WindowHeight, WindowWidth);
+	logs::Info("Window created with height {} and width {}", WindowHeight, WindowWidth);
 	glfwSwapInterval(State.VSync ? 1 : 0);
-	logs::Log("VSync is {}", State.VSync ? "on" : "off");
+	logs::Info("VSync is {}", State.VSync ? "on" : "off");
 	glfwSetFramebufferSizeCallback(Window, OnWindowResize);
 	glfwSetCursorPosCallback(Window, OnMouseMoved);
 	glfwSetScrollCallback(Window, OnMouseScroll);

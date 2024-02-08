@@ -43,8 +43,8 @@ namespace math {
 constexpr float DefaultEqualityTolerance = 0.001f;
 
 struct decimal_parts {
-	s64 Exponent{0};
 	u64 Significand{0};
+	s16 Exponent{0};
 	bool IsNegative{false};
 	bool IsNaN{false};
 	bool IsInfinity{false};

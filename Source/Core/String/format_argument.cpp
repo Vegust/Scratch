@@ -1,99 +1,44 @@
 #include "format_argument.h"
 #include "str_conversions.h"
+#include "str_format.h"
 
 namespace strings {
 index format_argument::GetCharSize() const {
-	if (CachedData.Cached) {
-		return CachedData.CharSize;
-	}
-	CachedData.Cached = true;
 	switch (Type) {
 		case type::string_arg:
-			CachedData.CharSize = String.GetSize();
-			break;
+			return String.GetSize();
 		case type::bool_arg:
-			CachedData.CharSize = default_bool_format::GetCharSize(Bool);
-			break;
-		case type::u8_arg:
-			CachedData.CharSize = default_int_format<u8>::GetCharSize(U8);
-			break;
-		case type::u16_arg:
-			CachedData.CharSize = default_int_format<u16>::GetCharSize(U16);
-			break;
-		case type::u32_arg:
-			CachedData.CharSize = default_int_format<u32>::GetCharSize(U32);
-			break;
-		case type::u64_arg:
-			CachedData.CharSize = default_int_format<u64>::GetCharSize(U64);
-			break;
-		case type::s8_arg:
-			CachedData.CharSize = default_int_format<s8>::GetCharSize(S8);
-			break;
-		case type::s16_arg:
-			CachedData.CharSize = default_int_format<s16>::GetCharSize(S16);
-			break;
-		case type::s32_arg:
-			CachedData.CharSize = default_int_format<s32>::GetCharSize(S32);
-			break;
-		case type::s64_arg:
-			CachedData.CharSize = default_int_format<s64>::GetCharSize(S64);
-			break;
+			return default_bool_format::GetCharSize(Bool);
+		case type::unsigned_integer_arg:
+			return default_int_format<u64>::GetCharSize(UnsignedInteger);
+		case type::signed_integer_arg:
+			return default_int_format<s64>::GetCharSize(SignedInteger);
 		case type::float_arg:
-			CachedData.DecimalParts = math::FloatToDecimal(Float);
-			CachedData.CharSize = default_float_format::GetCharSize(CachedData.DecimalParts);
-			break;
-		case type::double_arg:
-			CachedData.DecimalParts = math::FloatToDecimal(Double);
-			CachedData.CharSize = default_float_format::GetCharSize(CachedData.DecimalParts);
-			break;
+			return default_float_format::GetCharSize(Float);
 		case type::pointer_arg:
-			CachedData.CharSize = default_pointer_format::GetCharSize(Pointer);
-			break;
+			return default_pointer_format::GetCharSize(Pointer);
 		case type::empty:
 			CHECK(false);
 			break;
 	}
-	return CachedData.CharSize;
 }
 
 void format_argument::Write(mutable_str_view Destination) const {
-	index Size = GetCharSize();
 	switch (Type) {
 		case type::string_arg:
-			std::memcpy(Destination.GetData(), String.GetData(), Size);
+			std::memcpy(Destination.GetData(), String.GetData(), Destination.GetSize());
 			break;
 		case type::bool_arg:
 			default_bool_format::Write(Destination, Bool);
 			break;
-		case type::u8_arg:
-			default_int_format<u8>::Write(Destination, U8);
+		case type::unsigned_integer_arg:
+			default_int_format<u64>::Write(Destination, UnsignedInteger);
 			break;
-		case type::u16_arg:
-			default_int_format<u16>::Write(Destination, U16);
-			break;
-		case type::u32_arg:
-			default_int_format<u32>::Write(Destination, U32);
-			break;
-		case type::u64_arg:
-			default_int_format<u64>::Write(Destination, U64);
-			break;
-		case type::s8_arg:
-			default_int_format<s8>::Write(Destination, S8);
-			break;
-		case type::s16_arg:
-			default_int_format<s16>::Write(Destination, S16);
-			break;
-		case type::s32_arg:
-			default_int_format<s32>::Write(Destination, S32);
-			break;
-		case type::s64_arg:
-			default_int_format<s64>::Write(Destination, S64);
+		case type::signed_integer_arg:
+			default_int_format<s64>::Write(Destination, SignedInteger);
 			break;
 		case type::float_arg:
-			default_float_format::Write(Destination, CachedData.DecimalParts);
-			break;
-		case type::double_arg:
-			default_float_format::Write(Destination, CachedData.DecimalParts);
+			default_float_format::Write(Destination, Float);
 			break;
 		case type::pointer_arg:
 			default_pointer_format::Write(Destination, Pointer);

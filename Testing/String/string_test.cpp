@@ -135,10 +135,10 @@ static bool SanityCheck(s64 Count) {
 
 	atom TestCategory{"Test Log Category"};
 
-	logs::Log<logs::verbosity::info>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
-	logs::Log<logs::verbosity::warning>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
-	logs::Log<logs::verbosity::debug>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
-	logs::Log<logs::verbosity::error>(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Info(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Warning(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Debug(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
+	logs::Error(TestCategory, "Testing formatting: {} {} {} {}", &Valid, "test1", -0.1f);
 
 	str Pointer1 = strings::ToString(nullptr);
 	str Pointer2 = strings::ToString(&Test);
@@ -146,7 +146,7 @@ static bool SanityCheck(s64 Count) {
 	atom TestNatvis{"BlabLaBal"};
 
 	timestamp TimeTest = timestamp::GetCurrentUTC();
-	logs::Log(
+	logs::Info(
 		"Year: {}, Month: {}, Day {}, Hour {}, Minute {}, Second {}",
 		TimeTest.GetYear(),
 		TimeTest.GetMonth(),

@@ -73,9 +73,9 @@ static void SetupCubeTransforms(dyn_array<glm::mat4>& StaticCubes, dyn_array<glm
 renderer::renderer(u32 WindowWidth, u32 WindowHeight) {
 	mRHI = CreateRHI(mState.mApi);
 	mRHI->Init();
-	logs::Log("RHI created");
+	logs::Info("RHI created");
 	mOldRenderer.Init(WindowWidth, WindowHeight);
-	logs::Log("Old renderer initialized");
+	logs::Info("Old renderer initialized");
 	// from testmap, TODO refactor
 	auto& SceneLights = mOldRenderer.mSceneLights;
 	auto& Light = SceneLights[SceneLights.Emplace()];
