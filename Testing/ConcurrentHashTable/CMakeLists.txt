@@ -1,3 +1,7 @@
 ﻿add_executable(concurrent_table_test_exec concurrent_table_test.cpp)
 target_link_libraries(concurrent_table_test_exec ScratchLib)
 add_test(NAME concurrent_table_test COMMAND concurrent_table_test_exec)
+
+add_executable(conc_contest_test_exec ContestTest.cpp)
+target_link_libraries(conc_contest_test_exec ScratchLib)
+add_test(NAME conc_contest_test COMMAND conc_contest_test_exec)

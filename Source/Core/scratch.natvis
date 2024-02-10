@@ -30,7 +30,7 @@
             </CustomListItems>
         </Expand>
     </Type>
-    <Type Name="concurrent_hash_table&lt;*&gt;">
+    <Type Name="ConcurrentMap&lt;*&gt;">
         <DisplayString Condition="Size == 0">empty</DisplayString>
         <DisplayString>size={Size}</DisplayString>
         <Expand>
