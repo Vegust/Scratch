@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.25)
 project(Scratch)
 set(CMAKE_CXX_STANDARD 23)
 
+add_compile_definitions(NOMINMAX)
+add_compile_definitions(WIN32_LEAN_AND_MEAN)
+
 # --------- Executable ----------
 add_executable(ScratchExe)
-target_compile_definitions(ScratchExe PRIVATE NOMINMAX)
-target_compile_definitions(ScratchExe PRIVATE WIN32_LEAN_AND_MEAN)
 target_sources(ScratchExe PRIVATE
 		Source/main.cpp
 )
@@ -31,8 +32,6 @@ add_library(ScratchLib STATIC
 target_include_directories(ScratchLib PUBLIC Source)
 target_include_directories(ScratchLib PUBLIC Source/Core)
 
-target_compile_definitions(ScratchLib PRIVATE NOMINMAX)
-target_compile_definitions(ScratchLib PRIVATE WIN32_LEAN_AND_MEAN)
 target_link_libraries(ScratchExe ScratchLib)
 # --------------------------------
 

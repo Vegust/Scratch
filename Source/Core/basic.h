@@ -28,9 +28,9 @@ constexpr index InvalidIndex = 0xffffffff;
 #define CHECK(condition)
 #else
 #define FORCEINLINE inline
-#define CHECK(condition)  \
-	if (!(condition)) {   \
-		PLATFORM_BREAK(); \
+#define CHECK(condition)             \
+	if (!(condition)) [[unlikely]] { \
+		PLATFORM_BREAK();            \
 	}
 #endif
 
@@ -42,15 +42,9 @@ constexpr index InvalidIndex = 0xffffffff;
 #define NO_UNIQUE_ADDRESS [[no_unique_address]]
 #endif
 
-enum class container_clear_type : u8 {
-	deallocate,
-	dont_deallocate
-};
+enum class container_clear_type : u8 { deallocate, dont_deallocate };
 
-enum class iterator_constness : u8 {
-	constant,
-	non_constant
-};
+enum class iterator_constness : u8 { constant, non_constant };
 
 // stupid templates
 template <typename printed_type>

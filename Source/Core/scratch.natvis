@@ -30,6 +30,22 @@
             </CustomListItems>
         </Expand>
     </Type>
+    <Type Name="concurrent_hash_table&lt;*&gt;">
+        <DisplayString Condition="Size == 0">empty</DisplayString>
+        <DisplayString>size={Size}</DisplayString>
+        <Expand>
+            <Item Name="[size]">Size</Item>
+            <Item Name="[capacity]">Capacity</Item>
+            <CustomListItems MaxItemsPerView="5000">
+                <Variable Name="i" InitialValue="0"/>
+                <Size>Size</Size>
+                <Loop>
+                    <Item Condition="(LastValidHash > Data[i].Hash)">Data[i].Value</Item>
+                    <Exec>i++</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
     <Type Name="key_value_pair&lt;*&gt;">
         <DisplayString>({Key}, {Value})</DisplayString>
     </Type>
