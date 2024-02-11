@@ -27,6 +27,7 @@ public:
 
 template <typename key_type, typename value_type>
 struct ConcurrentMap {
+private:
 	using hash_type = size_t;
 	using index = size_t;
 
@@ -52,6 +53,7 @@ struct ConcurrentMap {
 	index MaxSize = static_cast<index>(MinCapacity * MaxLoadFactor);
 	std::mutex RelocateMutex;
 
+public:
 	__forceinline ConcurrentMap() {
 		Data = (map_element*) _aligned_malloc(MinCapacity * sizeof(map_element), 64);
 		for (map_element* MapElem = Data; MapElem != Data + MinCapacity; ++MapElem) {
@@ -75,7 +77,7 @@ struct ConcurrentMap {
 		Deleted.store(0, std::memory_order::memory_order_relaxed);
 	}
 
-	__forceinline value_type operator[](const key_type& Key) {
+	value_type operator[](const key_type& Key) {
 		value_type Result;
 		hash_type Hash = GetHash(Key);
 		while (true) {
@@ -135,7 +137,7 @@ struct ConcurrentMap {
 		}
 	}
 
-	__forceinline value_type& AtLock(key_type& Key) {
+	value_type& AtLock(const key_type& Key) {
 		hash_type Hash = GetHash(Key);
 		while (true) {
 			index HashMask = (1 << LogOfTwoCeil(Capacity)) - 1;
@@ -241,7 +243,12 @@ struct ConcurrentMap {
 		}
 	}
 
-	__forceinline void Relocate(index DesiredSize) {
+	[[nodiscard]] __forceinline index GetSize() const {
+		return Size.load(std::memory_order_relaxed);
+	}
+
+private:
+	void Relocate(index DesiredSize) {
 		const index NewCapacity = 1 << (LogOfTwoCeil(DesiredSize) + 1);
 		auto* const NewData = (map_element*) _aligned_malloc(NewCapacity * sizeof(map_element), alignof(map_element));
 		for (map_element* MapElem = NewData; MapElem != NewData + NewCapacity; ++MapElem) {
@@ -284,10 +291,6 @@ struct ConcurrentMap {
 
 	__forceinline static index TriangleNumber(const index InIteration) {
 		return (InIteration * (InIteration + 1)) >> 1;
-	}
-
-	[[nodiscard]] __forceinline index GetSize() const {
-		return Size.load(std::memory_order_relaxed);
 	}
 
 	__forceinline void LockAll() {

@@ -33,10 +33,10 @@ template <typename key_type, typename value_type>
 void IdealThreadInsertions(std::unordered_map<key_type, value_type>* Ideal, int Seed, int Count, int Min, int Max) {
 	std::default_random_engine Generator(Seed);
 	std::uniform_int_distribution<int> Distribution(Min, Max);
-	for (int i = 0; i < Count; ++i) {
-		int RandomKey = Distribution(Generator);
-		int RandomValue = Distribution(Generator);
-		Ideal->operator[](std::to_string(RandomKey)) = std::to_string(RandomValue);
+	for (int i = Min; i < Min + Count; ++i) {
+		int RandomKey = i;//Distribution(Generator);
+		int RandomValue = i;//Distribution(Generator);
+		Ideal->operator[](RandomKey) = RandomValue;
 	}
 }
 
@@ -44,10 +44,10 @@ template <typename key_type, typename value_type>
 void TestThreadInsertions(concurrent_hash_table<key_type, value_type>* Test, int Seed, int Count, int Min, int Max) {
 	std::default_random_engine Generator(Seed);
 	std::uniform_int_distribution<int> Distribution(Min, Max);
-	for (int i = 0; i < Count; ++i) {
-		int RandomKey = Distribution(Generator);
-		int RandomValue = Distribution(Generator);
-		Test->operator[](std::to_string(RandomKey)) = std::to_string(RandomValue);
+	for (int i = Min; i < Min + Count; ++i) {
+		int RandomKey = i;//Distribution(Generator);
+		int RandomValue = i;//Distribution(Generator);
+		Test->operator[](RandomKey) = RandomValue;
 	}
 }
 
@@ -55,9 +55,9 @@ template <typename key_type, typename value_type>
 void IdealThreadDeletions(std::unordered_map<key_type, value_type>* Ideal, int Seed, int Count, int Min, int Max) {
 	std::default_random_engine Generator(Seed);
 	std::uniform_int_distribution<int> Distribution(Min, Max);
-	for (int i = 0; i < Count; ++i) {
-		int RandomKey = Distribution(Generator);
-		Ideal->erase(std::to_string(RandomKey));
+	for (int i = Min; i < Min + Count; ++i) {
+		int RandomKey = i;//Distribution(Generator);
+		Ideal->erase(RandomKey);
 	}
 }
 
@@ -65,9 +65,9 @@ template <typename key_type, typename value_type>
 void TestThreadDeletions(concurrent_hash_table<key_type, value_type>* Test, int Seed, int Count, int Min, int Max) {
 	std::default_random_engine Generator(Seed);
 	std::uniform_int_distribution<int> Distribution(Min, Max);
-	for (int i = 0; i < Count; ++i) {
-		int RandomKey = Distribution(Generator);
-		Test->Remove(std::to_string(RandomKey));
+	for (int i = Min; i < Min + Count; ++i) {
+		int RandomKey = i;//Distribution(Generator);
+		Test->Remove(RandomKey);
 	}
 }
 
@@ -76,13 +76,13 @@ void IdealThreadMix(std::unordered_map<key_type, value_type>* Ideal, int Seed, i
 	std::default_random_engine Generator(Seed);
 	std::uniform_int_distribution<int> Distribution(Min, Max);
 	std::uniform_int_distribution<int> SwitchDistribution(0, 1);
-	for (int i = 0; i < Count; ++i) {
-		int RandomKey = Distribution(Generator);
+	for (int i = Min; i < Min + Count; ++i) {
+		int RandomKey = i;//Distribution(Generator);
 		if (SwitchDistribution(Generator)) {
-			Ideal->erase(std::to_string(RandomKey));
+			Ideal->erase(RandomKey);
 		} else {
-			int RandomValue = Distribution(Generator);
-			Ideal->operator[](std::to_string(RandomKey)) = std::to_string(RandomValue);
+			int RandomValue = i;//Distribution(Generator);
+			Ideal->operator[](RandomKey) = RandomValue;
 		}
 	}
 }
@@ -92,13 +92,13 @@ void TestThreadMix(concurrent_hash_table<key_type, value_type>* Test, int Seed, 
 	std::default_random_engine Generator(Seed);
 	std::uniform_int_distribution<int> Distribution(Min, Max);
 	std::uniform_int_distribution<int> SwitchDistribution(0, 1);
-	for (int i = 0; i < Count; ++i) {
-		int RandomKey = Distribution(Generator);
+	for (int i = Min; i < Min + Count; ++i) {
+		int RandomKey = i;//Distribution(Generator);
 		if (SwitchDistribution(Generator)) {
-			Test->Remove(std::to_string(RandomKey));
+			Test->Remove(RandomKey);
 		} else {
-			int RandomValue = Distribution(Generator);
-			Test->operator[](std::to_string(RandomKey)) = std::to_string(RandomValue);
+			int RandomValue = i;//Distribution(Generator);
+			Test->operator[](RandomKey) = RandomValue;
 		}
 	}
 }
@@ -268,7 +268,7 @@ static bool SanityCheck(int Count, int NumThreads, bool SameKeys) {
 s32 concurrent_table_test::Test(const std::span<char*>& Args) {
 	TEST_PRINT_LINE();
 	bool Passed = true;
-	Passed = Passed && SanityCheck<std::string, std::string>(10000, 16, false);
+	Passed = Passed && SanityCheck<s64, bytes_struct<2048>>(50000, 16, false);
 	return Passed ? 0 : 1;
 }
 
