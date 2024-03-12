@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Unnamed" type="CompoundRunConfigurationType">
+    <toRun name="Table test" targetId="CMakeBuildProfile:Release GCC" type="CTestRunConfiguration" />
+    <toRun name="string test" targetId="CMakeBuildProfile:Release MSVC" type="CTestRunConfiguration" />
+    <method v="2" />
+  </configuration>
+</component>
